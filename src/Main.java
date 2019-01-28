@@ -11,7 +11,7 @@ public class Main
 	{
 		int x = 9;		//Width of the board
 		int y = 9;		//Height of the board
-		int d = 1;		//The difficulty of the game, the number of mines in the board.
+		int d = 5;		//The difficulty of the game, the number of mines in the board.
 
  
 		new Minesweeper(x, y, d);

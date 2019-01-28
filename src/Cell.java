@@ -42,7 +42,7 @@ public class Cell
 		flagged = false;
 	}
  
-	public void reveal()
+	public void open()
 	{
 		open = true;
 	}
@@ -98,6 +98,11 @@ public class Cell
 	{
 		return open;
 	}
+	
+	public boolean isClosed()
+	{
+		return !open;
+	}
  
 	public int getNumber()
 	{
@@ -122,7 +127,7 @@ public class Cell
 
 	@Override
 	public String toString() {
-		return "Cell [Pos=[" + x + "," + y + "]" + " isMine=" + this.isMine() + ", isFlagged=" + flagged + ", isObscured=" + open + ", isHint=" + isHint() + ", number="
+		return "Cell [Pos=[" + x + "," + y + "]" + " isMine=" + this.isMine() + ", isFlagged=" + flagged + ", isOpen=" + open + ", isHint=" + isHint() + ", number="
 				+ number + "]";
 	}
 }

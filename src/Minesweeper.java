@@ -49,7 +49,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				genHint();
-				System.out.println(hintCells);
+				System.out.println("Set of hints = " + hintCells);
 				// board.repaint();
 			}
 		});
@@ -84,6 +84,16 @@ public class Minesweeper extends JFrame implements ActionListener {
 		return cells;
 	}
 
+	private void debug(int x, int y) {
+		System.out.println("=======================");
+		System.out.println("Cell info = " + cells[x][y]);
+		System.out.println("Set of neighbors = " + getNeighbours(x, y));
+		System.out.println("Num of uncovered neighbors = " + calcClosedNeighbours(x, y));
+		System.out.println("Num of flagged neighbors = " + calcFlaggedNeighbours(x, y));
+		System.out.println("=======================");
+
+	}
+	
 	public void reset() {
 		finished = false;
 
@@ -105,29 +115,46 @@ public class Minesweeper extends JFrame implements ActionListener {
 		 * for (int i = 0; i < width; ++i) { cells[i][0].setHint();
 		 * hintCells.add(cells[i][0]); }
 		 */
+		
+		// Find cells that have 0 surrounding mines but closed neighbours
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
-				// If the number of neighbouring flagged cells is the same as
-				// the surrounding mines then other cells are safe
-				if (cells[i][j].isOpen() && cells[i][j].getNumber() != 0
-						&& cells[i][j].getNumber() == calcFlaggedNeighbours(i, j)) {
-					Cell[][] neighbours = getNeighbours(i, j);
-					for (int ci = 0; ci < 3; ++ci) {
-						for (int ri = 0; ri < 3; ++ri) {
-							if (ci != 1 || ri != 1) {
-								if (!neighbours[ci][ri].isFlagged() && !hintCells.contains(cells[ci][ri])) {
-									Cell c = cells[ci][ri];
-									cells[c.getX()][c.getY()].setHint();
-									hintCells.add(c);
-									refresh();
-									return;
-								}
+				if (is_good(i, j)) {
+					Cell current = cells[i][j];
+					if (current.isOpen() && current.getNumber() == 0) {
+						List<Cell> n = getNeighbours(current);
+						for (int k = 0; k < n.size(); ++k) {
+							if (n.get(k).isClosed() && !n.get(k).isHint() && !n.get(k).isFlagged()) {
+								n.get(k).setHint();
+								hintCells.add(n.get(k));
+								refresh();
+								return;
 							}
 						}
 					}
 				}
 			}
 		}
+		/*for (int i = 0; i < width; ++i) {
+			for (int j = 0; j < height; ++j) {
+				// If the number of neighbouring flagged cells is the same as
+				// the surrounding mines then other cells are safe
+				if (cells[i][j].isOpen() && cells[i][j].getNumber() != 0
+						&& cells[i][j].getNumber() == calcFlaggedNeighbours(i, j)) {
+					List<Cell> neighbours = getNeighbours(i, j);
+					for (int k = 0; k < neighbours.size(); ++k) {
+						Cell current = neighbours.get(k);
+						if (!current.isFlagged() && !hintCells.contains(current) && current.getNumber() != 0 && current.isClosed()) {
+							current.setHint();
+							hintCells.add(current);
+							refresh();
+							return;
+						}
+					}
+				}
+			}
+		}*/
+		JOptionPane.showMessageDialog(null, "No known safe moves.");
 	}
 
 	public void select(int x, int y) {
@@ -137,16 +164,17 @@ public class Minesweeper extends JFrame implements ActionListener {
 			c.resetHint();
 		}
 		hintCells.clear();
+		
+		debug(x, y);
+		
 		// Mines around the cell
 		int cellNum = mineField.uncover(x, y);
 
 		cells[x][y].setNumber(cellNum);
 		// openCells.add(cells[x][y]);
-		cells[x][y].reveal();
+		cells[x][y].open();
 		resetMarks();
 		refresh();
-		System.out.println("Num of uncovered neighbors = " + calcClosedNeighbours(x, y));
-		System.out.println("Num of flagged neighbors = " + calcFlaggedNeighbours(x, y));
 
 		if (cellNum == -1) // If cell is a mine (-1), game is lost
 		{
@@ -188,7 +216,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		int obscuredCount = 0;
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
-				if (!cells[i][j].isOpen()) {
+				if (cells[i][j].isClosed()) {
 					++obscuredCount;
 				}
 			}
@@ -201,7 +229,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	public void mark(int x, int y) {
 		if (cells[x][y].isFlagged())
 			cells[x][y].unflag();
-		else if (!cells[x][y].isOpen())
+		else if (cells[x][y].isClosed())
 			cells[x][y].flag();
 
 		resetMarks();
@@ -227,7 +255,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		for (int i = x - 1; i <= x + 1; ++i) {
 			for (int j = y - 1; j <= y + 1; ++j) {
 				if ((i != x || j != y) && is_good(i, j)) {
-					if (!cells[i][j].isOpen()) {
+					if (cells[i][j].isClosed()) {
 						++count;
 					}
 				}
@@ -251,19 +279,21 @@ public class Minesweeper extends JFrame implements ActionListener {
 		}
 		return count;
 	}
-
-	public Cell[][] getNeighbours(int x, int y) {
-		Cell[][] c = new Cell[3][3];
-		for (int i = -1; i < 2; ++i) {
-			for (int j = -1; j < 2; ++j) {
-				if (is_good(x + i, y + j)) {
-					c[i+1][j+1] = cells[x + i][x + j];
-				} else {
-					c[i+1][j+1] = null;
+	
+	public List<Cell> getNeighbours(Cell c) {
+		return getNeighbours(c.getX(), c.getY());		
+	}
+	
+	public List<Cell> getNeighbours(int x, int y) {
+		List<Cell> neighbours = new ArrayList<Cell>();
+		for (int i = x - 1; i <= x + 1; ++i) {
+			for (int j = y - 1; j <= y + 1; ++j) {
+				if (is_good(i, j) && !(i == x && j == y)) {
+					neighbours.add(cells[i][j]);
 				}
 			}
 		}
-		return c;
+		return neighbours;
 	}
 
 	// checks if (i,j) is within the field
