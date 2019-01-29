@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.List;
 
 public class Actions implements ActionListener, MouseListener {
 	private Minesweeper mine;
@@ -21,6 +22,7 @@ public class Actions implements ActionListener, MouseListener {
 	public void actionPerformed(ActionEvent e) {
 		mine.getHintBtn().setEnabled(true);
 		mine.getAssistBtn().setEnabled(true);
+		mine.getAutoBtn().setEnabled(true);
 		mine.reset();
 		mine.refresh();
 	}
@@ -36,17 +38,22 @@ public class Actions implements ActionListener, MouseListener {
 			} else {
 				int x = e.getX() / 20;
 				int y = e.getY() / 20;
-
-				mine.select(x, y);
-				System.out.println(mine.getCells()[x][y]);
+				if (mine.is_good(x,  y)) {
+					mine.select(x, y);
+				}
 			}
 		}
 
 		if (e.getButton() == MouseEvent.BUTTON3) {
 			int x = e.getX() / 20;
 			int y = e.getY() / 20;
-
+			
 			mine.mark(x, y);
+			List<Cell> hintCells = mine.getHintCells();
+			for (Cell c : hintCells) {
+				c.resetHint();
+			}
+			hintCells.clear();
 		}
 
 		mine.refresh();

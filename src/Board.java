@@ -15,18 +15,16 @@ public class Board extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 	private Minesweeper game;
-	//private MineField mineField;
 	private Cell[][] cells;
 	private final int cellWidth = 20;
-	public Board(Minesweeper m, MineField mf)
+	public Board(Minesweeper m, int width, int height)
 	{
-		//mineField = mf;
 		game = m;
 		cells = game.getCells();
  
 		addMouseListener(new Actions(game));
  
-		setPreferredSize(new Dimension(game.getx() * cellWidth, game.gety() * cellWidth));
+		setPreferredSize(new Dimension(width * cellWidth, height * cellWidth));
 	}
 	
 	public int getCellWidth() {
@@ -73,7 +71,7 @@ public class Board extends JPanel
 					g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
 					g.setColor(Color.BLACK);
 				}
-				else if (!current.isOpen())
+				else if (current.isClosed())
 				{
 					g.setColor(Color.GRAY);
 					g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
@@ -95,9 +93,6 @@ public class Board extends JPanel
 				}
 				if (current.isOpen())
 				{
-					// Debug
-					//System.out.println(i*20 + ", " + j*20);
-
 					// TODO Draw a better 0
 					if (current.getNumber() == 0)
 					{
