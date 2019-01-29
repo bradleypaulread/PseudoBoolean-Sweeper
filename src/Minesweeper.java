@@ -20,6 +20,10 @@ import javax.swing.JOptionPane;
 
 public class Minesweeper extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
+
+	// Password to unlock the minefield
+	private final String password = "hello";
+
 	private MineField mineField;
 	private int width, height;
 	private Cell[][] cells;
@@ -61,7 +65,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		// this.setLocationRelativeTo(null); //center JFrame
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// setResizable(false);
+		setResizable(false);
 		// setPreferredSize(new Dimension(1000, 1000));
 
 		pack();
@@ -93,7 +97,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		System.out.println("=======================");
 
 	}
-	
+
 	public void reset() {
 		finished = false;
 
@@ -115,16 +119,18 @@ public class Minesweeper extends JFrame implements ActionListener {
 		 * for (int i = 0; i < width; ++i) { cells[i][0].setHint();
 		 * hintCells.add(cells[i][0]); }
 		 */
-		
+
 		// Find cells that have 0 surrounding mines but closed neighbours
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
 				if (is_good(i, j)) {
 					Cell current = cells[i][j];
+					// Only apply logic to open cells with 0 surrounding mines
 					if (current.isOpen() && current.getNumber() == 0) {
-						List<Cell> n = getNeighbours(current);
+						List<Cell> n = getNeighbours(current); // List of neighbours
 						for (int k = 0; k < n.size(); ++k) {
-							if (n.get(k).isClosed() && !n.get(k).isHint() && !n.get(k).isFlagged()) {
+							// If the cell has not been affected by the user (is blank of behaviour)
+							if (n.get(k).isBlank()) {
 								n.get(k).setHint();
 								hintCells.add(n.get(k));
 								refresh();
@@ -135,25 +141,29 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
-		/*for (int i = 0; i < width; ++i) {
+
+		// Find cells that have N surrounding mines but N flagged neighbours
+		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
-				// If the number of neighbouring flagged cells is the same as
-				// the surrounding mines then other cells are safe
-				if (cells[i][j].isOpen() && cells[i][j].getNumber() != 0
-						&& cells[i][j].getNumber() == calcFlaggedNeighbours(i, j)) {
-					List<Cell> neighbours = getNeighbours(i, j);
-					for (int k = 0; k < neighbours.size(); ++k) {
-						Cell current = neighbours.get(k);
-						if (!current.isFlagged() && !hintCells.contains(current) && current.getNumber() != 0 && current.isClosed()) {
-							current.setHint();
-							hintCells.add(current);
-							refresh();
-							return;
+				if (is_good(i, j)) {
+					Cell current = cells[i][j];
+					// Only apply logic to open cells with n surrounding mines and n surrounding flags
+					int flagsNo = calcFlaggedNeighbours(i, j);
+					if (current.isOpen() && current.getNumber() == flagsNo) {
+						List<Cell> n = getNeighbours(current); // List of neighbours
+						for (int k = 0; k < n.size(); ++k) {
+							// If the cell has not been affected by the user (is blank of behaviour)
+							if (n.get(k).isBlank()) {
+								n.get(k).setHint();
+								hintCells.add(n.get(k));
+								refresh();
+								return;
+							}
 						}
 					}
 				}
 			}
-		}*/
+		}
 		JOptionPane.showMessageDialog(null, "No known safe moves.");
 	}
 
@@ -164,9 +174,9 @@ public class Minesweeper extends JFrame implements ActionListener {
 			c.resetHint();
 		}
 		hintCells.clear();
-		
+
 		debug(x, y);
-		
+
 		// Mines around the cell
 		int cellNum = mineField.uncover(x, y);
 
@@ -178,38 +188,35 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 		if (cellNum == -1) // If cell is a mine (-1), game is lost
 		{
-			loose();
+			endGame();
+			JOptionPane.showMessageDialog(null, "BOOOOM!");
 		} else if (won()) {
-			win();
+			endGame();
+			JOptionPane.showMessageDialog(null, "Congratulations! You won!");
 		}
 	}
 
-	private void loose() {
+	private void endGame() {
 		finished = true;
 		try {
-			mineField.open("hello");
+			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		refresh();
-		JOptionPane.showMessageDialog(null, "BOOOOM!");
-		reset();
 	}
 
-	private void win() {
-		finished = true;
-		for (int i = 0; i < width; ++i)
-			try {
-				mineField.open("hello");
-			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+	private void openAllCells() throws NoSuchAlgorithmException {
+		mineField.open(password);
+		for (int i = 0; i < width; ++i) {
+			for (int j = 0; j < height; ++j) {
+				int cellNum = mineField.uncover(i, j);
+				cells[i][j].setNumber(cellNum);
+				cells[i][j].open();
 			}
-
+		}
 		refresh();
-		JOptionPane.showMessageDialog(null, "Congratulations! You won!");
-		reset();
 	}
 
 	private boolean won() {
@@ -251,15 +258,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	public int calcClosedNeighbours(int x, int y) {
 		int count = 0;
 		// for loop to count how many closed cells are around a cell
-		assert is_good(x, y);
-		for (int i = x - 1; i <= x + 1; ++i) {
-			for (int j = y - 1; j <= y + 1; ++j) {
-				if ((i != x || j != y) && is_good(i, j)) {
-					if (cells[i][j].isClosed()) {
-						++count;
-					}
-				}
-			}
+		List<Cell> neighbours = getNeighbours(x, y);
+		for (Cell c : neighbours) {
+			if (c.isClosed())
+				++count;
 		}
 		return count;
 	}
@@ -267,23 +269,18 @@ public class Minesweeper extends JFrame implements ActionListener {
 	public int calcFlaggedNeighbours(int x, int y) {
 		int count = 0;
 		// for loop to count how many flagged cells are around a cell
-		assert is_good(x, y);
-		for (int i = x - 1; i <= x + 1; ++i) {
-			for (int j = y - 1; j <= y + 1; ++j) {
-				if ((i != x || j != y) && is_good(i, j)) {
-					if (cells[i][j].isFlagged()) {
-						++count;
-					}
-				}
-			}
+		List<Cell> neighbours = getNeighbours(x, y);
+		for (Cell c : neighbours) {
+			if (c.isFlagged())
+				++count;
 		}
 		return count;
 	}
-	
+
 	public List<Cell> getNeighbours(Cell c) {
-		return getNeighbours(c.getX(), c.getY());		
+		return getNeighbours(c.getX(), c.getY());
 	}
-	
+
 	public List<Cell> getNeighbours(int x, int y) {
 		List<Cell> neighbours = new ArrayList<Cell>();
 		for (int i = x - 1; i <= x + 1; ++i) {

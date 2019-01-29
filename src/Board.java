@@ -7,6 +7,7 @@
  
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import javax.swing.JPanel;
  
@@ -100,7 +101,8 @@ public class Board extends JPanel
 					// TODO Draw a better 0
 					if (current.getNumber() == 0)
 					{
-						g.drawString("0", i*cellWidth + cellWidth/2, j*cellWidth + cellWidth/2);
+						//g.setFont(new Font());
+						g.drawString("0", (i*cellWidth + cellWidth/2)-3, (j*cellWidth + cellWidth/2)+5);
 					}
 					else if (current.getNumber() == 1)
 					{

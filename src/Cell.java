@@ -124,6 +124,10 @@ public class Cell
 	public void resetHint() {
 		hint = false;
 	}
+	
+	public boolean isBlank() {
+		return !open && !flagged && !hint;
+	}
 
 	@Override
 	public String toString() {
