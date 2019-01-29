@@ -8,7 +8,9 @@
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.security.NoSuchAlgorithmException;
@@ -32,6 +34,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private int noOfMines; // Number of mines
 	private Board board;
 	private JButton resetBtn;
+	private JButton assistBtn;
 	private JButton hintBtn;
 	private boolean finished;
 	int test = 0;
@@ -46,15 +49,32 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 		board = new Board(this, mineField);
 		resetBtn = new JButton("Reset");
+		assistBtn = new JButton("Assist");
 		hintBtn = new JButton("Hint");
+		
+		
+		Container topBar = new Container();
+		topBar.setLayout(new FlowLayout());
+		topBar.add(assistBtn);
+		topBar.add(hintBtn);
 
-		add(hintBtn, BorderLayout.NORTH);
-
+		add(topBar, BorderLayout.NORTH);
+		//add(assistBtn, BorderLayout.NORTH);
+		
 		hintBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				genHint();
 				System.out.println("Set of hints = " + hintCells);
+				// board.repaint();
+			}
+		});
+
+		assistBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				assist();
+				//System.out.println("Set of hints = " + hintCells);
 				// board.repaint();
 			}
 		});
@@ -115,7 +135,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		board.repaint();
 	}
 
-	public void genHint() {
+	public boolean genHint() {
 		/*
 		 * for (int i = 0; i < width; ++i) { cells[i][0].setHint();
 		 * hintCells.add(cells[i][0]); }
@@ -128,14 +148,16 @@ public class Minesweeper extends JFrame implements ActionListener {
 					Cell current = cells[i][j];
 					// Only apply logic to open cells with 0 surrounding mines
 					if (current.isOpen() && current.getNumber() == 0) {
-						List<Cell> n = getNeighbours(current); // List of neighbours
+						List<Cell> n = getNeighbours(current); // List of
+																// neighbours
 						for (int k = 0; k < n.size(); ++k) {
-							// If the cell has not been affected by the user (is blank of behaviour)
+							// If the cell has not been affected by the user (is
+							// blank of behaviour)
 							if (n.get(k).isBlank()) {
 								n.get(k).setHint();
 								hintCells.add(n.get(k));
 								refresh();
-								return;
+								return true;
 							}
 						}
 					}
@@ -148,17 +170,20 @@ public class Minesweeper extends JFrame implements ActionListener {
 			for (int j = 0; j < height; ++j) {
 				if (is_good(i, j)) {
 					Cell current = cells[i][j];
-					// Only apply logic to open cells with n surrounding mines and n surrounding flags
+					// Only apply logic to open cells with n surrounding mines
+					// and n surrounding flags
 					int flagsNo = calcFlaggedNeighbours(i, j);
 					if (current.isOpen() && current.getNumber() == flagsNo) {
-						List<Cell> n = getNeighbours(current); // List of neighbours
+						List<Cell> n = getNeighbours(current); // List of
+																// neighbours
 						for (int k = 0; k < n.size(); ++k) {
-							// If the cell has not been affected by the user (is blank of behaviour)
+							// If the cell has not been affected by the user (is
+							// blank of behaviour)
 							if (n.get(k).isBlank()) {
 								n.get(k).setHint();
 								hintCells.add(n.get(k));
 								refresh();
-								return;
+								return true;
 							}
 						}
 					}
@@ -166,6 +191,56 @@ public class Minesweeper extends JFrame implements ActionListener {
 			}
 		}
 		JOptionPane.showMessageDialog(null, "No known safe moves.");
+		return false;
+	}
+
+	private boolean assist() {
+		for (int i = 0; i < width; ++i) {
+			for (int j = 0; j < height; ++j) {
+				if (is_good(i, j)) {
+					Cell current = cells[i][j];
+					// Only apply logic to open cells with 0 surrounding mines
+					if (current.isOpen() && current.getNumber() == 0) {
+						List<Cell> n = getNeighbours(current); // List of
+																// neighbours
+						for (int k = 0; k < n.size(); ++k) {
+							// If the cell has not been affected by the user (is
+							// blank of behaviour)
+							if (n.get(k).isBlank()) {
+								select(n.get(k).getX(), n.get(k).getY());
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Find cells that have N surrounding mines but N flagged neighbours
+		for (int i = 0; i < width; ++i) {
+			for (int j = 0; j < height; ++j) {
+				if (is_good(i, j)) {
+					Cell current = cells[i][j];
+					// Only apply logic to open cells with n surrounding mines
+					// and n surrounding flags
+					int flagsNo = calcFlaggedNeighbours(i, j);
+					if (current.isOpen() && current.getNumber() == flagsNo) {
+						List<Cell> n = getNeighbours(current); // List of
+																// neighbours
+						for (int k = 0; k < n.size(); ++k) {
+							// If the cell has not been affected by the user (is
+							// blank of behaviour)
+							if (n.get(k).isBlank()) {
+								select(n.get(k).getX(), n.get(k).getY());
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		JOptionPane.showMessageDialog(null, "No known safe moves.");
+		return false;
 	}
 
 	public void select(int x, int y) {
@@ -200,6 +275,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private void endGame() {
 		finished = true;
 		hintBtn.setEnabled(false);
+		assistBtn.setEnabled(false);
 		try {
 			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
@@ -319,6 +395,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 	public JButton getHintBtn() {
 		return hintBtn;
+	}
+	
+	public JButton getAssistBtn() {
+		return assistBtn;
 	}
 
 }
