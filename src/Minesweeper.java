@@ -7,6 +7,7 @@
  */
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -120,7 +121,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		 * hintCells.add(cells[i][0]); }
 		 */
 
-		// Find cells that have 0 surrounding mines but closed neighbours
+		// Find cells that have n surrounding mines and n closed neighbours
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
 				if (is_good(i, j)) {
@@ -198,6 +199,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 	private void endGame() {
 		finished = true;
+		hintBtn.setEnabled(false);
 		try {
 			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
@@ -313,6 +315,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 
+	}
+
+	public JButton getHintBtn() {
+		return hintBtn;
 	}
 
 }

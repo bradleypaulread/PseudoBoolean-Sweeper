@@ -19,6 +19,7 @@ public class Actions implements ActionListener, MouseListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		mine.getHintBtn().setEnabled(true);
 		mine.reset();
 		mine.refresh();
 	}
