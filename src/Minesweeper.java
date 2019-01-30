@@ -94,6 +94,61 @@ public class Minesweeper extends JFrame implements ActionListener {
 		setVisible(true);
 	}
 
+	public Minesweeper(int x, int y, int d) {
+		width = x;
+		height = y;
+		noOfMines = d;
+		System.out.println(noOfMines);
+		cells = new Cell[width][height];
+		mineField = new MineField(height, width, noOfMines);
+		reset();
+
+		board = new Board(this, x, y);
+
+		Container topBar = new Container();
+		topBar.setLayout(new FlowLayout());
+
+		topBar.add(autoBtn);
+		topBar.add(assistBtn);
+		topBar.add(hintBtn);
+		add(topBar, BorderLayout.NORTH);
+		// add(assistBtn, BorderLayout.NORTH);
+
+		hintBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				genHint();
+			}
+		});
+
+		assistBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				assist();
+			}
+		});
+
+		autoBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				while(assist()) {}
+			}
+		});
+
+		add(board, BorderLayout.CENTER);
+		add(resetBtn, BorderLayout.SOUTH);
+
+		resetBtn.addActionListener(new Actions(this));
+		// this.setLocationRelativeTo(null); //center JFrame
+		setTitle("Minesweeper");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setResizable(false);
+		//setPreferredSize(new Dimension(1000, 1000));
+
+		pack();
+		setVisible(true);
+	}
+	
 	public MineField getMineField() {
 		return mineField;
 	}
@@ -190,7 +245,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
-		JOptionPane.showMessageDialog(null, "No (more) known safe moves.");
+		if (!finished) JOptionPane.showMessageDialog(null, "No (more) known safe moves.");
 		return false;
 	}
 
@@ -201,16 +256,22 @@ public class Minesweeper extends JFrame implements ActionListener {
 					Cell current = cells[i][j];
 					// Only apply logic to open cells with 0 surrounding mines
 					if (current.isOpen() && current.getNumber() == 0) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbours
+						List<Cell> n = getNeighbours(current); // List of neighbouring cells
 						for (int k = 0; k < n.size(); ++k) {
-							// If the cell has not been affected by the user (is
-							// blank of behaviour)
+							// If the cell has not been affected by the user (is blank of behaviour)
 							if (n.get(k).isClosed() && !n.get(k).isFlagged()) {
 								select(n.get(k).getX(), n.get(k).getY());
 								return true;
 							}
 						}
+					}
+					if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j) && current.getNumber() != calcFlaggedNeighbours(i, j)) {
+						List<Cell> n = getNeighbours(current); // List of neighbouring cells
+						for (Cell c : n) {
+							if (c.isClosed()) c.flag();
+						}
+						refresh();
+						return true;
 					}
 				}
 			}
@@ -237,7 +298,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
-		JOptionPane.showMessageDialog(null, "No (more) known safe moves.");
+		if (!finished) JOptionPane.showMessageDialog(null, "No (more) known safe moves.");
 		return false;
 	}
 
