@@ -12,10 +12,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
 
-public class Actions implements ActionListener, MouseListener {
+public class MouseActions implements ActionListener, MouseListener {
 	private Minesweeper mine;
 
-	public Actions(Minesweeper m) {
+	public MouseActions(Minesweeper m) {
 		mine = m;
 	}
 

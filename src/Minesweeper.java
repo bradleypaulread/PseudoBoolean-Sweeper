@@ -7,88 +7,67 @@
  */
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 
 public class Minesweeper extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 
-	// Password to unlock the minefield
-	private final String password = "hello";
+	// Password to unlock MineField.java
+	private final String PASSWORD = "hello";
 
-	private MineField mineField;
-	private int width, height;
-	private Cell[][] cells;
-	private List<Cell> hintCells = new ArrayList<Cell>();
-	private int noOfMines; // Number of mines
-	private Board board;
+	// Swing components (buttons etc.)
 	private JButton resetBtn = new JButton("Reset");
 	private JButton assistBtn = new JButton("Assist");
 	private JButton autoBtn = new JButton("Auto");
 	private JButton hintBtn = new JButton("Hint");
-	private boolean finished;
+	private JCheckBoxMenuItem debugCB = new JCheckBoxMenuItem("Debug Output");
+	private JMenuBar menuBar = new JMenuBar();
+	private JMenu menu = new JMenu("File");
+	
+	private MineField mineField; 	// Blackbox minefield
+	private int width, height;		// Width and Height of board (number of cells = width*height)
+	private Cell[][] cells;		// 2D array to store all cells
+	private List<Cell> hintCells = new ArrayList<Cell>();  // 
+	private int noOfMines; // Number of mines
+	private Board board;	// Board instance, where cells appearance is processed
+	private boolean debug = false;	// If debug information should be printed to console
+	private boolean isGameOver;		// True if the game has been lost or won
+	
 
 	public Minesweeper(int x, int y, double d) {
 		width = x;
 		height = y;
-		noOfMines = (int) ((x*y)*d);
-		System.out.println(noOfMines);
+		noOfMines = (int) ((x * y) * d); // Round down to integer amount of mines
 		cells = new Cell[width][height];
 		mineField = new MineField(height, width, noOfMines);
 		reset();
 
+		// Load interface components
 		board = new Board(this, x, y);
-
-		Container topBar = new Container();
-		topBar.setLayout(new FlowLayout());
-
-		topBar.add(autoBtn);
-		topBar.add(assistBtn);
-		topBar.add(hintBtn);
-		add(topBar, BorderLayout.NORTH);
-		// add(assistBtn, BorderLayout.NORTH);
-
-		hintBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				genHint();
-			}
-		});
-
-		assistBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				assist();
-			}
-		});
-
-		autoBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				while(assist()) {}
-			}
-		});
+		loadButtons();
+		loadFileMenu();
 
 		add(board, BorderLayout.CENTER);
-		add(resetBtn, BorderLayout.SOUTH);
-
-		resetBtn.addActionListener(new Actions(this));
+		
 		// this.setLocationRelativeTo(null); //center JFrame
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//setResizable(false);
-		//setPreferredSize(new Dimension(1000, 1000));
+		// setResizable(false);
+		// setPreferredSize(new Dimension(1000, 1000));
 
 		pack();
 		setVisible(true);
@@ -112,7 +91,6 @@ public class Minesweeper extends JFrame implements ActionListener {
 		topBar.add(assistBtn);
 		topBar.add(hintBtn);
 		add(topBar, BorderLayout.NORTH);
-		// add(assistBtn, BorderLayout.NORTH);
 
 		hintBtn.addActionListener(new ActionListener() {
 			@Override
@@ -131,24 +109,76 @@ public class Minesweeper extends JFrame implements ActionListener {
 		autoBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				while(assist()) {}
+				while (assist()) {
+				}
 			}
 		});
 
 		add(board, BorderLayout.CENTER);
 		add(resetBtn, BorderLayout.SOUTH);
 
-		resetBtn.addActionListener(new Actions(this));
+		resetBtn.addActionListener(new MouseActions(this));
 		// this.setLocationRelativeTo(null); //center JFrame
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//setResizable(false);
-		//setPreferredSize(new Dimension(1000, 1000));
+		// setResizable(false);
+		// setPreferredSize(new Dimension(1000, 1000));
 
 		pack();
 		setVisible(true);
 	}
-	
+
+	private void loadButtons() {
+		Container topBar = new Container();
+		topBar.setLayout(new FlowLayout());
+		topBar.add(autoBtn);
+		topBar.add(assistBtn);
+		topBar.add(hintBtn);
+		this.add(topBar, BorderLayout.NORTH);
+		this.add(resetBtn, BorderLayout.SOUTH);
+		
+		resetBtn.addActionListener(new MouseActions(this));
+		
+		hintBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				genHint();
+			}
+		});
+
+		assistBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				assist();
+			}
+		});
+
+		autoBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				while (assist()) {
+				}
+			}
+		});
+	}
+
+	private void loadFileMenu() {
+		menu.setMnemonic(KeyEvent.VK_A);
+		menu.getAccessibleContext().setAccessibleDescription("Playability settings.");
+		menuBar.add(menu);
+		debugCB.setMnemonic(KeyEvent.VK_C);
+
+		debugCB.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				debug = !debug;
+			}
+		});
+
+		menu.add(debugCB);
+		this.setJMenuBar(menuBar);
+	}
+
 	public MineField getMineField() {
 		return mineField;
 	}
@@ -175,7 +205,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	public void reset() {
-		finished = false;
+		isGameOver = false;
 
 		mineField = new MineField(height, width, noOfMines);
 
@@ -191,18 +221,16 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	public boolean genHint() {
-		/*
-		 * for (int i = 0; i < width; ++i) { cells[i][0].setHint();
-		 * hintCells.add(cells[i][0]); }
-		 */
-
 		// Find cells that have n surrounding mines and n closed neighbours
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
 				if (is_good(i, j)) {
 					Cell current = cells[i][j];
 					// Only apply logic to open cells with 0 surrounding mines
-					if (current.isOpen() && current.getNumber() == 0) {    // Code to add if I want to find mines: (current.getNumber() == 0 || current.getNumber() == calcClosedNeighbours(i, j))
+					if (current.isOpen() && current.getNumber() == 0) { // Code to add if I want to find mines:
+																		// (current.getNumber() == 0 ||
+																		// current.getNumber() ==
+																		// calcClosedNeighbours(i, j))
 						List<Cell> n = getNeighbours(current); // List of
 																// neighbours
 						for (int k = 0; k < n.size(); ++k) {
@@ -245,7 +273,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
-		if (!finished) JOptionPane.showMessageDialog(null, "No (more) known safe moves.");
+		if (!isGameOver)
+			JOptionPane.showMessageDialog(null, "No known safe moves.");
 		return false;
 	}
 
@@ -265,10 +294,12 @@ public class Minesweeper extends JFrame implements ActionListener {
 							}
 						}
 					}
-					if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j) && current.getNumber() != calcFlaggedNeighbours(i, j)) {
+					if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
+							&& current.getNumber() != calcFlaggedNeighbours(i, j)) {
 						List<Cell> n = getNeighbours(current); // List of neighbouring cells
 						for (Cell c : n) {
-							if (c.isClosed()) c.flag();
+							if (c.isClosed())
+								c.flag();
 						}
 						refresh();
 						return true;
@@ -298,27 +329,41 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
-		if (!finished) JOptionPane.showMessageDialog(null, "No (more) known safe moves.");
+		if (!isGameOver)
+			JOptionPane.showMessageDialog(null, "No known safe moves.");
 		return false;
 	}
 
 	public void select(int x, int y) {
 		if (cells[x][y].isFlagged())
 			return;
+
 		for (Cell c : hintCells) {
 			c.resetHint();
 		}
 		hintCells.clear();
 
 		// TODO Remove when product is finished
-		debug(x, y);
+		if (debug)
+			debug(x, y);
 
 		// Mines around the cell
-		int cellNum = mineField.uncover(y, x); // x and y has to be reversed as MineField.java takes parameters in the order of height then width, not width then height
+		int cellNum = mineField.uncover(y, x); // x and y has to be reversed as MineField.java takes parameters in the
+												// order of height then width, not width then height
 
 		cells[x][y].setNumber(cellNum);
 		// openCells.add(cells[x][y]);
 		cells[x][y].open();
+
+		if (cellNum == 0) {
+			List<Cell> neighbours = getNeighbours(x, y);
+			for (Cell c : neighbours) {
+				if (c.isClosed()) {
+					select(c.getX(), c.getY());
+				}
+			}
+		}
+
 		resetMarks();
 		refresh();
 
@@ -333,24 +378,24 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	private void endGame() {
-		finished = true;
+		isGameOver = true;
 		hintBtn.setEnabled(false);
 		assistBtn.setEnabled(false);
 		autoBtn.setEnabled(false);
 		try {
 			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		refresh();
 	}
 
 	private void openAllCells() throws NoSuchAlgorithmException {
-		mineField.open(password);
+		mineField.open(PASSWORD);
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
-				int cellNum = mineField.uncover(j, i); // j then i as MineField.java takes (height, width), not (width, height)
+				int cellNum = mineField.uncover(j, i); // j then i as MineField.java takes (height, width), not (width,
+														// height)
 				cells[i][j].setNumber(cellNum);
 				cells[i][j].open();
 			}
@@ -391,7 +436,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	public boolean isFinished() {
-		return finished;
+		return isGameOver;
 	}
 
 	public int calcClosedNeighbours(int x, int y) {
@@ -448,12 +493,6 @@ public class Minesweeper extends JFrame implements ActionListener {
 		return cells;
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-
-	}
-
 	public JButton getHintBtn() {
 		return hintBtn;
 	}
@@ -461,21 +500,26 @@ public class Minesweeper extends JFrame implements ActionListener {
 	public JButton getAssistBtn() {
 		return assistBtn;
 	}
-	
+
 	public JButton getAutoBtn() {
 		return autoBtn;
 	}
-	
+
 	public List<Cell> getHintCells() {
 		return hintCells;
 	}
 
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
 
-/*
- * Sample for loop for copy and paste
- * 
- * for (int i = 0; i < width; ++i) { for (int j = 0; j < height; ++j) {
- * cells[i][j] } }
- * 
- */
+//Sample for loop for copy and paste
+//	for(int i = 0;i<width;++i) {
+//		for (int j = 0; j < height; ++j) {
+//			cells[i][j]; 
+//		} 
+//	}

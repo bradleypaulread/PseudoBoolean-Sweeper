@@ -21,7 +21,6 @@ public class Cell
 		flagged = false;
 		open = false;
 		hint = false;
-		number = 0;
 	}
  
 	public int getX() {

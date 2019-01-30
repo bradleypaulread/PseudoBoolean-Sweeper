@@ -7,7 +7,6 @@
  
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Graphics;
 import javax.swing.JPanel;
  
@@ -16,19 +15,19 @@ public class Board extends JPanel
 	private static final long serialVersionUID = 1L;
 	private Minesweeper game;
 	private Cell[][] cells;
-	private final int cellWidth = 20;
+	private final int CELL_WIDTH = 20;
 	public Board(Minesweeper m, int width, int height)
 	{
 		game = m;
 		cells = game.getCells();
  
-		addMouseListener(new Actions(game));
+		addMouseListener(new MouseActions(game));
  
-		setPreferredSize(new Dimension(width * cellWidth, height * cellWidth));
+		setPreferredSize(new Dimension(width * CELL_WIDTH, height * CELL_WIDTH));
 	}
 	
 	public int getCellWidth() {
-		return cellWidth;
+		return CELL_WIDTH;
 	}
 	
 	public void paintComponent(Graphics g)
@@ -40,55 +39,55 @@ public class Board extends JPanel
 			for (int j = 0; j < game.gety(); ++j)
 			{
 				Cell current = cells[i][j];
-				int posX = i*cellWidth;
-				int posY = j*cellWidth;
+				int posX = i*CELL_WIDTH;
+				int posY = j*CELL_WIDTH;
 				if (current.isFlagged())
 				{
 					if (current.isMine() && game.isFinished())
 					{
 						g.setColor(Color.ORANGE);
-						g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+						g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 						g.setColor(Color.BLACK);
  
-						g.drawLine(posX, posY, posX + cellWidth, posY + cellWidth);
-						g.drawLine(posX, posY + cellWidth, posX + cellWidth, posY);
+						g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
+						g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
 					}
 					else if (game.isFinished())
 					{
 						g.setColor(Color.GREEN);
-						g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+						g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 						g.setColor(Color.BLACK);
 					}
 					else
 					{
 						g.setColor(Color.YELLOW);
-						g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+						g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 						g.setColor(Color.BLACK);
 					}
 				}
 				else if (current.isHint()) {
 					g.setColor(Color.PINK);
-					g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+					g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 					g.setColor(Color.BLACK);
 				}
 				else if (current.isClosed())
 				{
 					g.setColor(Color.GRAY);
-					g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+					g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 					g.setColor(Color.BLACK);
 				}
 				else if (current.isMine())
 				{
 					g.setColor(Color.RED);
-					g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+					g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 					g.setColor(Color.BLACK);
-					g.drawLine(posX, posY, posX + cellWidth, posY + cellWidth);
-					g.drawLine(posX, posY + cellWidth, posX + cellWidth, posY);
+					g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
+					g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
 				}
 				else
 				{
 					g.setColor(Color.LIGHT_GRAY);
-					g.fillRect(posX, posY, posX + cellWidth, posY + cellWidth);
+					g.fillRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 					g.setColor(Color.BLACK);
 				}
 				if (current.isOpen())
@@ -97,7 +96,7 @@ public class Board extends JPanel
 					if (current.getNumber() == 0)
 					{
 						//g.setFont(new Font());
-						g.drawString("0", (i*cellWidth + cellWidth/2)-3, (j*cellWidth + cellWidth/2)+5);
+						g.drawString("0", (i*CELL_WIDTH + CELL_WIDTH/2)-3, (j*CELL_WIDTH + CELL_WIDTH/2)+5);
 					}
 					else if (current.getNumber() == 1)
 					{
@@ -162,7 +161,7 @@ public class Board extends JPanel
 					}
 				}
 				g.setColor(Color.BLACK);
-				g.drawRect(posX, posY, posX + cellWidth, posY + cellWidth);
+				g.drawRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 			}
 		}
 	}
