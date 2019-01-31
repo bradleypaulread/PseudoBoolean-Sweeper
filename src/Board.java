@@ -4,6 +4,9 @@
  * 
  * Created by Potrik
  * Last modified: 07.22.13
+ * 
+ * Heavily modified by Bradley Read
+ * Last modified: @date
  */
 
 import java.awt.Color;

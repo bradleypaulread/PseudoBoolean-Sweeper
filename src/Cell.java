@@ -3,15 +3,22 @@
  * 
  * Created by Potrik
  * Last modified: 07.22.13
+ * 
+ * Heavily modified by Bradley Read
+ * Last modified: @date
  */
  
 public class Cell
 {
-	private int x;
-	private int y;
+	// ID of cell (cell coordinates)
+	private int x, y;
+
+	// Surrounding mines
+	private int number;
+
+	// Cell behaviour
 	private boolean flagged;
 	private boolean open;
-	private int number;
 	private boolean hint;
  
 	public Cell(int x, int y)
@@ -108,6 +115,9 @@ public class Cell
 		return number;
 	}
 	
+	/**
+	 * @return if number is -1 the cell is a mine
+	 */
 	public boolean isMine() {
 		return (number == -1);
 	}
@@ -124,6 +134,9 @@ public class Cell
 		hint = false;
 	}
 	
+	/**
+	 * @return If the cell has default values.
+	 */
 	public boolean isBlank() {
 		return !open && !flagged && !hint;
 	}
@@ -132,5 +145,12 @@ public class Cell
 	public String toString() {
 		return "Cell [Pos=[" + x + "," + y + "]" + " isMine=" + this.isMine() + ", isFlagged=" + flagged + ", isOpen=" + open + ", isHint=" + isHint() + ", number="
 				+ number + "]";
+	}
+
+	/**
+	 * Flag/Unflag cell.
+	 */
+	public void invertFlag() {
+		flagged = !flagged;
 	}
 }

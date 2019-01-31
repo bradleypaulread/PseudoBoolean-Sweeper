@@ -1,16 +1,18 @@
 
 /*
- * Board.java
+ * MouseAction.java
  * 
  * Created by Potrik
  * Last modified: 07.22.13
+ * 
+ * Heavily modified by Bradley Read
+ * Last modified: @date
  */
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.List;
 
 public class MouseActions implements ActionListener, MouseListener {
 	private Minesweeper mine;
@@ -19,6 +21,9 @@ public class MouseActions implements ActionListener, MouseListener {
 		mine = m;
 	}
 
+	/**
+	 * When reset button is clicked, reset board and enable buttons.
+	 */
 	public void actionPerformed(ActionEvent e) {
 		mine.getHintBtn().setEnabled(true);
 		mine.getAssistBtn().setEnabled(true);
@@ -28,51 +33,38 @@ public class MouseActions implements ActionListener, MouseListener {
 	}
 
 	public void mouseClicked(MouseEvent e) {
+		// If mouse 1 is pressed
 		if (e.getButton() == MouseEvent.BUTTON1) {
-			if (e.getClickCount() == 2) {	// Double click, clear all neighbours around selected cell
-				for(int i=(e.getX()/20)-1;i<=(e.getX()/20)+1;++i){
-					for(int j=(e.getY()/20)-1;j<=(e.getY()/20)+1;++j){
-						if (mine.is_good(i, j)) mine.select(i, j);
-					}
-				}
-			} else {
-				int x = e.getX() / 20;
-				int y = e.getY() / 20;
-				if (mine.is_good(x,  y)) {
-					mine.select(x, y);
-				}
-			}
-		}
-
-		if (e.getButton() == MouseEvent.BUTTON3) {
 			int x = e.getX() / 20;
 			int y = e.getY() / 20;
-			
-			mine.mark(x, y);
-			List<Cell> hintCells = mine.getHintCells();
-			for (Cell c : hintCells) {
-				c.resetHint();
+			if (e.getClickCount() == 2) { // Double click, clear all neighbours around selected cell
+				for (Cell c : mine.getNeighbours(x, y)) {
+					mine.select(c.getX(), c.getY());
+				}
+			} else if (mine.is_good(x, y) && mine.getCell(x, y).isClosed()) {
+				mine.select(x, y);
 			}
-			hintCells.clear();
+		} else if (e.getButton() == MouseEvent.BUTTON3) { // If mouse 2 is pressed
+			int x = e.getX() / 20;
+			int y = e.getY() / 20;
+
+			if (mine.is_good(x, y) && mine.getCell(x, y).isClosed()) {
+				mine.getCell(x, y).invertFlag();
+			}
 		}
 
 		mine.refresh();
 	}
 
 	public void mouseEntered(MouseEvent e) {
-
 	}
 
 	public void mouseExited(MouseEvent e) {
-
 	}
 
 	public void mousePressed(MouseEvent e) {
-
 	}
 
 	public void mouseReleased(MouseEvent e) {
-
 	}
-
 }
