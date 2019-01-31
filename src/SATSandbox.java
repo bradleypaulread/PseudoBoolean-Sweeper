@@ -39,7 +39,7 @@ public class SATSandbox {
 //		} catch (TimeoutException e) {
 //			System.out.println("Timeout, sorry!");
 //		}
-
+		
 		DimacToList d = new DimacToList("src/queens16.cnf");
 
 			final int MAXVAR = d.getMAX_VARS();
