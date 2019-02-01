@@ -97,15 +97,14 @@ public class Board extends JPanel {
 					drawCell(g, posX, posY);
 					drawCellNumber(current.getNumber(), g, i, j);
 				}
-				// Draw grid
-				// g.setColor(Color.BLACK);
-				// g.drawRect(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 			}
 		}
 		g.setColor(Color.BLACK);
+		// Draw Vertical grid lines
 		for (int i = 0; i < game.gety() + 1; ++i) {
 			g.drawLine(0, i * CELL_WIDTH, game.getx() * CELL_WIDTH, i * CELL_WIDTH);
 		}
+		// Draw Horizontal grid lines
 		for (int i = 0; i < game.getx() + 1; ++i) {
 			g.drawLine(i * CELL_WIDTH, 0, i * CELL_WIDTH, game.gety() * CELL_WIDTH);
 		}
@@ -142,14 +141,11 @@ public class Board extends JPanel {
 		case 8: // Black
 			g.setColor(new Color(0, 0, 0));
 			break;
-		default: // Black
-			g.setColor(new Color(0, 0, 0));
-			break;
+		default: // Dont do anything for other numbers (including 0)
+			return;
 		}
-		if (num != 0) {
-			g.drawString(Integer.toString(num), (i * CELL_WIDTH + CELL_WIDTH / 2) - 6,
-					(j * CELL_WIDTH + CELL_WIDTH / 2) + 8);
-		}
+		g.drawString(Integer.toString(num), (i * CELL_WIDTH + CELL_WIDTH / 2) - 6,
+				(j * CELL_WIDTH + CELL_WIDTH / 2) + 8);
 	}
 
 }

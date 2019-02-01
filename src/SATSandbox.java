@@ -29,18 +29,15 @@ public class SATSandbox {
 //				System.out.println("Unsatisfiable !");
 //			}
 //		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
 //		} catch (ParseFormatException e) {
-//			// TODO Auto-generated catch block
 //		} catch (IOException e) {
-//			// TODO Auto-generated catch block
 //		} catch (ContradictionException e) {
 //			System.out.println("Unsatisfiable (trivial)!");
 //		} catch (TimeoutException e) {
 //			System.out.println("Timeout, sorry!");
 //		}
 		
-		DimacToList d = new DimacToList("src/queens16.cnf");
+		DimacToList d = new DimacToList("resources/queens16.cnf");
 
 			final int MAXVAR = d.getMAX_VARS();
 			final int NBCLAUSES = d.getMAX_CLAUSES();
@@ -75,7 +72,6 @@ public class SATSandbox {
 			if (problem.isSatisfiable()) {
 				System.out.println("SATISFIABLE!");
 				int r = 1;
-				System.out.println(problem.model().length);
 				for (int l : problem.model()) {
 					if (r++%20 == 0) System.out.println();
 					System.out.print(l + ", ");

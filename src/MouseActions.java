@@ -18,7 +18,6 @@ public class MouseActions implements ActionListener, MouseListener {
 	private Minesweeper mine;
 	private Board board;
 
-
 	public MouseActions(Minesweeper m, Board b) {
 		mine = m;
 		board = b;
@@ -40,22 +39,32 @@ public class MouseActions implements ActionListener, MouseListener {
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			int x = e.getX() / board.getCellWidth();
 			int y = e.getY() / board.getCellWidth();
-			if (e.getClickCount() == 2) { // Double click, clear all neighbours around selected cell
-				for (Cell c : mine.getNeighbours(x, y)) {
-					mine.select(c.getX(), c.getY());
+			if (mine.is_good(x, y)) {
+				if (e.getClickCount() == 2) { // Double click, clear all neighbours around selected cell
+					for (Cell c : mine.getNeighbours(x, y)) {
+						if (c.isClosed()) {
+							mine.select(c.getX(), c.getY());
+						}
+					}
+				} else if (mine.getCell(x, y).isClosed()){
+					mine.select(x, y);
 				}
-			} else if (mine.is_good(x, y) && mine.getCell(x, y).isClosed()) {
-				mine.select(x, y);
+				mine.refresh();
 			}
 		} else if (e.getButton() == MouseEvent.BUTTON3) { // If mouse 2 is pressed
 			int x = e.getX() / board.getCellWidth();
 			int y = e.getY() / board.getCellWidth();
 
 			if (mine.is_good(x, y) && mine.getCell(x, y).isClosed()) {
+				if (!mine.getCell(x, y).isFlagged()) {
+					mine.decrementMines();
+				} else {
+					mine.incrementMines();
+				}
 				mine.getCell(x, y).invertFlag();
 			}
+			mine.refresh();
 		}
-		mine.refresh();
 	}
 
 	public void mouseEntered(MouseEvent e) {
