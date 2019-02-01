@@ -76,7 +76,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		// this.setLocationRelativeTo(null); //center JFrame
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setResizable(false);
+		setResizable(true);
 		pack();
 		setVisible(true);
 	}
@@ -98,7 +98,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		// this.setLocationRelativeTo(null); //center JFrame
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setResizable(false);
+		setResizable(true);
 		pack();
 		setVisible(true);
 	}
@@ -126,7 +126,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		icons.add(img4);
 		this.setIconImages(icons);
 		
-		resetBtn.addActionListener(new MouseActions(this));
+		resetBtn.addActionListener(new MouseActions(this, board));
 
 		hintBtn.addActionListener(new ActionListener() {
 			@Override
