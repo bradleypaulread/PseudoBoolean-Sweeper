@@ -9,12 +9,10 @@
  * Last modified: @date
  */
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-public class MouseActions implements ActionListener, MouseListener {
+public class MouseActions implements MouseListener {
 	private Minesweeper mine;
 	private Board board;
 
@@ -23,19 +21,8 @@ public class MouseActions implements ActionListener, MouseListener {
 		board = b;
 	}
 
-	/**
-	 * When reset button is clicked, reset board and enable buttons.
-	 */
-	public void actionPerformed(ActionEvent e) {
-		mine.getHintBtn().setEnabled(true);
-		mine.getAssistBtn().setEnabled(true);
-		mine.getAutoBtn().setEnabled(true);
-		mine.reset();
-		mine.refresh();
-	}
-
 	public void mouseClicked(MouseEvent e) {
-		// If mouse 1 is pressed
+		// // If mouse 1 is pressed
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			int x = e.getX() / board.getCellWidth();
 			int y = e.getY() / board.getCellWidth();
@@ -46,7 +33,24 @@ public class MouseActions implements ActionListener, MouseListener {
 							mine.select(c.getX(), c.getY());
 						}
 					}
-				} else if (mine.getCell(x, y).isClosed()){
+				}
+			}
+		}
+	}
+
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	public void mouseExited(MouseEvent e) {
+	}
+
+	public void mousePressed(MouseEvent e) {
+		// If mouse 1 is pressed
+		if (e.getButton() == MouseEvent.BUTTON1) {
+			int x = e.getX() / board.getCellWidth();
+			int y = e.getY() / board.getCellWidth();
+			if (mine.is_good(x, y)) {
+				if (mine.getCell(x, y).isClosed()) {
 					mine.select(x, y);
 				}
 				mine.refresh();
@@ -65,15 +69,6 @@ public class MouseActions implements ActionListener, MouseListener {
 			}
 			mine.refresh();
 		}
-	}
-
-	public void mouseEntered(MouseEvent e) {
-	}
-
-	public void mouseExited(MouseEvent e) {
-	}
-
-	public void mousePressed(MouseEvent e) {
 	}
 
 	public void mouseReleased(MouseEvent e) {

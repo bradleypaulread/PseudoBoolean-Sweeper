@@ -110,11 +110,17 @@ public class Board extends JPanel {
 		}
 	}
 
-	private void drawCell(Graphics g, int posX, int posY) {
-		g.fillRect(posX, posY, CELL_WIDTH, CELL_WIDTH);
+	private void drawCell(Graphics g, int x, int y) {
+		g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
+		if (game.getDebug()) {
+			g.setFont(new Font("", Font.BOLD, (int) (CELL_WIDTH / 3)));
+			g.setColor(Color.BLACK);
+			g.drawString("" + (x / CELL_WIDTH) + "," + (y / CELL_WIDTH), x + 1, y + 13);
+			game.refresh();
+		}
 	}
 
-	private void drawCellNumber(int num, Graphics g, int i, int j) {
+	private void drawCellNumber(int num, Graphics g, int x, int y) {
 		g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 1.5)));
 		switch (num) {
 		case 1: // Blue
@@ -144,8 +150,8 @@ public class Board extends JPanel {
 		default: // Dont do anything for other numbers (including 0)
 			return;
 		}
-		g.drawString(Integer.toString(num), (i * CELL_WIDTH + CELL_WIDTH / 2) - 6,
-				(j * CELL_WIDTH + CELL_WIDTH / 2) + 8);
+		g.drawString(Integer.toString(num), (x * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
+				(y * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
 	}
 
 }
