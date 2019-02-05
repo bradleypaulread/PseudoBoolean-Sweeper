@@ -31,6 +31,9 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.TimeoutException;
+
 public class Minesweeper extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 
@@ -42,6 +45,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private JButton assistBtn = new JButton("Assist");
 	private JButton autoBtn = new JButton("Auto");
 	private JButton hintBtn = new JButton("Hint");
+	private JButton SATSolveBtn = new JButton("SAT Solve");
 	private JLabel movesLbl = new JLabel();
 	private JLabel minesLbl = new JLabel();
 	private JCheckBoxMenuItem debugCb = new JCheckBoxMenuItem("Debug Output");
@@ -62,6 +66,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private int moves = 0; // Number if moves made by the player.
 	private int minesLeft;
 
+	private Minesweeper test;
+	
 	public Minesweeper(int x, int y, double d) {
 		// Cast number of mines down to integer value
 		setup(x, y, (int) ((x * y) * d));
@@ -76,7 +82,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		height = y;
 		noOfMines = d;
 		minesLeft = d;
-
+		
 		// Load interface components
 		board = new Board(this, x, y);
 		loadButtons();
@@ -92,6 +98,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		setResizable(false);
 		pack();
 		setVisible(true);
+		test = this;
 	}
 
 	/**
@@ -110,6 +117,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		minesLbl.setText(Integer.toString(minesLeft));
 
 		buttons.setLayout(new FlowLayout());
+		buttons.add(SATSolveBtn);
 		buttons.add(autoBtn);
 		buttons.add(assistBtn);
 		buttons.add(hintBtn);
@@ -159,6 +167,26 @@ public class Minesweeper extends JFrame implements ActionListener {
 				// Perform the assist action until no more safe moves exist
 				while (assist())
 					;
+			}
+		});
+		
+		SATSolveBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				/*BoardSolver pb;
+				try {
+					while ((pb = new BoardSolver(test)).solve());
+				} catch (ContradictionException | TimeoutException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}*/
+				
+				try {
+					new BoardSolver(test).solve();
+				} catch (ContradictionException | TimeoutException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		});
 	}
@@ -445,6 +473,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				cells[i][j] = new Cell(i, j);
 			}
 		}
+		test = this;
 		refresh();
 	}
 
@@ -559,7 +588,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 * @return List of all open cells.
 	 */
 	@SuppressWarnings("unused")
-	private List<Cell> getAllOpenCells() {
+	public List<Cell> getAllOpenCells() {
 		List<Cell> cells = new ArrayList<Cell>();
 		for (Cell[] col : this.cells) {
 			for (Cell c : col) {

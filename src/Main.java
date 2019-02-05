@@ -14,8 +14,8 @@ public class Main
 {
 	public static void main (String[] args) throws IOException
 	{
-		int x = 11;		// Width of the board
-		int y = 11;		// Height of the board
+		int x = 10;		// Width of the board
+		int y = 10;		// Height of the board
 		double d = 0.2;	// The difficulty of the game (percent of cells that are mines)
 		int mines = 13;	// Integer number of mines on the board
 		assert d >= 0.00 && d < 1.00 && mines >= 0 && mines < (x*y);
