@@ -65,15 +65,15 @@ public class PBtest {
         two[3][2].setNumber(1);
         two[3][2].open();
 
-        try {
-            BoardSolver b = new BoardSolver();
-
-            Map<Cell, Integer> result = b.solve(two);
-
-            System.out.println(result);
-
-        } catch (ContradictionException | TimeoutException e1) {
-        }
+//        try {
+//            BoardSolver b = new BoardSolver();
+//
+//            Map<Cell, Integer> result = b.solve(two);
+//
+//            System.out.println(result);
+//
+//        } catch (ContradictionException | TimeoutException e1) {
+//        }
     }
 
 }

@@ -21,7 +21,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.*;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -68,7 +67,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private int moves = 0; // Number if moves made by the player.
 	private int minesLeft;
 
-	private Minesweeper test;
+	private BoardSolver solver;
 
 	public Minesweeper(int x, int y, double d) {
 		// Cast number of mines down to integer value
@@ -100,7 +99,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 		setResizable(false);
 		pack();
 		setVisible(true);
-		test = this;
+
+		solver = new BoardSolver(this);
 	}
 
 	/**
@@ -182,8 +182,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				 */
 
 				try {
-					BoardSolver b = new BoardSolver();
-					Map<Cell, Integer> result = b.solve(cells);
+					Map<Cell, Integer> result = solver.solve();
 
 					for (Map.Entry<Cell, Integer> entry : result.entrySet()) {
 						Cell key = entry.getKey();
@@ -191,12 +190,12 @@ public class Minesweeper extends JFrame implements ActionListener {
 						if (mine && !key.isFlagged()) {
 							key.flag();
 							decrementMines();
-						}// else {
-							//select(key.getX(), key.getY());
-						//}
+						} // else {
+							// select(key.getX(), key.getY());
+							// }
 					}
 					refresh();
-					//while(assist());
+					// while(assist());
 
 				} catch (ContradictionException | TimeoutException e1) {
 					// TODO Auto-generated catch block
@@ -336,7 +335,18 @@ public class Minesweeper extends JFrame implements ActionListener {
 			for (int j = 0; j < height; ++j) {
 				if (is_good(i, j)) {
 					Cell current = cells[i][j];
-					if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
+					if (current.isOpen() && current.getNumber() != 0
+							&& current.getNumber() == calcFlaggedNeighbours(i, j)) {
+						List<Cell> n = getNeighbours(current); // List of neighbours
+						for (int k = 0; k < n.size(); ++k) {
+							// If the cell has not been affected by the user (is
+							// blank of behaviour)
+							if (n.get(k).isClosed() && !n.get(k).isFlagged()) {
+								select(n.get(k).getX(), n.get(k).getY());
+								return true;
+							}
+						}
+					} else if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
 							&& current.getNumber() != calcFlaggedNeighbours(i, j)) {
 						List<Cell> n = getNeighbours(current); // List of neighbouring cells
 						for (Cell c : n) {
@@ -351,7 +361,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
-
+		/*
 		// Find cells that have N surrounding mines but N flagged neighbours
 		for (int i = 0; i < width; ++i) {
 			for (int j = 0; j < height; ++j) {
@@ -373,7 +383,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 					}
 				}
 			}
-		}
+		}*/
 		if (!isGameOver) {
 			JOptionPane.showMessageDialog(null, "No known safe moves.");
 		}
@@ -391,8 +401,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 * Called when a cell is wished to be cleared. Will not affect flagged cells.
 	 * Clears hint cells and
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 */
 	public void select(int x, int y) {
 		// Dont perform any behaviour if cell is flagged or game is over
@@ -486,8 +498,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 				cells[i][j] = new Cell(i, j);
 			}
 		}
-		test = this;
 		refresh();
+		solver = new BoardSolver(this);
 	}
 
 	/**
@@ -535,8 +547,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	private int calcClosedNeighbours(int x, int y) {
@@ -554,8 +568,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	private int calcFlaggedNeighbours(int x, int y) {
@@ -573,8 +589,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Return the neighbouring cells of a cell (includes diagonal).
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 * @return List of neighbouring cells (excluding the specified cell).
 	 */
 	public List<Cell> getNeighbours(int x, int y) {
@@ -614,8 +632,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Print information about a cell to console.
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 */
 	private void debug(int x, int y) {
 		System.out.println("=======================");

@@ -22,88 +22,37 @@ public class BoardSolver {
 	private Minesweeper game;
 	private Cell[][] cells;
 
-	public BoardSolver() {
-		pbSolver = SolverFactory.newDefault();
-	}
-
 	public BoardSolver(Minesweeper game) {
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
 	}
 
-	public boolean solve() throws ContradictionException, TimeoutException {
-		// Update cell array
+	public Map<Cell, Integer> solve() throws ContradictionException, TimeoutException {
 		cells = game.getCells();
-
-		List<Cell> openCells = game.getAllOpenCells();
-		// For every open cell
-		for (Cell sourceCell : openCells) {
-			IVecInt lits = new VecInt();
-			IVec<BigInteger> coeffs = new Vec<BigInteger>();
-
-			List<Cell> neighbours = game.getNeighbours(sourceCell.getX(), sourceCell.getY());
-			// For every neighbouring closed cell create Pseudo Boolean Constraint (PBC)
-			for (Cell c : neighbours) {
-				if (c.isClosed()) {
-					lits.push(Integer.parseInt("1" + c.getX() + c.getY()));
-					coeffs.push(BigInteger.ONE);
-				}
-			}
-			pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(sourceCell.getNumber()));
-		}
-
-		OptToPBSATAdapter optimizer = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
-		if (optimizer.isSatisfiable()) {
-
-			System.out.println("SATISFIABLE!");
-			int[] model = optimizer.model();
-			// lits.clear();
-			for (int i : model) {
-				String s = Integer.toString(i);
-				int x = Integer.parseInt(String.valueOf(s.charAt(s.length() - 2)));
-				int y = Integer.parseInt(String.valueOf(s.charAt(s.length() - 1)));
-
-				System.out.println(s);
-				if (i > 0 && cells[x][y].isClosed()) {
-					System.out.print("FLAG! - ");
-					cells[x][y].flag();
-				} else if (i < 0 && cells[x][y].isClosed()) {
-					System.out.print("SAFE! - ");
-					game.select(x, y);
-				}
-				System.out.println("[" + x + "," + y + "]");
-
-				// lits.push(i*-1);
-			}
-			// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(2));
-			// optimizer = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-			System.out.println("\n");
-			return true;
-		}
-		if (!optimizer.isSatisfiable()) {
-			return false;
-		}
-		return false;
-	}
-
-	public Map<Cell, Integer> solve(Cell[][] board) throws ContradictionException, TimeoutException {
+		pbSolver = SolverFactory.newDefault();
 		Map<Cell, Integer> knownCells = new HashMap<Cell, Integer>();
 
-		for (int i = 0; i < board.length; i++) {
-			for (int j = 0; j < board[i].length; j++) {
-				Cell current = board[i][j];
+		for (int i = 0; i < cells.length; i++) {
+			for (int j = 0; j < cells[i].length; j++) {
+				Cell current = cells[i][j];
 				if (current.isOpen()) {
-					List<Cell> neighbours = getNeighbours(board, i, j);
+					List<Cell> neighbours = getNeighbours(cells, i, j);
 					IVecInt lits = new VecInt();
 					IVec<BigInteger> coeffs = new Vec<BigInteger>();
-					for (Cell c : neighbours) {
-						lits.push((c.getY() * board.length + c.getX())+1);
+					
+					if (current.getNumber() == 0) {
+						lits.push(encodeCellId(current, cells));
 						coeffs.push(BigInteger.ONE);
-						// id = y * WIDTH + x;
+						pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+						lits.clear();
+						coeffs.clear();
 					}
-					//int num = current.isClosed() ? 8 : current.getNumber();
+					
+					for (Cell c : neighbours) {
+						lits.push(encodeCellId(c, cells));
+						coeffs.push(BigInteger.ONE);
+					}
 					pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 				}
 			}
@@ -114,12 +63,9 @@ public class BoardSolver {
 		if (optimiser.isSatisfiable()) {
 			System.out.println("SAT!");
 			for (int i : optimiser.model()) {
-				int num = i < 0 ? i * -1 : i;
 				int sign = i < 0 ? -1 : 1;
-				int x = (num-1) % board.length;
-				int y = ((num-1) - x) / board.length;
-				System.out.println("" + x + "," + y);
-				knownCells.put(board[x][y], sign);
+				
+				knownCells.put(decodeCellId(i, cells), sign);
 			}
 		} else {
 			System.out.println("NOT SAT!");
@@ -137,6 +83,31 @@ public class BoardSolver {
 			}
 		}
 		return neighbours;
+	}
+	
+	/**
+	 * When passed a cell and a board, create a unique identifier (a single integer) for that cell.
+	 * 
+	 * @param c Cell to encode.
+	 * @param board Board the cell is present in, used to get the width of the board.
+	 * @return Unique integer identifier for given cell.
+	 */
+	private int encodeCellId(Cell c, Cell[][] board) {
+		return (c.getY() * board.length + c.getX()) + 1;
+	}
+	
+	/**
+	 * When passed an identity, decode and return the cell it is referring to.
+	 * 
+	 * @param id Unique encoded identity id.
+	 * @param board Board the cell would be present in, used to get the width of the board.
+	 * @return Cell that the id refers to.
+	 */
+	private Cell decodeCellId(int id, Cell[][] board) {
+		int posId = id < 0 ? id * -1 : id;
+		int x = (posId - 1) % board.length;
+		int y = ((posId - 1) - x) / board.length;
+		return board[x][y];
 	}
 
 }
