@@ -20,6 +20,8 @@ import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.*;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -67,7 +69,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private int minesLeft;
 
 	private Minesweeper test;
-	
+
 	public Minesweeper(int x, int y, double d) {
 		// Cast number of mines down to integer value
 		setup(x, y, (int) ((x * y) * d));
@@ -82,7 +84,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		height = y;
 		noOfMines = d;
 		minesLeft = d;
-		
+
 		// Load interface components
 		board = new Board(this, x, y);
 		loadButtons();
@@ -169,20 +171,33 @@ public class Minesweeper extends JFrame implements ActionListener {
 					;
 			}
 		});
-		
+
 		SATSolveBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				/*BoardSolver pb;
+				/*
+				 * BoardSolver pb; try { while ((pb = new BoardSolver(test)).solve()); } catch
+				 * (ContradictionException | TimeoutException e1) { // TODO Auto-generated catch
+				 * block e1.printStackTrace(); }
+				 */
+
 				try {
-					while ((pb = new BoardSolver(test)).solve());
-				} catch (ContradictionException | TimeoutException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}*/
-				
-				try {
-					new BoardSolver(test).solve();
+					BoardSolver b = new BoardSolver();
+					Map<Cell, Integer> result = b.solve(cells);
+
+					for (Map.Entry<Cell, Integer> entry : result.entrySet()) {
+						Cell key = entry.getKey();
+						boolean mine = entry.getValue() == 1;
+						if (mine && !key.isFlagged()) {
+							key.flag();
+							decrementMines();
+						}// else {
+							//select(key.getX(), key.getY());
+						//}
+					}
+					refresh();
+					//while(assist());
+
 				} catch (ContradictionException | TimeoutException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -376,10 +391,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 * Called when a cell is wished to be cleared. Will not affect flagged cells.
 	 * Clears hint cells and
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 */
 	public void select(int x, int y) {
 		// Dont perform any behaviour if cell is flagged or game is over
@@ -522,10 +535,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	private int calcClosedNeighbours(int x, int y) {
@@ -543,10 +554,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	private int calcFlaggedNeighbours(int x, int y) {
@@ -564,10 +573,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Return the neighbouring cells of a cell (includes diagonal).
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return List of neighbouring cells (excluding the specified cell).
 	 */
 	public List<Cell> getNeighbours(int x, int y) {
@@ -607,10 +614,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Print information about a cell to console.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 */
 	private void debug(int x, int y) {
 		System.out.println("=======================");
@@ -703,6 +708,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 	public boolean getDebug() {
 		return debug;
+	}
+
+	public int getMinesLeft() {
+		return minesLeft;
 	}
 
 	@Override

@@ -141,10 +141,15 @@ public class Cell
 		return !open && !flagged && !hint;
 	}
 
+	// @Override
+	// public String toString() {
+	// 	return "Cell [Pos=[" + x + "," + y + "]" + " isMine=" + this.isMine() + ", isFlagged=" + flagged + ", isOpen=" + open + ", isHint=" + isHint() + ", number="
+	// 			+ number + "]";
+	// }
+
 	@Override
 	public String toString() {
-		return "Cell [Pos=[" + x + "," + y + "]" + " isMine=" + this.isMine() + ", isFlagged=" + flagged + ", isOpen=" + open + ", isHint=" + isHint() + ", number="
-				+ number + "]";
+		return "[" + x + "," + y + "]";
 	}
 
 	/**
