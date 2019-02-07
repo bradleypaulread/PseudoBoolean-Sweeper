@@ -697,11 +697,15 @@ public class Minesweeper extends JFrame implements ActionListener {
 	public int getx() {
 		return width;
 	}
-
+	
 	public int gety() {
 		return height;
 	}
 
+	public int getNoOfMines() {
+		return noOfMines;
+	}
+	
 	public Cell[][] getCells() {
 		return cells;
 	}

@@ -32,14 +32,25 @@ public class BoardSolver {
 		cells = game.getCells();
 		pbSolver = SolverFactory.newDefault();
 		Map<Cell, Integer> knownCells = new HashMap<Cell, Integer>();
-
+		IVecInt lits = new VecInt();
+		IVec<BigInteger> coeffs = new Vec<BigInteger>();
+		
+		for (int i = 0; i < cells.length; i++) {
+			for (int j = 0; j < cells[i].length; j++) {
+				lits.push(encodeCellId(cells[i][j], cells));
+				coeffs.push(BigInteger.ONE);
+			}
+		}
+		pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getNoOfMines()));
+		lits.clear();
+		coeffs.clear();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
 				if (current.isOpen()) {
 					List<Cell> neighbours = getNeighbours(cells, i, j);
-					IVecInt lits = new VecInt();
-					IVec<BigInteger> coeffs = new Vec<BigInteger>();
+					lits.clear();
+					coeffs.clear();
 					
 					if (current.getNumber() == 0) {
 						lits.push(encodeCellId(current, cells));
