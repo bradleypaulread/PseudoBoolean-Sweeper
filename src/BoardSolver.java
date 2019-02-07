@@ -28,13 +28,13 @@ public class BoardSolver {
 		cells = game.getCells();
 	}
 
-	public Map<Cell, Integer> solve() throws ContradictionException, TimeoutException {
+	public List<HashMap<Cell, Integer>> solveMines() throws ContradictionException, TimeoutException {
 		cells = game.getCells();
 		pbSolver = SolverFactory.newDefault();
-		Map<Cell, Integer> knownCells = new HashMap<Cell, Integer>();
+		List<HashMap<Cell, Integer>> allSolutions = new ArrayList<HashMap<Cell, Integer>>();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
-		
+
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				lits.push(encodeCellId(cells[i][j], cells));
@@ -51,38 +51,64 @@ public class BoardSolver {
 					List<Cell> neighbours = getNeighbours(cells, i, j);
 					lits.clear();
 					coeffs.clear();
+
+					// Every open cell is guaranteed to not be a mine
+					lits.push(encodeCellId(current, cells));
+					coeffs.push(BigInteger.ONE);
+					pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
 					
-					if (current.getNumber() == 0) {
-						lits.push(encodeCellId(current, cells));
-						coeffs.push(BigInteger.ONE);
+					lits.clear();
+					coeffs.clear();
+					if (game.calcClosedNeighbours(current.getX(), current.getY()) == current.getNumber()) {
+						for (Cell c : neighbours) {
+							if (c.isClosed()) {
+								lits.push(encodeCellId(c, cells));
+								coeffs.push(BigInteger.ONE);
+								pbSolver.addExactly(lits, coeffs, BigInteger.ONE);
+								lits.clear();
+								coeffs.clear();
+							}
+						}
+					} else {
+						for (Cell c : neighbours) {
+							lits.push(encodeCellId(c, cells));
+							coeffs.push(BigInteger.ONE);
+						}
 						pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 						lits.clear();
 						coeffs.clear();
 					}
-					
-					for (Cell c : neighbours) {
-						lits.push(encodeCellId(c, cells));
-						coeffs.push(BigInteger.ONE);
-					}
-					pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 				}
 			}
 		}
 
-		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
-		if (optimiser.isSatisfiable()) {
+		//OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+		
+		
+		while (pbSolver.isSatisfiable()) {
 			System.out.println("SAT!");
-			for (int i : optimiser.model()) {
+			HashMap<Cell, Integer> knownCells  = new HashMap<Cell, Integer>();
+			int[] model = pbSolver.model();
+			for (int i : model) {
 				int sign = i < 0 ? -1 : 1;
-				
 				knownCells.put(decodeCellId(i, cells), sign);
+				//System.out.print("" + sign + decodeCellId(i, cells) + ", ");
 			}
-		} else {
-			System.out.println("NOT SAT!");
+			//System.out.println("\n");
+			allSolutions.add(knownCells);
+			// Find another solution
+			for (int i = 0; i < model.length; i++) {
+				model[i] = model[i]*-1;
+			}
+			IVecInt block = new VecInt(model);
+			
+			pbSolver.addBlockingClause(block);
+			//optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 		}
-		return knownCells;
+		System.out.println("NOT SAT!");
+		return allSolutions;
 	}
+	
 
 	public List<Cell> getNeighbours(Cell[][] board, int x, int y) {
 		List<Cell> neighbours = new ArrayList<Cell>();
@@ -95,23 +121,30 @@ public class BoardSolver {
 		}
 		return neighbours;
 	}
-	
+
 	/**
-	 * When passed a cell and a board, create a unique identifier (a single integer) for that cell.
+	 * When passed a cell and a board, create a unique identifier (a single
+	 * integer) for that cell.
 	 * 
-	 * @param c Cell to encode.
-	 * @param board Board the cell is present in, used to get the width of the board.
+	 * @param c
+	 *            Cell to encode.
+	 * @param board
+	 *            Board the cell is present in, used to get the width of the
+	 *            board.
 	 * @return Unique integer identifier for given cell.
 	 */
 	private int encodeCellId(Cell c, Cell[][] board) {
 		return (c.getY() * board.length + c.getX()) + 1;
 	}
-	
+
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id Unique encoded identity id.
-	 * @param board Board the cell would be present in, used to get the width of the board.
+	 * @param id
+	 *            Unique encoded identity id.
+	 * @param board
+	 *            Board the cell would be present in, used to get the width of
+	 *            the board.
 	 * @return Cell that the id refers to.
 	 */
 	private Cell decodeCellId(int id, Cell[][] board) {
