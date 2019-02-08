@@ -17,13 +17,10 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -33,7 +30,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
-
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.TimeoutException;
 
@@ -201,7 +197,6 @@ public class Minesweeper extends JFrame implements ActionListener {
 						}
 						refresh();
 				} catch (ContradictionException | TimeoutException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 
@@ -358,18 +353,18 @@ public class Minesweeper extends JFrame implements ActionListener {
 																// cells
 						for (Cell c : n) {
 							if (c.isClosed() && !c.isFlagged()) {
-								//c.flag();
-								//decrementMines();
+								c.flag();
+								decrementMines();
 							}
 						}
 						refresh();
-						//return true;
+						return true;
 					}
 				}
 			}
 		}
 		if (!isGameOver) {
-			//JOptionPane.showMessageDialog(null, "No known safe moves.");
+			JOptionPane.showMessageDialog(null, "No known safe moves.");
 		}
 		return false;
 	}
@@ -428,7 +423,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
 			System.out.println("LOST ON CELL " + cells[x][y]);
 			endGame();
-			// JOptionPane.showMessageDialog(null, " BOOOOM!");
+			JOptionPane.showMessageDialog(null, " BOOOOM!");
 			return;
 		}
 
