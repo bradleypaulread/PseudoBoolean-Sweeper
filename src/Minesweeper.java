@@ -176,29 +176,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 			public void actionPerformed(ActionEvent e) {
 
 				// 1 means minr/flag
-				try {
-					List<HashMap<Cell, Integer>> allSolutions = solver.solveMines();
-						HashMap<Cell, Integer> map = allSolutions.get(0);
-
-						for (Cell cell : map.keySet()) {
-							if (map.get(cell) == 1) {
-								boolean mine = true;
-								for (int i = 1; i < allSolutions.size(); i++) {
-									if (allSolutions.get(i).get(cell) != 1) {
-										mine = false;
-										break;
-									}
-								}
-								if (mine && !cell.isFlagged()) {
-									cell.flag();
-									decrementMines();
-								}
-							} 
-						}
-						refresh();
-				} catch (ContradictionException | TimeoutException e1) {
-					e1.printStackTrace();
-				}
+				SATSolve();
 
 			}
 		});
@@ -319,6 +297,34 @@ public class Minesweeper extends JFrame implements ActionListener {
 		return false;
 	}
 
+	private boolean SATSolve() {
+		boolean change = false;
+		try {
+			List<HashMap<Cell, Integer>> allSolutions = solver.solveMines();
+			HashMap<Cell, Integer> map = allSolutions.get(0);
+			for (Cell cell : map.keySet()) {
+				if (map.get(cell) == 1) {
+					boolean mine = true;
+					for (int i = 1; i < allSolutions.size(); i++) {
+						if (allSolutions.get(i).get(cell) != 1) {
+							mine = false;
+							break;
+						}
+					}
+					if (mine && !cell.isFlagged()) {
+						cell.flag();
+						decrementMines();
+						change = true;
+					}
+				}
+			}
+			refresh();
+		} catch (ContradictionException | TimeoutException e1) {
+			e1.printStackTrace();
+		}
+		return change;
+	}
+
 	/**
 	 * Search the board for a cell that is not a mine and cells that are
 	 * guaranteed to be a mine. When "safe" cell found, selected it and return
@@ -363,6 +369,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 				}
 			}
 		}
+		if (SATSolve()) {
+			return true;
+		}
+
 		if (!isGameOver) {
 			JOptionPane.showMessageDialog(null, "No known safe moves.");
 		}
@@ -473,7 +483,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		autoBtn.setEnabled(true);
 		SATSolveBtn.setEnabled(true);
 		minesLeft = noOfMines;
-		minesLbl.setText(Integer.toString(minesLeft));
+		minesLbl.setText("Mines Left: " + Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
 		cells = new Cell[width][height];
 
