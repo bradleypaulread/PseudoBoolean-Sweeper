@@ -179,36 +179,27 @@ public class Minesweeper extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// 1 means flag
+				// 1 means minr/flag
 				try {
 					List<HashMap<Cell, Integer>> allSolutions = solver.solveMines();
-					if (allSolutions.size() > 0) {
 						HashMap<Cell, Integer> map = allSolutions.get(0);
 
 						for (Cell cell : map.keySet()) {
 							if (map.get(cell) == 1) {
 								boolean mine = true;
 								for (int i = 1; i < allSolutions.size(); i++) {
-									mine = allSolutions.get(i).get(cell) != 1 ? false : true;
-									break;
+									if (allSolutions.get(i).get(cell) != 1) {
+										mine = false;
+										break;
+									}
 								}
-								if (mine) {
+								if (mine && !cell.isFlagged()) {
 									cell.flag();
+									decrementMines();
 								}
 							} 
-							/*else if (map.get(cell) == -1) {
-								boolean safe = true;
-								for (int i = 1; i < allSolutions.size(); i++) {
-									safe = allSolutions.get(i).get(cell) != -1 ? false : true;
-									break;
-								}
-								if (safe) {
-									select(cell.getX(), cell.getY());
-								}
-							}*/
 						}
 						refresh();
-					}
 				} catch (ContradictionException | TimeoutException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -367,31 +358,18 @@ public class Minesweeper extends JFrame implements ActionListener {
 																// cells
 						for (Cell c : n) {
 							if (c.isClosed() && !c.isFlagged()) {
-								c.flag();
-								decrementMines();
+								//c.flag();
+								//decrementMines();
 							}
 						}
 						refresh();
-						return true;
+						//return true;
 					}
 				}
 			}
 		}
-		/*
-		 * // Find cells that have N surrounding mines but N flagged neighbours
-		 * for (int i = 0; i < width; ++i) { for (int j = 0; j < height; ++j) {
-		 * if (is_good(i, j)) { Cell current = cells[i][j]; // Only apply logic
-		 * to open cells with n surrounding mines // and n surrounding flags int
-		 * flagsNo = calcFlaggedNeighbours(i, j); if (current.isOpen() &&
-		 * current.getNumber() != 0 && current.getNumber() == flagsNo) {
-		 * List<Cell> n = getNeighbours(current); // List of neighbours for (int
-		 * k = 0; k < n.size(); ++k) { // If the cell has not been affected by
-		 * the user (is // blank of behaviour) if (n.get(k).isClosed() &&
-		 * !n.get(k).isFlagged()) { select(n.get(k).getX(), n.get(k).getY());
-		 * return true; } } } } } }
-		 */
 		if (!isGameOver) {
-			JOptionPane.showMessageDialog(null, "No known safe moves.");
+			//JOptionPane.showMessageDialog(null, "No known safe moves.");
 		}
 		return false;
 	}
@@ -480,6 +458,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		hintBtn.setEnabled(false);
 		assistBtn.setEnabled(false);
 		autoBtn.setEnabled(false);
+		SATSolveBtn.setEnabled(false);
 		try {
 			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
@@ -497,6 +476,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		hintBtn.setEnabled(true);
 		assistBtn.setEnabled(true);
 		autoBtn.setEnabled(true);
+		SATSolveBtn.setEnabled(true);
 		minesLeft = noOfMines;
 		minesLbl.setText(Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
