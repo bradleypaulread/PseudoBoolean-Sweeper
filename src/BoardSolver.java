@@ -34,17 +34,14 @@ public class BoardSolver {
 		List<HashMap<Cell, Integer>> allSolutions = new ArrayList<HashMap<Cell, Integer>>();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
-		int nopen = 0;
+
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				lits.push(encodeCellId(cells[i][j], cells));
 				coeffs.push(BigInteger.ONE);
-				if (cells[i][j].isOpen())
-					++nopen;
 			}
 		}
-		if (nopen > (((cells.length*cells[0].length))/3)*2) 
-			//pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getNoOfMines()));
+		pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getNoOfMines()));
 		lits.clear();
 		coeffs.clear();
 		for (int i = 0; i < cells.length; i++) {
@@ -59,7 +56,7 @@ public class BoardSolver {
 					lits.push(encodeCellId(current, cells));
 					coeffs.push(BigInteger.ONE);
 					pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
-
+					
 					lits.clear();
 					coeffs.clear();
 					if (game.calcClosedNeighbours(current.getX(), current.getY()) == current.getNumber()) {
@@ -85,31 +82,33 @@ public class BoardSolver {
 			}
 		}
 
-		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
+		//OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+		
+		
 		while (pbSolver.isSatisfiable()) {
-			//System.out.println("SAT!");
-			HashMap<Cell, Integer> knownCells = new HashMap<Cell, Integer>();
+			System.out.println("SAT!");
+			HashMap<Cell, Integer> knownCells  = new HashMap<Cell, Integer>();
 			int[] model = pbSolver.model();
 			for (int i : model) {
 				int sign = i < 0 ? -1 : 1;
 				knownCells.put(decodeCellId(i, cells), sign);
-				// System.out.print("" + sign + decodeCellId(i, cells) + ", ");
+				//System.out.print("" + sign + decodeCellId(i, cells) + ", ");
 			}
-			// System.out.println("\n");
+			//System.out.println("\n");
 			allSolutions.add(knownCells);
 			// Find another solution
 			for (int i = 0; i < model.length; i++) {
-				model[i] = model[i] * -1;
+				model[i] = model[i]*-1;
 			}
 			IVecInt block = new VecInt(model);
-
-			optimiser.addBlockingClause(block);
-			// optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+			
+			pbSolver.addBlockingClause(block);
+			//optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 		}
 		System.out.println("NOT SAT!");
 		return allSolutions;
 	}
+	
 
 	public List<Cell> getNeighbours(Cell[][] board, int x, int y) {
 		List<Cell> neighbours = new ArrayList<Cell>();
@@ -124,12 +123,14 @@ public class BoardSolver {
 	}
 
 	/**
-	 * When passed a cell and a board, create a unique identifier (a single integer)
-	 * for that cell.
+	 * When passed a cell and a board, create a unique identifier (a single
+	 * integer) for that cell.
 	 * 
-	 * @param c     Cell to encode.
-	 * @param board Board the cell is present in, used to get the width of the
-	 *              board.
+	 * @param c
+	 *            Cell to encode.
+	 * @param board
+	 *            Board the cell is present in, used to get the width of the
+	 *            board.
 	 * @return Unique integer identifier for given cell.
 	 */
 	private int encodeCellId(Cell c, Cell[][] board) {
@@ -139,9 +140,11 @@ public class BoardSolver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id    Unique encoded identity id.
-	 * @param board Board the cell would be present in, used to get the width of the
-	 *              board.
+	 * @param id
+	 *            Unique encoded identity id.
+	 * @param board
+	 *            Board the cell would be present in, used to get the width of
+	 *            the board.
 	 * @return Cell that the id refers to.
 	 */
 	private Cell decodeCellId(int id, Cell[][] board) {

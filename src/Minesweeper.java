@@ -179,23 +179,21 @@ public class Minesweeper extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// 1 means minr/flag
+				// 1 means flag
 				try {
 					List<HashMap<Cell, Integer>> allSolutions = solver.solveMines();
+					if (allSolutions.size() > 0) {
 						HashMap<Cell, Integer> map = allSolutions.get(0);
 
 						for (Cell cell : map.keySet()) {
 							if (map.get(cell) == 1) {
 								boolean mine = true;
 								for (int i = 1; i < allSolutions.size(); i++) {
-									if (allSolutions.get(i).get(cell) != 1) {
-										mine = false;
-										break;
-									}
+									mine = allSolutions.get(i).get(cell) != 1 ? false : true;
+									break;
 								}
-								if (mine && !cell.isFlagged()) {
+								if (mine) {
 									cell.flag();
-									decrementMines();
 								}
 							} 
 							/*else if (map.get(cell) == -1) {
@@ -210,6 +208,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 							}*/
 						}
 						refresh();
+					}
 				} catch (ContradictionException | TimeoutException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -368,12 +367,12 @@ public class Minesweeper extends JFrame implements ActionListener {
 																// cells
 						for (Cell c : n) {
 							if (c.isClosed() && !c.isFlagged()) {
-								//c.flag();
-								//decrementMines();
+								c.flag();
+								decrementMines();
 							}
 						}
 						refresh();
-						//return true;
+						return true;
 					}
 				}
 			}
