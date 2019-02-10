@@ -175,7 +175,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				// 1 means minr/flag
+				// 1 means mine/flag
 				SATSolve();
 
 			}
@@ -303,18 +303,26 @@ public class Minesweeper extends JFrame implements ActionListener {
 			List<HashMap<Cell, Integer>> allSolutions = solver.solveMines();
 			HashMap<Cell, Integer> map = allSolutions.get(0);
 			for (Cell cell : map.keySet()) {
-				if (map.get(cell) == 1) {
-					boolean mine = true;
+				if (map.containsKey(cell)) {
+					boolean known = true;
+					int sign = map.get(cell);
 					for (int i = 1; i < allSolutions.size(); i++) {
-						if (allSolutions.get(i).get(cell) != 1) {
-							mine = false;
+						if (allSolutions.get(i).get(cell) != sign) {
+							known = false;
 							break;
 						}
 					}
-					if (mine && !cell.isFlagged()) {
-						cell.flag();
-						decrementMines();
-						change = true;
+					if (known) {
+						if (sign > 0) {
+							if (cell.isClosed() && !cell.isFlagged()) {
+								cell.flag();
+								decrementMines();
+							}
+						} else {
+							if (cell.isBlank()) {
+								select(cell.getX(), cell.getY());
+							}
+						}
 					}
 				}
 			}
