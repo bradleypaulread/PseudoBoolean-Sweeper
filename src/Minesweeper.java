@@ -183,8 +183,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	/**
-	 * Load the File menu component options and add each option's action
-	 * listener code.
+	 * Load the File menu component options and add each option's action listener
+	 * code.
 	 */
 	private void loadFileMenu() {
 		menu.setMnemonic(KeyEvent.VK_A);
@@ -258,11 +258,11 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine. When such a cell is found
-	 * set its hint value to true. Results in its colour turning pink.
+	 * Search the board for a cell that is not a mine. When such a cell is found set
+	 * its hint value to true. Results in its colour turning pink.
 	 * 
-	 * @return if a non-mine cell was found. Will only return false if there are
-	 *         no cells left on the board that are considered "safe".
+	 * @return if a non-mine cell was found. Will only return false if there are no
+	 *         cells left on the board that are considered "safe".
 	 */
 	private boolean genHint() {
 		// Find cells that have N surrounding mines but N flagged neighbours
@@ -326,6 +326,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 					}
 				}
 			}
+			calcCellOdds(allSolutions);
 			refresh();
 		} catch (ContradictionException | TimeoutException e1) {
 			e1.printStackTrace();
@@ -334,14 +335,14 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine and cells that are
-	 * guaranteed to be a mine. When "safe" cell found, selected it and return
-	 * true; When a guaranteed mine found, set its flag value to true. Results
-	 * in its colour turning yellow.
+	 * Search the board for a cell that is not a mine and cells that are guaranteed
+	 * to be a mine. When "safe" cell found, selected it and return true; When a
+	 * guaranteed mine found, set its flag value to true. Results in its colour
+	 * turning yellow.
 	 * 
-	 * @return if either pattern was found. Will only return false if there are
-	 *         no cells left on the board that are considered "safe" and no
-	 *         cells that are guaranteed mines.
+	 * @return if either pattern was found. Will only return false if there are no
+	 *         cells left on the board that are considered "safe" and no cells that
+	 *         are guaranteed mines.
 	 */
 	private boolean assist() {
 		for (int i = 0; i < width; ++i) {
@@ -387,6 +388,26 @@ public class Minesweeper extends JFrame implements ActionListener {
 		return false;
 	}
 
+	private void calcCellOdds(List<HashMap<Cell, Integer>> data) {
+		HashMap<Cell, Integer> results = new HashMap<Cell, Integer>();
+		for (int i = 0; i < data.size(); i++) {
+			HashMap<Cell, Integer> map = data.get(i);
+			for (Cell cell : map.keySet()) {
+				if (map.containsKey(cell) && map.get(cell) == -1) {
+					if (!results.containsKey(cell)) {
+						results.put(cell, 1);
+					} else {
+						results.put(cell, results.get(cell)+1);
+					}
+				}
+			}
+		}
+		for (Cell cell : results.keySet()) {
+			double odd = (1/results.get(cell));
+			System.out.println("" + cell + " - " + odd);
+		}
+	}
+
 	/**
 	 * Redraw the board, updating all cells appearance and behaviour.
 	 */
@@ -395,13 +416,11 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	/**
-	 * Called when a cell is wished to be cleared. Will not affect flagged
-	 * cells. Clears hint cells and
+	 * Called when a cell is wished to be cleared. Will not affect flagged cells.
+	 * Clears hint cells and
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 */
 	public void select(int x, int y) {
 		// Dont perform any behaviour if cell is flagged or game is over
@@ -551,10 +570,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	public int calcClosedNeighbours(int x, int y) {
@@ -572,10 +589,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	public int calcFlaggedNeighbours(int x, int y) {
@@ -593,10 +608,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Return the neighbouring cells of a cell (includes diagonal).
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return List of neighbouring cells (excluding the specified cell).
 	 */
 	public List<Cell> getNeighbours(int x, int y) {
@@ -636,10 +649,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	/**
 	 * Print information about a cell to console.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 */
 	private void debug(int x, int y) {
 		System.out.println("=======================");
