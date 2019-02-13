@@ -19,7 +19,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -30,8 +29,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
-import org.sat4j.specs.ContradictionException;
-import org.sat4j.specs.TimeoutException;
 
 public class Minesweeper extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
@@ -151,14 +148,14 @@ public class Minesweeper extends JFrame implements ActionListener {
 		hintBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				genHint();
+				solver.genHint();
 			}
 		});
 
 		assistBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				assist();
+				solver.assist();
 			}
 		});
 
@@ -166,7 +163,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// Perform the assist action until no more safe moves exist
-				while (assist())
+				while (solver.assist())
 					;
 			}
 		});
@@ -174,10 +171,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 		SATSolveBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
 				// 1 means mine/flag
-				SATSolve();
-
+				solver.SATSolve();
 			}
 		});
 	}
@@ -258,161 +253,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine. When such a cell is found set
-	 * its hint value to true. Results in its colour turning pink.
-	 * 
-	 * @return if a non-mine cell was found. Will only return false if there are no
-	 *         cells left on the board that are considered "safe".
-	 */
-	private boolean genHint() {
-		// Find cells that have N surrounding mines but N flagged neighbours
-		for (int i = 0; i < width; ++i) {
-			for (int j = 0; j < height; ++j) {
-				if (is_good(i, j)) {
-					Cell current = cells[i][j];
-					// Only apply logic to open cells with n surrounding mines
-					// and n surrounding flags
-					int flagsNo = calcFlaggedNeighbours(i, j);
-					if (current.isOpen() && current.getNumber() == flagsNo) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbours
-						for (int k = 0; k < n.size(); ++k) {
-							// If the cell has not been affected by the user (is
-							// blank of behaviour)
-							if (n.get(k).isBlank()) {
-								n.get(k).setHint();
-								hintCells.add(n.get(k));
-								refresh();
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-		// Only display finish prompt if the game has not finished
-		if (!isGameOver) {
-			JOptionPane.showMessageDialog(null, "No known safe moves.");
-		}
-		return false;
-	}
-
-	private boolean SATSolve() {
-		boolean change = false;
-		try {
-			List<HashMap<Cell, Integer>> allSolutions = solver.solveMines();
-			HashMap<Cell, Integer> map = allSolutions.get(0);
-			for (Cell cell : map.keySet()) {
-				if (map.containsKey(cell)) {
-					boolean known = true;
-					int sign = map.get(cell);
-					for (int i = 1; i < allSolutions.size(); i++) {
-						if (allSolutions.get(i).get(cell) != sign) {
-							known = false;
-							break;
-						}
-					}
-					if (known) {
-						if (sign > 0) {
-							if (cell.isClosed() && !cell.isFlagged()) {
-								cell.flag();
-								decrementMines();
-							}
-						} else {
-							if (cell.isBlank()) {
-								select(cell.getX(), cell.getY());
-							}
-						}
-					}
-				}
-			}
-			calcCellOdds(allSolutions);
-			refresh();
-		} catch (ContradictionException | TimeoutException e1) {
-			e1.printStackTrace();
-		}
-		return change;
-	}
-
-	/**
-	 * Search the board for a cell that is not a mine and cells that are guaranteed
-	 * to be a mine. When "safe" cell found, selected it and return true; When a
-	 * guaranteed mine found, set its flag value to true. Results in its colour
-	 * turning yellow.
-	 * 
-	 * @return if either pattern was found. Will only return false if there are no
-	 *         cells left on the board that are considered "safe" and no cells that
-	 *         are guaranteed mines.
-	 */
-	private boolean assist() {
-		for (int i = 0; i < width; ++i) {
-			for (int j = 0; j < height; ++j) {
-				if (is_good(i, j)) {
-					Cell current = cells[i][j];
-					if (current.isOpen() && current.getNumber() != 0
-							&& current.getNumber() == calcFlaggedNeighbours(i, j)) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbours
-						for (int k = 0; k < n.size(); ++k) {
-							// If the cell has not been affected by the user (is
-							// blank of behaviour)
-							if (n.get(k).isClosed() && !n.get(k).isFlagged()) {
-								select(n.get(k).getX(), n.get(k).getY());
-								return true;
-							}
-						}
-					} else if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
-							&& current.getNumber() != calcFlaggedNeighbours(i, j)) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbouring
-																// cells
-						for (Cell c : n) {
-							if (c.isClosed() && !c.isFlagged()) {
-								c.flag();
-								decrementMines();
-							}
-						}
-						refresh();
-						return true;
-					}
-				}
-			}
-		}
-		if (SATSolve()) {
-			return true;
-		}
-
-		if (!isGameOver) {
-			JOptionPane.showMessageDialog(null, "No known safe moves.");
-		}
-		return false;
-	}
-
-	private void calcCellOdds(List<HashMap<Cell, Integer>> data) {
-		HashMap<Cell, Integer> results = new HashMap<Cell, Integer>();
-		for (int i = 0; i < data.size(); i++) {
-			HashMap<Cell, Integer> map = data.get(i);
-			for (Cell cell : map.keySet()) {
-				if (map.containsKey(cell) && map.get(cell) == -1) {
-					if (!results.containsKey(cell)) {
-						results.put(cell, 1);
-					} else {
-						results.put(cell, results.get(cell)+1);
-					}
-				}
-			}
-		}
-		for (Cell cell : results.keySet()) {
-			double odd = (1/results.get(cell));
-			System.out.println("" + cell + " - " + odd);
-		}
-	}
-
-	/**
 	 * Redraw the board, updating all cells appearance and behaviour.
 	 */
 	public void refresh() {
-		board.repaint();
+		board.repaint(10);
 	}
 
 	/**
@@ -423,7 +267,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 * @param y Y-axis coordinate of cell.
 	 */
 	public void select(int x, int y) {
-		// Dont perform any behaviour if cell is flagged or game is over
+		// Dont perform any behaviour if cell is flagged or game has already been won/lost
 		if (cells[x][y].isFlagged() || isGameOver) {
 			return;
 		}
@@ -450,13 +294,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		// If there are 0 neighbouring mines then recursively open neighbouring
 		// cells
 		if (cellNum == 0) {
-			List<Cell> neighbours = getNeighbours(x, y);
-			for (Cell c : neighbours) {
-				// Only attempt to open closed cells
-				if (c.isClosed()) {
-					select(c.getX(), c.getY());
-				}
-			}
+			clearNeighbours(x, y);
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
 			System.out.println("LOST ON CELL " + cells[x][y]);
 			endGame();
@@ -467,8 +305,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 		if (won()) { // If the game has been beaten (number of closed cells =
 						// number of mines)
 			// Flag remaining unflagged mines
-			for (int i = 0; i < width; ++i) {
-				for (int j = 0; j < height; ++j) {
+			for (int i = 0; i < width; i++) {
+				for (int j = 0; j < height; j++) {
 					if (cells[i][j].isClosed() && !cells[i][j].isFlagged()) {
 						cells[i][j].flag();
 						decrementMines();
@@ -480,6 +318,16 @@ public class Minesweeper extends JFrame implements ActionListener {
 		}
 
 		refresh();
+	}
+
+	public void clearNeighbours(int x, int y) {
+		List<Cell> neighbours = solver.getNeighbours(x, y);	// Reuse code thats in solver class
+		for (Cell c : neighbours) {
+			// Only attempt to open closed cells
+			if (c.isClosed()) {
+				select(c.getX(), c.getY());
+			}
+		}
 	}
 
 	/**
@@ -514,8 +362,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 		mineField = new MineField(height, width, noOfMines);
 		cells = new Cell[width][height];
 
-		for (int i = 0; i < width; ++i) {
-			for (int j = 0; j < height; ++j) {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
 				cells[i][j] = new Cell(i, j);
 			}
 		}
@@ -532,8 +380,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 		// Unlock the minefield
 		mineField.open(PASSWORD);
 		// Open/Select every closed cell
-		for (int i = 0; i < width; ++i) {
-			for (int j = 0; j < height; ++j) {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
 				if (cells[i][j].isClosed()) {
 					// (j, i) as MineField.java takes (height, width), not
 					// (width, height)
@@ -554,8 +402,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 */
 	private boolean won() {
 		int closedCount = 0;
-		for (int i = 0; i < width; ++i) {
-			for (int j = 0; j < height; ++j) {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
 				if (cells[i][j].isClosed()) {
 					++closedCount;
 				}
@@ -565,81 +413,6 @@ public class Minesweeper extends JFrame implements ActionListener {
 		// game is
 		// won
 		return (closedCount == noOfMines);
-	}
-
-	/**
-	 * Count the amount of closed cells are around a cell.
-	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
-	 * @return Number of closed neighbouring cells.
-	 */
-	public int calcClosedNeighbours(int x, int y) {
-		int closedCount = 0;
-		// for loop to count how many closed cells are around a cell
-		List<Cell> neighbours = getNeighbours(x, y);
-		for (Cell c : neighbours) {
-			if (c.isClosed()) {
-				++closedCount;
-			}
-		}
-		return closedCount;
-	}
-
-	/**
-	 * Count the amount of flagged cells are around a cell.
-	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
-	 * @return Number of flagged neighbouring cells.
-	 */
-	public int calcFlaggedNeighbours(int x, int y) {
-		int flagCount = 0;
-		// for loop to count how many flagged cells are around a cell
-		List<Cell> neighbours = getNeighbours(x, y);
-		for (Cell c : neighbours) {
-			if (c.isFlagged()) {
-				++flagCount;
-			}
-		}
-		return flagCount;
-	}
-
-	/**
-	 * Return the neighbouring cells of a cell (includes diagonal).
-	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
-	 * @return List of neighbouring cells (excluding the specified cell).
-	 */
-	public List<Cell> getNeighbours(int x, int y) {
-		List<Cell> neighbours = new ArrayList<Cell>();
-		for (int i = x - 1; i <= x + 1; ++i) {
-			for (int j = y - 1; j <= y + 1; ++j) {
-				if (is_good(i, j) && !(i == x && j == y)) {
-					neighbours.add(cells[i][j]);
-				}
-			}
-		}
-		return neighbours;
-	}
-
-	/**
-	 * Return all open cells.
-	 * 
-	 * @return List of all open cells.
-	 */
-	@SuppressWarnings("unused")
-	public List<Cell> getAllOpenCells() {
-		List<Cell> cells = new ArrayList<Cell>();
-		for (Cell[] col : this.cells) {
-			for (Cell c : col) {
-				if (c.isOpen()) {
-					cells.add(c);
-				}
-			}
-		}
-		return cells;
 	}
 
 	public void incrementMoves() {
@@ -655,10 +428,14 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private void debug(int x, int y) {
 		System.out.println("=======================");
 		System.out.println("Cell info = " + cells[x][y]);
-		System.out.println("Set of neighbors = " + getNeighbours(x, y));
-		System.out.println("Num of uncovered neighbors = " + calcClosedNeighbours(x, y));
-		System.out.println("Num of flagged neighbors = " + calcFlaggedNeighbours(x, y));
+		System.out.println("Set of neighbors = " + solver.getNeighbours(x, y));
+		System.out.println("Num of uncovered neighbors = " + solver.calcClosedNeighbours(x, y));
+		System.out.println("Num of flagged neighbors = " + solver.calcFlaggedNeighbours(x, y));
 		System.out.println("=======================");
+	}
+
+	public void showNoMoreMovesDialog() {
+		JOptionPane.showMessageDialog(null, "No known safe moves.");
 	}
 
 	// checks if (i,j) is within the field (taken from MineField.java)
@@ -679,10 +456,6 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 	public Cell getCell(int x, int y) {
 		return cells[x][y];
-	}
-
-	private List<Cell> getNeighbours(Cell c) {
-		return getNeighbours(c.getX(), c.getY());
 	}
 
 	public boolean isFinished() {
@@ -759,8 +532,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 }
 
 // Sample for loop for copy and paste
-// for(int i = 0;i<width;++i) {
-// for (int j = 0; j < height; ++j) {
+// for(int i = 0;i<width;i++) {
+// for (int j = 0; j < height; j++) {
 // cells[i][j];
 // }
 // }

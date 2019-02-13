@@ -13,11 +13,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class MouseActions implements MouseListener {
-	private Minesweeper mine;
+	private Minesweeper game;
 	private Board board;
 
 	public MouseActions(Minesweeper m, Board b) {
-		mine = m;
+		game = m;
 		board = b;
 	}
 
@@ -26,13 +26,9 @@ public class MouseActions implements MouseListener {
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			int x = e.getX() / board.getCellWidth();
 			int y = e.getY() / board.getCellWidth();
-			if (mine.is_good(x, y)) {
+			if (game.is_good(x, y)) {
 				if (e.getClickCount() == 2) { // Double click, clear all neighbours around selected cell
-					for (Cell c : mine.getNeighbours(x, y)) {
-						if (c.isClosed()) {
-							mine.select(c.getX(), c.getY());
-						}
-					}
+					game.clearNeighbours(x, y);
 				}
 			}
 		}
@@ -45,29 +41,30 @@ public class MouseActions implements MouseListener {
 	}
 
 	public void mousePressed(MouseEvent e) {
-		// If mouse 1 is pressed
+		// If left click is pressed
 		if (e.getButton() == MouseEvent.BUTTON1) {
 			int x = e.getX() / board.getCellWidth();
 			int y = e.getY() / board.getCellWidth();
-			if (mine.is_good(x, y)) {
-				if (mine.getCell(x, y).isClosed()) {
-					mine.select(x, y);
+			if (game.is_good(x, y)) {
+				if (game.getCell(x, y).isClosed()) {
+					game.select(x, y);
 				}
-				mine.refresh();
+				game.refresh();
 			}
-		} else if (e.getButton() == MouseEvent.BUTTON3) { // If mouse 2 is pressed
+		} else if (e.getButton() == MouseEvent.BUTTON3) { // If right click is pressed
 			int x = e.getX() / board.getCellWidth();
 			int y = e.getY() / board.getCellWidth();
 
-			if (mine.is_good(x, y) && mine.getCell(x, y).isClosed()) {
-				if (!mine.getCell(x, y).isFlagged()) {
-					mine.decrementMines();
+			if (game.is_good(x, y) && game.getCell(x, y).isClosed()) {
+				if (!game.getCell(x, y).isFlagged()) {
+					game.decrementMines();
 				} else {
-					mine.incrementMines();
+					game.incrementMines();
 				}
-				mine.getCell(x, y).invertFlag();
+				game.getCell(x, y).invertFlag();
 			}
-			mine.refresh();
+			//    public void repaint(int x, int y, int width, int height) {
+			board.repaint(10);
 		}
 	}
 
