@@ -14,18 +14,37 @@ import org.sat4j.specs.IVec;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
-public class BoardSolver {
+public class BoardSolver implements Runnable {
 
 	private IPBSolver pbSolver;
+    private volatile boolean execute = true;
+
 
 	private Minesweeper game;
 	private Cell[][] cells;
+
+	private List<HashMap<Cell, Integer>> data;
 
 	public BoardSolver(Minesweeper game) {
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
 	}
+
+	@Override
+	public void run() {
+		while (execute) {
+            try {
+                Thread.sleep((long) 15000);
+            } catch (InterruptedException e) {
+                execute = false;
+            }
+        }
+	}
+
+	public void terminate() {
+        execute = false;
+    }
 
 	/**
 	 * Search the board for a cell that is not a mine. When such a cell is found set
@@ -220,6 +239,8 @@ public class BoardSolver {
 			optimiser.addBlockingClause(block);
 		}
 		System.out.println("NOT SAT!");
+		// Save solutions in case there are no 100% known moves left
+		data = allSolutions;
 		return allSolutions;
 	}
 
@@ -306,12 +327,13 @@ public class BoardSolver {
 		return closedCount;
 	}
 
-	private void calcCellOdds(List<HashMap<Cell, Integer>> data) {
+	public void calcCellOdds() {
 		HashMap<Cell, Integer> results = new HashMap<Cell, Integer>();
 		for (int i = 0; i < data.size(); i++) {
 			HashMap<Cell, Integer> map = data.get(i);
 			for (Cell cell : map.keySet()) {
-				if (map.containsKey(cell) && map.get(cell) == -1) {
+				// If the cell is marked as a mine in the current solution
+				if (map.get(cell) != null && map.get(cell) == 1) {
 					if (!results.containsKey(cell)) {
 						results.put(cell, 1);
 					} else {
@@ -320,11 +342,16 @@ public class BoardSolver {
 				}
 			}
 		}
+		Cell bestProb = new ArrayList<Cell>(results.keySet()).get(0);
+		System.out.println(results.keySet());
 		for (Cell cell : results.keySet()) {
-			double odd = (1 / results.get(cell));
-			System.out.println("" + cell + " - " + odd);
+			double prob = results.get(cell) / (double) data.size();
+			if (cell.isClosed() && prob < (results.get(bestProb) / (double) data.size())) {
+				bestProb = cell;
+			}
+			System.out.println("" + cell + " ~ " + prob);
 		}
+		System.out.printf("SELECTING SAFEST CELL " + bestProb + " WITH MINE PROBABILTY OF %.2f%%%n", ((results.get(bestProb) / (double) data.size())*100));
+		game.select(bestProb.getX(), bestProb.getY());
 	}
-
-
 }

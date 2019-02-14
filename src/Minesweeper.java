@@ -155,7 +155,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 		assistBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				System.out.println(Thread.getAllStackTraces().keySet().size());
 				solver.assist();
+				System.out.println(Thread.getAllStackTraces().keySet().size());
+System.out.println();
 			}
 		});
 
@@ -171,8 +174,16 @@ public class Minesweeper extends JFrame implements ActionListener {
 		SATSolveBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// 1 means mine/flag
-				solver.SATSolve();
+				// Find a guarenteed mine/safe cell, if non found (returns false):
+				//    Ask the user if they would like to select the safest/least dangerous cell
+				if (!solver.SATSolve()) {
+					int dialogResult = JOptionPane.showConfirmDialog(null,
+							"No more known moves available. Would you like to select the 'least dangerous' cell?",
+							"No More Known Moves", JOptionPane.YES_NO_OPTION);
+					if (dialogResult == JOptionPane.YES_OPTION) {
+						solver.calcCellOdds();
+					}
+				}
 			}
 		});
 	}
@@ -267,7 +278,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 * @param y Y-axis coordinate of cell.
 	 */
 	public void select(int x, int y) {
-		// Dont perform any behaviour if cell is flagged or game has already been won/lost
+		// Dont perform any behaviour if cell is flagged or game has already been
+		// won/lost
 		if (cells[x][y].isFlagged() || isGameOver) {
 			return;
 		}
@@ -321,7 +333,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	}
 
 	public void clearNeighbours(int x, int y) {
-		List<Cell> neighbours = solver.getNeighbours(x, y);	// Reuse code thats in solver class
+		List<Cell> neighbours = solver.getNeighbours(x, y); // Reuse code thats in solver class
 		for (Cell c : neighbours) {
 			// Only attempt to open closed cells
 			if (c.isClosed()) {
