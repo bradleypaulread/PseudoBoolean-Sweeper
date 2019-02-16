@@ -17,8 +17,7 @@ import org.sat4j.specs.TimeoutException;
 public class BoardSolver implements Runnable {
 
 	private IPBSolver pbSolver;
-    private volatile boolean execute = true;
-
+	private volatile boolean execute = true;
 
 	private Minesweeper game;
 	private Cell[][] cells;
@@ -34,17 +33,17 @@ public class BoardSolver implements Runnable {
 	@Override
 	public void run() {
 		while (execute) {
-            try {
-                Thread.sleep((long) 15000);
-            } catch (InterruptedException e) {
-                execute = false;
-            }
-        }
+			try {
+				Thread.sleep((long) 15000);
+			} catch (InterruptedException e) {
+				execute = false;
+			}
+		}
 	}
 
 	public void terminate() {
-        execute = false;
-    }
+		execute = false;
+	}
 
 	/**
 	 * Search the board for a cell that is not a mine. When such a cell is found set
@@ -86,7 +85,7 @@ public class BoardSolver implements Runnable {
 		return false;
 	}
 
-/**
+	/**
 	 * Search the board for a cell that is not a mine and cells that are guaranteed
 	 * to be a mine. When "safe" cell found, selected it and return true; When a
 	 * guaranteed mine found, set its flag value to true. Results in its colour
@@ -160,10 +159,12 @@ public class BoardSolver implements Runnable {
 							if (cell.isClosed() && !cell.isFlagged()) {
 								cell.flag();
 								game.decrementMines();
+								change = true;
 							}
 						} else {
 							if (cell.isBlank()) {
 								game.select(cell.getX(), cell.getY());
+								change = true;
 							}
 						}
 					}
@@ -182,6 +183,25 @@ public class BoardSolver implements Runnable {
 		List<HashMap<Cell, Integer>> allSolutions = new ArrayList<HashMap<Cell, Integer>>();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
+
+		int blanksAmt = 0;
+
+		for (int i = 0; i < cells.length; i++) {
+			for (int j = 0; j < cells[i].length; j++) {
+				Cell current = cells[i][j];
+				if (current.isBlank()) {
+					lits.push(encodeCellId(current));
+					coeffs.push(BigInteger.ONE);
+					++blanksAmt;
+				}
+			}
+		}
+		if (blanksAmt <= (cells.length * cells[0].length)/5) {
+			pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getMinesLeft()));
+		}
+		lits.clear();
+		coeffs.clear();
+
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
@@ -349,9 +369,10 @@ public class BoardSolver implements Runnable {
 			if (cell.isClosed() && prob < (results.get(bestProb) / (double) data.size())) {
 				bestProb = cell;
 			}
-			System.out.println("" + cell + " ~ " + prob);
+			if (cell.isBlank())System.out.println("" + cell + " ~ " + prob);
 		}
-		System.out.printf("SELECTING SAFEST CELL " + bestProb + " WITH MINE PROBABILTY OF %.2f%%%n", ((results.get(bestProb) / (double) data.size())*100));
+		System.out.printf("SELECTING SAFEST CELL " + bestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
+				((results.get(bestProb) / (double) data.size()) * 100));
 		game.select(bestProb.getX(), bestProb.getY());
 	}
 }

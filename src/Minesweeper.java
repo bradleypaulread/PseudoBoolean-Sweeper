@@ -74,6 +74,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 		setup(x, y, d);
 	}
 
+	public Minesweeper() {
+		setup(11, 11, 15);
+	}
+
 	private void setup(int x, int y, int d) {
 		width = x;
 		height = y;
@@ -155,10 +159,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		assistBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println(Thread.getAllStackTraces().keySet().size());
 				solver.assist();
-				System.out.println(Thread.getAllStackTraces().keySet().size());
-System.out.println();
 			}
 		});
 
