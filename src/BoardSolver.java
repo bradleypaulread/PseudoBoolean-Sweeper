@@ -2,7 +2,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.Random;
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.IPBSolver;
@@ -14,7 +14,7 @@ import org.sat4j.specs.IVec;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
-public class BoardSolver implements Runnable {
+public class BoardSolver {
 
 	private IPBSolver pbSolver;
 	private volatile boolean execute = true;
@@ -30,7 +30,6 @@ public class BoardSolver implements Runnable {
 		cells = game.getCells();
 	}
 
-	@Override
 	public void run() {
 		while (execute) {
 			try {
@@ -53,6 +52,7 @@ public class BoardSolver implements Runnable {
 	 *         cells left on the board that are considered "safe".
 	 */
 	public boolean genHint() {
+		cells = game.getCells();
 		// Find cells that have N surrounding mines but N flagged neighbours
 		for (int i = 0; i < cells.length; ++i) {
 			for (int j = 0; j < cells[i].length; ++j) {
@@ -78,10 +78,6 @@ public class BoardSolver implements Runnable {
 				}
 			}
 		}
-		// Only display finish prompt if the game has not finished
-		if (!game.isGameOver()) {
-			game.showNoMoreMovesDialog();
-		}
 		return false;
 	}
 
@@ -96,6 +92,7 @@ public class BoardSolver implements Runnable {
 	 *         are guaranteed mines.
 	 */
 	public boolean assist() {
+		cells = game.getCells();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				if (game.is_good(i, j)) {
@@ -131,10 +128,6 @@ public class BoardSolver implements Runnable {
 		}
 		if (SATSolve()) {
 			return true;
-		}
-
-		if (!game.isGameOver()) {
-			game.showNoMoreMovesDialog();
 		}
 		return false;
 	}
@@ -184,6 +177,8 @@ public class BoardSolver implements Runnable {
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
+		data = null;
+
 		int blanksAmt = 0;
 
 		for (int i = 0; i < cells.length; i++) {
@@ -196,7 +191,7 @@ public class BoardSolver implements Runnable {
 				}
 			}
 		}
-		if (blanksAmt <= (cells.length * cells[0].length)/5) {
+		if (blanksAmt <= (cells.length * cells[0].length) / 10) {
 			pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getMinesLeft()));
 		}
 		lits.clear();
@@ -242,7 +237,7 @@ public class BoardSolver implements Runnable {
 
 		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 
-		while (pbSolver.isSatisfiable()) {
+		while (optimiser.isSatisfiable()) {
 			HashMap<Cell, Integer> knownCells = new HashMap<Cell, Integer>();
 			int[] model = pbSolver.model();
 			for (int i : model) {
@@ -259,8 +254,10 @@ public class BoardSolver implements Runnable {
 			optimiser.addBlockingClause(block);
 		}
 		System.out.println("NOT SAT!");
+
 		// Save solutions in case there are no 100% known moves left
-		data = allSolutions;
+		if (!allSolutions.isEmpty())
+			data = allSolutions;
 		return allSolutions;
 	}
 
@@ -347,32 +344,78 @@ public class BoardSolver implements Runnable {
 		return closedCount;
 	}
 
-	public void calcCellOdds() {
-		HashMap<Cell, Integer> results = new HashMap<Cell, Integer>();
+	public Cell calcCellOdds() {
+		// No last run data (field has never been able to be SAT solved)
+		//     just return a random cell with its probability
+		if (data == null) {
+			int randX = new Random().nextInt(cells.length);
+			int randY = new Random().nextInt(cells[0].length);
+			//		double nonAdjacentProb = ((game.getNoOfMines() - maxMineSolution) / (double) nonAdjacentCells.size());
+			double randCellProb = (game.getNoOfMines() / (double) (cells.length * cells[0].length));
+			return cells[randX][randY];
+		}
+
+		HashMap<Cell, Integer> knownCellOdds = new HashMap<Cell, Integer>();
+
+		int maxMineSolution = 0;
+
 		for (int i = 0; i < data.size(); i++) {
 			HashMap<Cell, Integer> map = data.get(i);
+			int noOfMines = 0;
 			for (Cell cell : map.keySet()) {
 				// If the cell is marked as a mine in the current solution
 				if (map.get(cell) != null && map.get(cell) == 1) {
-					if (!results.containsKey(cell)) {
-						results.put(cell, 1);
+					noOfMines++;
+					if (!knownCellOdds.containsKey(cell)) {
+						knownCellOdds.put(cell, 1);
 					} else {
-						results.put(cell, results.get(cell) + 1);
+						knownCellOdds.put(cell, knownCellOdds.get(cell) + 1);
 					}
 				}
 			}
+			maxMineSolution = noOfMines > maxMineSolution ? noOfMines : maxMineSolution;
 		}
-		Cell bestProb = new ArrayList<Cell>(results.keySet()).get(0);
-		System.out.println(results.keySet());
-		for (Cell cell : results.keySet()) {
-			double prob = results.get(cell) / (double) data.size();
-			if (cell.isClosed() && prob < (results.get(bestProb) / (double) data.size())) {
-				bestProb = cell;
+		
+		Cell cellWithBestProb = new ArrayList<Cell>(knownCellOdds.keySet()).get(0);
+		for (Cell cell : knownCellOdds.keySet()) {
+			double prob = knownCellOdds.get(cell) / (double) data.size();
+			double currentProb = (knownCellOdds.get(cellWithBestProb) / (double) data.size());
+			if (cell.isClosed() && prob < currentProb) {
+				cellWithBestProb = cell;
 			}
-			if (cell.isBlank())System.out.println("" + cell + " ~ " + prob);
+			if (cell.isBlank())
+				System.out.println("" + cell + " ~ " + prob);
 		}
-		System.out.printf("SELECTING SAFEST CELL " + bestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
-				((results.get(bestProb) / (double) data.size()) * 100));
-		game.select(bestProb.getX(), bestProb.getY());
+
+		List<Cell> nonAdjacentCells = new ArrayList<Cell>();
+		for (int i = 0; i < cells.length; i++) {
+			for (int j = 0; j < cells[i].length; j++) {
+				Cell current = cells[i][j];
+				// If the cell has not been touched and is not part of any known possible
+				// solution
+				if (current.isBlank() && !knownCellOdds.containsKey(current)) {
+					nonAdjacentCells.add(current);
+				}
+			}
+		}
+		// https://puzzling.stackexchange.com/questions/50948/optimal-next-move-in-minesweeper-game
+		// If there is a better chance of selecting a safe non adjacent cell
+		double nonAdjacentProb = ((game.getNoOfMines() - maxMineSolution) / (double) nonAdjacentCells.size());
+		double currentProb = (knownCellOdds.get(cellWithBestProb) / (double) data.size());
+		if (!nonAdjacentCells.isEmpty() && nonAdjacentProb < currentProb) {
+			// Select a random non adjacent cell
+			int rndNonAdjacentIdx = new Random().nextInt(nonAdjacentCells.size());
+			cellWithBestProb = nonAdjacentCells.get(rndNonAdjacentIdx);
+		}
+
+		// To Remove
+		if (knownCellOdds.containsKey(cellWithBestProb)) {
+			System.out.printf("SELECTING SAFEST CELL " + cellWithBestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
+					((knownCellOdds.get(cellWithBestProb) / (double) data.size()) * 100));
+		} else {
+			System.out.printf("SELECTING SAFEST CELL " + cellWithBestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
+					(nonAdjacentProb * 100));
+		}
+		return cellWithBestProb;
 	}
 }

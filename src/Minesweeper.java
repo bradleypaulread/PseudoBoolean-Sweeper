@@ -40,6 +40,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private JButton resetBtn = new JButton("Reset");
 	private JButton assistBtn = new JButton("Assist");
 	private JButton autoBtn = new JButton("Auto");
+	private JButton fullAutoBtn = new JButton("Full Auto");
 	private JButton hintBtn = new JButton("Hint");
 	private JButton SATSolveBtn = new JButton("SAT Solve");
 	private JLabel movesLbl = new JLabel();
@@ -119,8 +120,9 @@ public class Minesweeper extends JFrame implements ActionListener {
 		minesLbl.setText(Integer.toString(minesLeft));
 
 		buttons.setLayout(new FlowLayout());
-		buttons.add(SATSolveBtn);
+		buttons.add(fullAutoBtn);
 		buttons.add(autoBtn);
+		buttons.add(SATSolveBtn);
 		buttons.add(assistBtn);
 		buttons.add(hintBtn);
 
@@ -159,7 +161,9 @@ public class Minesweeper extends JFrame implements ActionListener {
 		assistBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				solver.assist();
+				if (!solver.assist() && !isGameOver()) {
+					showNoMoreMovesDialog();
+				}
 			}
 		});
 
@@ -169,6 +173,27 @@ public class Minesweeper extends JFrame implements ActionListener {
 				// Perform the assist action until no more safe moves exist
 				while (solver.assist())
 					;
+
+				int dialogResult = JOptionPane.showConfirmDialog(null,
+						"No more known moves available. Would you like to select the 'least dangerous' cell?",
+						"No More Known Moves", JOptionPane.YES_NO_OPTION);
+				if (dialogResult == JOptionPane.YES_OPTION) {
+					Cell cell = solver.calcCellOdds();
+					select(cell.getX(), cell.getY());
+				}
+			}
+		});
+
+		fullAutoBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Perform the assist action until no more safe moves exist
+				while (!isGameOver) {
+					while (solver.assist())
+						;
+					Cell cell = solver.calcCellOdds();
+					select(cell.getX(), cell.getY());
+				}
 			}
 		});
 
@@ -176,13 +201,14 @@ public class Minesweeper extends JFrame implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// Find a guarenteed mine/safe cell, if non found (returns false):
-				//    Ask the user if they would like to select the safest/least dangerous cell
+				// Ask the user if they would like to select the safest/least dangerous cell
 				if (!solver.SATSolve()) {
 					int dialogResult = JOptionPane.showConfirmDialog(null,
 							"No more known moves available. Would you like to select the 'least dangerous' cell?",
 							"No More Known Moves", JOptionPane.YES_NO_OPTION);
 					if (dialogResult == JOptionPane.YES_OPTION) {
-						solver.calcCellOdds();
+						Cell cell = solver.calcCellOdds();
+						select(cell.getX(), cell.getY());
 					}
 				}
 			}
@@ -351,6 +377,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		hintBtn.setEnabled(false);
 		assistBtn.setEnabled(false);
 		autoBtn.setEnabled(false);
+		fullAutoBtn.setEnabled(false);
 		SATSolveBtn.setEnabled(false);
 		try {
 			openAllCells();
@@ -369,6 +396,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		hintBtn.setEnabled(true);
 		assistBtn.setEnabled(true);
 		autoBtn.setEnabled(true);
+		fullAutoBtn.setEnabled(true);
 		SATSolveBtn.setEnabled(true);
 		minesLeft = noOfMines;
 		minesLbl.setText("Mines Left: " + Integer.toString(minesLeft));
