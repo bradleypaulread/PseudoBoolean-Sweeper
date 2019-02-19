@@ -103,7 +103,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		setResizable(false);
 		pack();
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
+		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
 
 		solver = new BoardSolver(this);
@@ -178,13 +178,15 @@ public class Minesweeper extends JFrame implements ActionListener {
 				// Perform the assist action until no more safe moves exist
 				while (solver.assist())
 					;
-				
-				int dialogResult = JOptionPane.showConfirmDialog(null,
-						"No more known moves available. Would you like to select the 'least dangerous' cell?",
-						"No More Known Moves", JOptionPane.YES_NO_OPTION);
-				if (dialogResult == JOptionPane.YES_OPTION) {
-					Cell cell = solver.calcCellOdds();
-					select(cell.getX(), cell.getY());
+				if (!isGameOver) {
+					int dialogResult = JOptionPane.showConfirmDialog(null,
+							"No more known moves available. Would you like to select the 'least dangerous' cell?",
+							"No More Known Moves", JOptionPane.YES_NO_OPTION);
+							
+					if (dialogResult == JOptionPane.YES_OPTION) {
+						Cell cell = solver.calcCellOdds();
+						select(cell.getX(), cell.getY());
+					}
 				}
 			}
 		});
@@ -369,7 +371,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		List<Cell> neighbours = solver.getNeighbours(x, y); // Reuse code thats in solver class
 		for (Cell c : neighbours) {
 			// Only attempt to open closed cells
-			if (c.isClosed()) {
+			if (c.isClosed() && !c.isFlagged()) {
 				select(c.getX(), c.getY());
 			}
 		}
@@ -473,12 +475,14 @@ public class Minesweeper extends JFrame implements ActionListener {
 	 * @param y Y-axis coordinate of cell.
 	 */
 	private void debug(int x, int y) {
-		System.out.println("=======================");
-		System.out.println("Cell info = " + cells[x][y]);
-		System.out.println("Set of neighbors = " + solver.getNeighbours(x, y));
-		System.out.println("Num of uncovered neighbors = " + solver.calcClosedNeighbours(x, y));
-		System.out.println("Num of flagged neighbors = " + solver.calcFlaggedNeighbours(x, y));
-		System.out.println("=======================");
+		//System.out.println("=======================");
+		//System.out.println("Cell info = " + cells[x][y]);
+		// System.out.println("Set of neighbors = " + solver.getNeighbours(x, y));
+		// System.out.println("Num of uncovered neighbors = " +
+		// solver.calcClosedNeighbours(x, y));
+		// System.out.println("Num of flagged neighbors = " +
+		// solver.calcFlaggedNeighbours(x, y));
+		//System.out.println("=======================");
 	}
 
 	public void showNoMoreMovesDialog() {

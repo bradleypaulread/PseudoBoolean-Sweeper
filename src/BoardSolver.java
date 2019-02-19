@@ -107,7 +107,7 @@ public class BoardSolver {
 							&& current.getNumber() == calcFlaggedNeighbours(i, j)) {
 						List<Cell> n = getNeighbours(current); // List of
 																// neighbours
-						for (int k = 0; k < n.size(); ++k) {
+						for (int k = 0; k < n.size(); k++) {
 							// If the cell has not been affected by the user (is
 							// blank of behaviour)
 							if (n.get(k).isClosed() && !n.get(k).isFlagged()) {
@@ -117,9 +117,7 @@ public class BoardSolver {
 						}
 					} else if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
 							&& current.getNumber() != calcFlaggedNeighbours(i, j)) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbouring
-																// cells
+						List<Cell> n = getNeighbours(current); // List of neighbouring cells
 						for (Cell c : n) {
 							if (c.isClosed() && !c.isFlagged()) {
 								c.flag();
@@ -198,7 +196,7 @@ public class BoardSolver {
 			}
 		}
 		if (blanksAmt <= (cells.length * cells[0].length) / 10) {
-			pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getMinesLeft()));
+			// pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getMinesLeft()));
 		}
 		lits.clear();
 		coeffs.clear();
@@ -295,7 +293,7 @@ public class BoardSolver {
 		return cells[x][y];
 	}
 
-	public List<Cell> getNeighbours(Cell c) {
+	private List<Cell> getNeighbours(Cell c) {
 		return getNeighbours(c.getX(), c.getY());
 	}
 
@@ -319,7 +317,7 @@ public class BoardSolver {
 	 * @param y Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
-	public int calcFlaggedNeighbours(int x, int y) {
+	private int calcFlaggedNeighbours(int x, int y) {
 		int flagCount = 0;
 		// for loop to count how many flagged cells are around a cell
 		List<Cell> neighbours = getNeighbours(x, y);
@@ -338,7 +336,7 @@ public class BoardSolver {
 	 * @param y Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
-	public int calcClosedNeighbours(int x, int y) {
+	private int calcClosedNeighbours(int x, int y) {
 		int closedCount = 0;
 		// for loop to count how many closed cells are around a cell
 		List<Cell> neighbours = getNeighbours(x, y);
@@ -406,28 +404,36 @@ public class BoardSolver {
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue,
 						LinkedHashMap::new));
 		System.out.println(knownCellOdds);
+
 		List<Cell> orderedCells = new ArrayList<Cell>(knownCellOdds.keySet());
 		cellWithBestProb = orderedCells.get(0);
+		BigDecimal cellBestProb = new BigDecimal(knownCellOdds.get(cellWithBestProb));
 
-		if (orderedCells.size() > 0) {
-			BigDecimal prob1 = new BigDecimal(knownCellOdds.get(cellWithBestProb));
-			BigDecimal prob2 = new BigDecimal(knownCellOdds.get(orderedCells.get(1)));
-			// If probabilities are the same
-			if (prob1.compareTo(prob2) == 0) {
-				// TO DO
-				// return cell with best stratigic pos
+		BigDecimal nonAdjacentProb = new BigDecimal(
+				(game.getNoOfMines() - maxMineSolution) / (double) nonAdjacentCells.size());
+
+		if (nonAdjacentProb.compareTo(cellBestProb) == -1) {
+			// Select a random non adjacent cell
+			int rndNonAdjacentIdx = new Random().nextInt(nonAdjacentCells.size());
+			cellWithBestProb = nonAdjacentCells.get(rndNonAdjacentIdx);
+		} else if (cellBestProb.compareTo(new BigDecimal(knownCellOdds.get(orderedCells.get(1)))) == 0) {
+			List<Cell> equalOddCells = new ArrayList<>();
+			for (int i = 0; i < orderedCells.size(); i++) {
+				Cell current = orderedCells.get(i);
+				BigDecimal currentProb = new BigDecimal(knownCellOdds.get(current));
+				if (cellBestProb.compareTo(currentProb) != 0) {
+					break;
+				}
+				equalOddCells.add(current);
 			}
+			if (cellBestProb.compareTo(nonAdjacentProb) == 0) {
+				equalOddCells.addAll(nonAdjacentCells);
+			}
+			cellWithBestProb = calcBestStrategicCell(equalOddCells);
 		}
 
 		// https://puzzling.stackexchange.com/questions/50948/optimal-next-move-in-minesweeper-game
 		// If there is a better chance of selecting a safe non adjacent cell
-		double nonAdjacentProb = ((game.getNoOfMines() - maxMineSolution) / (double) nonAdjacentCells.size());
-		double currentProb = knownCellOdds.get(cellWithBestProb);
-		if (!nonAdjacentCells.isEmpty() && nonAdjacentProb < currentProb) {
-			// Select a random non adjacent cell
-			int rndNonAdjacentIdx = new Random().nextInt(nonAdjacentCells.size());
-			cellWithBestProb = nonAdjacentCells.get(rndNonAdjacentIdx);
-		}
 
 		// To Remove
 		if (knownCellOdds.containsKey(cellWithBestProb)) {
@@ -435,8 +441,26 @@ public class BoardSolver {
 					((knownCellOdds.get(cellWithBestProb)) * 100));
 		} else {
 			System.out.printf("SELECTING SAFEST CELL " + cellWithBestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
-					(nonAdjacentProb * 100));
+					(nonAdjacentProb.multiply(new BigDecimal(100))));
 		}
 		return cellWithBestProb;
+	}
+
+	private Cell calcBestStrategicCell(List<Cell> equalOddCells) {
+		int bestCellIdx = 0;
+		BigDecimal d = new BigDecimal(1.1);
+		for (int i = 0; i < equalOddCells.size(); i++) {
+			List<Cell> neighbours = getNeighbours(equalOddCells.get(i));
+			int neughbourCount = neighbours.size();
+			neighbours.removeIf(c -> c.isClosed());
+			int openCount = neighbours.size();
+			BigDecimal openPercent = new BigDecimal(openCount / neughbourCount);
+			if (openPercent.compareTo(d) == 1) {
+				d = openPercent;
+				bestCellIdx = i;
+			}
+		}
+		System.out.println(equalOddCells.get(bestCellIdx));
+		return equalOddCells.get(bestCellIdx); // Placeholder
 	}
 }
