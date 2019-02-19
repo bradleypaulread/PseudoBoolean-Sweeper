@@ -85,11 +85,15 @@ public class Board extends JPanel {
 					// If the cell is a mine (number is -1)
 					// set colour to Red with a 'X' pattern
 				} else if (current.isMine()) {
-					g.setColor(Color.RED);
+					if (current.isCellThatLost()) {
+						g.setColor(new Color(51, 51, 51));
+					} else {
+						g.setColor(Color.RED);
+					}
 					drawCell(g, posX, posY);
-					g.setColor(Color.BLACK);
-					g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
-					g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
+						g.setColor(Color.BLACK);
+						g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
+						g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
 					// If cell is open
 					// set colour to Light Grey and paint cell number
 				} else {

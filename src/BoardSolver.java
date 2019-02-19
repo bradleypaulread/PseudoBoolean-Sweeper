@@ -3,6 +3,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.math.BigDecimal;
+
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.IPBSolver;
@@ -22,7 +28,7 @@ public class BoardSolver {
 	private Minesweeper game;
 	private Cell[][] cells;
 
-	private List<HashMap<Cell, Integer>> data;
+	private List<HashMap<Cell, Integer>> lastRun;
 
 	public BoardSolver(Minesweeper game) {
 		pbSolver = SolverFactory.newDefault();
@@ -177,7 +183,7 @@ public class BoardSolver {
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
-		data = null;
+		lastRun = new ArrayList<>();
 
 		int blanksAmt = 0;
 
@@ -257,7 +263,7 @@ public class BoardSolver {
 
 		// Save solutions in case there are no 100% known moves left
 		if (!allSolutions.isEmpty())
-			data = allSolutions;
+			lastRun = allSolutions;
 		return allSolutions;
 	}
 
@@ -346,47 +352,20 @@ public class BoardSolver {
 
 	public Cell calcCellOdds() {
 		// No last run data (field has never been able to be SAT solved)
-		//     just return a random cell with its probability
-		if (data == null) {
+		// just return a random cell
+		if (lastRun.isEmpty()) {
 			int randX = new Random().nextInt(cells.length);
 			int randY = new Random().nextInt(cells[0].length);
-			//		double nonAdjacentProb = ((game.getNoOfMines() - maxMineSolution) / (double) nonAdjacentCells.size());
-			double randCellProb = (game.getNoOfMines() / (double) (cells.length * cells[0].length));
 			return cells[randX][randY];
 		}
 
-		HashMap<Cell, Integer> knownCellOdds = new HashMap<Cell, Integer>();
+		// Cell to return
+		Cell cellWithBestProb;
 
-		int maxMineSolution = 0;
+		// Compliation of cells present in every computed solution
+		Map<Cell, Double> knownCellOdds = new HashMap<Cell, Double>();
 
-		for (int i = 0; i < data.size(); i++) {
-			HashMap<Cell, Integer> map = data.get(i);
-			int noOfMines = 0;
-			for (Cell cell : map.keySet()) {
-				// If the cell is marked as a mine in the current solution
-				if (map.get(cell) != null && map.get(cell) == 1) {
-					noOfMines++;
-					if (!knownCellOdds.containsKey(cell)) {
-						knownCellOdds.put(cell, 1);
-					} else {
-						knownCellOdds.put(cell, knownCellOdds.get(cell) + 1);
-					}
-				}
-			}
-			maxMineSolution = noOfMines > maxMineSolution ? noOfMines : maxMineSolution;
-		}
-		
-		Cell cellWithBestProb = new ArrayList<Cell>(knownCellOdds.keySet()).get(0);
-		for (Cell cell : knownCellOdds.keySet()) {
-			double prob = knownCellOdds.get(cell) / (double) data.size();
-			double currentProb = (knownCellOdds.get(cellWithBestProb) / (double) data.size());
-			if (cell.isClosed() && prob < currentProb) {
-				cellWithBestProb = cell;
-			}
-			if (cell.isBlank())
-				System.out.println("" + cell + " ~ " + prob);
-		}
-
+		// List of non adjacent cells (cells that are never present in a solution)
 		List<Cell> nonAdjacentCells = new ArrayList<Cell>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -398,10 +377,52 @@ public class BoardSolver {
 				}
 			}
 		}
+
+		// Max amount of mines featured in a solution, used to compute non adjacent mine
+		// probability
+		int maxMineSolution = 0;
+		// Sum the number of occurances of a cell appearing as a mine
+		for (int i = 0; i < lastRun.size(); i++) {
+			Map<Cell, Integer> map = lastRun.get(i);
+			int noOfMines = 0;
+			for (Cell cell : map.keySet()) {
+				// If the cell is marked as a mine in the current solution
+				if (map.get(cell) != null && map.get(cell) == 1) {
+					noOfMines++;
+					if (!knownCellOdds.containsKey(cell)) {
+						knownCellOdds.put(cell, 1.0);
+					} else {
+						knownCellOdds.put(cell, knownCellOdds.get(cell) + 1.0);
+					}
+				}
+			}
+			maxMineSolution = noOfMines > maxMineSolution ? noOfMines : maxMineSolution;
+		}
+
+		// Turn number of occurances in to proabilities
+		knownCellOdds.replaceAll((cell, prob) -> (prob / (double) lastRun.size()));
+		// Order mapping key (the cells) by value in ascending order
+		knownCellOdds = knownCellOdds.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.naturalOrder()))
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue,
+						LinkedHashMap::new));
+		System.out.println(knownCellOdds);
+		List<Cell> orderedCells = new ArrayList<Cell>(knownCellOdds.keySet());
+		cellWithBestProb = orderedCells.get(0);
+
+		if (orderedCells.size() > 0) {
+			BigDecimal prob1 = new BigDecimal(knownCellOdds.get(cellWithBestProb));
+			BigDecimal prob2 = new BigDecimal(knownCellOdds.get(orderedCells.get(1)));
+			// If probabilities are the same
+			if (prob1.compareTo(prob2) == 0) {
+				// TO DO
+				// return cell with best stratigic pos
+			}
+		}
+
 		// https://puzzling.stackexchange.com/questions/50948/optimal-next-move-in-minesweeper-game
 		// If there is a better chance of selecting a safe non adjacent cell
 		double nonAdjacentProb = ((game.getNoOfMines() - maxMineSolution) / (double) nonAdjacentCells.size());
-		double currentProb = (knownCellOdds.get(cellWithBestProb) / (double) data.size());
+		double currentProb = knownCellOdds.get(cellWithBestProb);
 		if (!nonAdjacentCells.isEmpty() && nonAdjacentProb < currentProb) {
 			// Select a random non adjacent cell
 			int rndNonAdjacentIdx = new Random().nextInt(nonAdjacentCells.size());
@@ -411,7 +432,7 @@ public class BoardSolver {
 		// To Remove
 		if (knownCellOdds.containsKey(cellWithBestProb)) {
 			System.out.printf("SELECTING SAFEST CELL " + cellWithBestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
-					((knownCellOdds.get(cellWithBestProb) / (double) data.size()) * 100));
+					((knownCellOdds.get(cellWithBestProb)) * 100));
 		} else {
 			System.out.printf("SELECTING SAFEST CELL " + cellWithBestProb + " WITH MINE PROBABILTY OF %.2f%%%n",
 					(nonAdjacentProb * 100));

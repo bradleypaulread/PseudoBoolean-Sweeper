@@ -20,6 +20,7 @@ public class Cell
 	private boolean flagged;
 	private boolean open;
 	private boolean hint;
+	private boolean fail;
  
 	public Cell(int x, int y)
 	{
@@ -28,6 +29,7 @@ public class Cell
 		flagged = false;
 		open = false;
 		hint = false;
+		fail = false;
 	}
  
 	public int getX() {
@@ -61,6 +63,14 @@ public class Cell
 	public boolean isFlagged()
 	{
 		return flagged;
+	}
+
+	public void setFail() {
+		fail = true;
+	}
+
+	public boolean isCellThatLost() {
+		return fail;
 	}
  
 	@Override

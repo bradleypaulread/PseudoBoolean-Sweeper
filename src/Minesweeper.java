@@ -10,6 +10,7 @@
  */
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.Image;
@@ -89,16 +90,20 @@ public class Minesweeper extends JFrame implements ActionListener {
 		board = new Board(this, x, y);
 		loadButtons();
 		loadFileMenu();
-		add(board, BorderLayout.CENTER);
+		Container fl = new Container();
+		fl.add(board);
+		fl.setLayout(new FlowLayout());
+		add(fl, BorderLayout.CENTER);
 
 		// Reset board to a fresh setting
 		reset();
 
-		// this.setLocationRelativeTo(null); //center JFrame
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
 		pack();
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation(dim.width/2-getSize().width/2, dim.height/2-getSize().height/2);
 		setVisible(true);
 
 		solver = new BoardSolver(this);
@@ -173,7 +178,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				// Perform the assist action until no more safe moves exist
 				while (solver.assist())
 					;
-
+				
 				int dialogResult = JOptionPane.showConfirmDialog(null,
 						"No more known moves available. Would you like to select the 'least dangerous' cell?",
 						"No More Known Moves", JOptionPane.YES_NO_OPTION);
@@ -335,6 +340,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		if (cellNum == 0) {
 			clearNeighbours(x, y);
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
+			cells[x][y].setFail();
 			System.out.println("LOST ON CELL " + cells[x][y]);
 			endGame();
 			JOptionPane.showMessageDialog(null, " BOOOOM!");
