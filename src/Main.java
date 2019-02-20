@@ -21,8 +21,8 @@ public class Main
 		assert diff >= 0.00 && diff < 1.00 && mines >= 0 && mines < (x*y);
  
 		
-		new Minesweeper(x, y, diff);	// Constructor for % mines
+		//new Minesweeper(x, y, diff);	// Constructor for % mines
 		//new Minesweeper(x, y, mines); // Constructor for int mines
-		//new Minesweeper();
+		new Minesweeper();
 	}
 }

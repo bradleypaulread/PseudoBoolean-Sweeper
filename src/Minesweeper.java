@@ -254,6 +254,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				newGame.getDiffEasyRb().setEnabled(false);
 				newGame.getDiffMediumRb().setEnabled(true);
 				newGame.getDiffHardRb().setEnabled(true);
+				newGame.setDebug(debugCb.isSelected());
 				newGame.getDebugCB().setSelected(debugCb.isSelected());
 				setVisible(false);
 				dispose();
@@ -270,6 +271,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				newGame.getDiffEasyRb().setEnabled(true);
 				newGame.getDiffMediumRb().setEnabled(false);
 				newGame.getDiffHardRb().setEnabled(true);
+				newGame.setDebug(debugCb.isSelected());
 				newGame.getDebugCB().setSelected(debugCb.isSelected());
 				setVisible(false);
 				dispose();
@@ -286,6 +288,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 				newGame.getDiffEasyRb().setEnabled(true);
 				newGame.getDiffMediumRb().setEnabled(true);
 				newGame.getDiffHardRb().setEnabled(false);
+				newGame.setDebug(debugCb.isSelected());
 				newGame.getDebugCB().setSelected(debugCb.isSelected());
 				setVisible(false);
 				dispose();
@@ -345,7 +348,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 			cells[x][y].setFail();
 			System.out.println("LOST ON CELL " + cells[x][y]);
 			endGame();
-			JOptionPane.showMessageDialog(null, " BOOOOM!");
+			JOptionPane.showMessageDialog(null, "             BOOOOM!");
 			return;
 		}
 
@@ -575,6 +578,10 @@ public class Minesweeper extends JFrame implements ActionListener {
 
 	public int getMinesLeft() {
 		return minesLeft;
+	}
+
+	public void setDebug(boolean value) {
+		debug = value;
 	}
 
 	@Override

@@ -2,7 +2,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -352,9 +351,13 @@ public class BoardSolver {
 		// No last run data (field has never been able to be SAT solved)
 		// just return a random cell
 		if (lastRun.isEmpty()) {
-			int randX = new Random().nextInt(cells.length);
-			int randY = new Random().nextInt(cells[0].length);
-			return cells[randX][randY];
+			List<Cell> allCells = new ArrayList<>();
+			for (int i = 0; i < cells.length; i++) {
+				for (int j = 0; j < cells[i].length; j++) {
+					allCells.add(cells[i][j]);
+				}
+			}
+			return calcBestStrategicCell(allCells);
 		}
 
 		// Cell to return
@@ -414,8 +417,7 @@ public class BoardSolver {
 
 		if (nonAdjacentProb.compareTo(cellBestProb) == -1) {
 			// Select a random non adjacent cell
-			int rndNonAdjacentIdx = new Random().nextInt(nonAdjacentCells.size());
-			cellWithBestProb = nonAdjacentCells.get(rndNonAdjacentIdx);
+			cellWithBestProb = calcBestStrategicCell(nonAdjacentCells);
 		} else if (cellBestProb.compareTo(new BigDecimal(knownCellOdds.get(orderedCells.get(1)))) == 0) {
 			List<Cell> equalOddCells = new ArrayList<>();
 			for (int i = 0; i < orderedCells.size(); i++) {
