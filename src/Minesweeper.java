@@ -209,7 +209,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 			public void actionPerformed(ActionEvent e) {
 				// Find a guarenteed mine/safe cell, if non found (returns false):
 				// Ask the user if they would like to select the safest/least dangerous cell
-				if (!solver.SATSolve()) {
+				/*if (!solver.SATSolve()) {
 					int dialogResult = JOptionPane.showConfirmDialog(null,
 							"No more known moves available. Would you like to select the 'least dangerous' cell?",
 							"No More Known Moves", JOptionPane.YES_NO_OPTION);
@@ -217,6 +217,11 @@ public class Minesweeper extends JFrame implements ActionListener {
 						Cell cell = solver.calcCellOdds();
 						select(cell.getX(), cell.getY());
 					}
+				}*/
+				try {
+					solver.SATSolve();
+				} catch (Exception e1) {
+					e1.printStackTrace();
 				}
 			}
 		});

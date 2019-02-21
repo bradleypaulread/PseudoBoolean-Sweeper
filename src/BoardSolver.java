@@ -137,72 +137,67 @@ public class BoardSolver {
 
 	public boolean SATSolve() {
 		boolean change = false;
-		try {
-			List<HashMap<Cell, Integer>> allSolutions = solveMines();
-			HashMap<Cell, Integer> map = allSolutions.get(0);
-			for (Cell cell : map.keySet()) {
-				if (map.containsKey(cell)) {
-					boolean known = true;
-					int sign = map.get(cell);
-					for (int i = 1; i < allSolutions.size(); i++) {
-						if (allSolutions.get(i).get(cell) != sign) {
-							known = false;
-							break;
-						}
+		Map<Cell, Boolean> results = solveMines();
+		for (Cell current : results.keySet()) {
+			if (results.containsKey(current)) {
+				boolean mine = results.get(current);
+				if (mine) {
+					if (current.isClosed() && !current.isFlagged()) {
+						current.flag();
+						game.decrementMines();
+						change = true;
 					}
-					if (known) {
-						if (sign > 0) {
-							if (cell.isClosed() && !cell.isFlagged()) {
-								cell.flag();
-								game.decrementMines();
-								change = true;
-							}
-						} else {
-							if (cell.isBlank()) {
-								game.select(cell.getX(), cell.getY());
-								change = true;
-							}
-						}
+				} else {
+					if (current.isBlank()) {
+						game.select(current.getX(), current.getY());
+						change = true;
 					}
 				}
 			}
-			game.refresh();
-		} catch (ContradictionException | TimeoutException e1) {
-			e1.printStackTrace();
 		}
+		game.refresh();
 		return change;
 	}
 
-	public List<HashMap<Cell, Integer>> solveMines() throws ContradictionException, TimeoutException {
-		cells = game.getCells();
-		pbSolver = SolverFactory.newDefault();
-		List<HashMap<Cell, Integer>> allSolutions = new ArrayList<HashMap<Cell, Integer>>();
+	public List<Cell> getAdjacentCells(Cell[][] c) {
+		List<Cell> adjacentCells = new ArrayList<>();
+		for (int i = 0; i < c.length; i++) {
+			for (int j = 0; j < c[i].length; j++) {
+				Cell current = c[i][j];
+				List<Cell> neighbours = getNeighbours(current);
+				int noOfNeighbours = neighbours.size();
+				neighbours.removeIf(cell -> cell.isOpen());
+				int noOfClosedNeighbours = neighbours.size();
+				if (current.isClosed() && noOfClosedNeighbours < noOfNeighbours) {
+					adjacentCells.add(current);
+				}
+			}
+		}
+		return adjacentCells;
+	}
+
+	private void genBasicConstraints(IPBSolver solver) throws ContradictionException {
+
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
 		lastRun = new ArrayList<>();
 
-		int blanksAmt = 0;
-
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
-				if (current.isBlank()) {
-					lits.push(encodeCellId(current));
-					coeffs.push(BigInteger.ONE);
-					++blanksAmt;
-				}
+				lits.push(encodeCellId(current));
+				coeffs.push(BigInteger.ONE);
 			}
 		}
-		if (blanksAmt <= (cells.length * cells[0].length) / 10) {
-			// pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(game.getMinesLeft()));
-		}
+		solver.addExactly(lits, coeffs, BigInteger.valueOf(game.getNoOfMines()));
 		lits.clear();
 		coeffs.clear();
 
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
+
 				if (current.isOpen()) {
 					List<Cell> neighbours = getNeighbours(i, j);
 					lits.clear();
@@ -211,57 +206,87 @@ public class BoardSolver {
 					// Every open cell is guaranteed to not be a mine
 					lits.push(encodeCellId(current));
 					coeffs.push(BigInteger.ONE);
-					pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
+					solver.addExactly(lits, coeffs, BigInteger.ZERO);
 
 					lits.clear();
 					coeffs.clear();
-					if (calcClosedNeighbours(current.getX(), current.getY()) == current.getNumber()) {
+					// N-N pattern
+					// if (calcClosedNeighbours(current.getX(), current.getY()) == current.getNumber()) {
+					// 	for (Cell c : neighbours) {
+					// 		if (c.isClosed()) {
+					// 			lits.push(encodeCellId(c));
+					// 			coeffs.push(BigInteger.ONE);
+					// 			solver.addExactly(lits, coeffs, BigInteger.ONE);
+					// 			lits.clear();
+					// 			coeffs.clear();
+					// 		}
+					// 	}
+					// } else {
+						// Normal constraint
 						for (Cell c : neighbours) {
 							if (c.isClosed()) {
 								lits.push(encodeCellId(c));
 								coeffs.push(BigInteger.ONE);
-								pbSolver.addExactly(lits, coeffs, BigInteger.ONE);
-								lits.clear();
-								coeffs.clear();
 							}
 						}
-					} else {
-						for (Cell c : neighbours) {
-							lits.push(encodeCellId(c));
-							coeffs.push(BigInteger.ONE);
-						}
-						pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+						solver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 						lits.clear();
 						coeffs.clear();
-					}
+					//}
 				}
 			}
 		}
+		// try {
+		// 	if (solver.isSatisfiable()) {
+		// 		for (int i : solver.model()) {
+		// 			if (getAdjacentCells(this.cells).contains(decodeCellId(i))) {
+		// 				String sign = i < 0 ? "-" : "";
+		// 				System.out.print(sign + decodeCellId(i) + ", ");
+		// 			}
+		// 		}
+		// 		System.out.println();
+		// 	}
+		// } catch (Exception e) {
+		// }
+	}
 
-		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+	public Map<Cell, Boolean> solveMines() {
+		cells = game.getCells();
+		Map<Cell, Boolean> results = new HashMap<>();
+		List<Cell> adjacentCells = getAdjacentCells(this.cells);
+		for (int i = 0; i < adjacentCells.size(); i++) {
 
-		while (optimiser.isSatisfiable()) {
-			HashMap<Cell, Integer> knownCells = new HashMap<Cell, Integer>();
-			int[] model = pbSolver.model();
-			for (int i : model) {
-				int sign = i < 0 ? -1 : 1;
-				knownCells.put(decodeCellId(i), sign);
+			Cell current = adjacentCells.get(i);
+			for (int weight = 0; weight <= 1; weight++) {
+				IVecInt lit = new VecInt();
+				IVec<BigInteger> coeff = new Vec<BigInteger>();
+				BigInteger cellWeight = BigInteger.valueOf(weight);
+				try {
+					pbSolver = SolverFactory.newDefault();
+					genBasicConstraints(pbSolver);
+
+					lit.push(encodeCellId(current));
+					coeff.push(BigInteger.ONE);
+					pbSolver.addExactly(lit, coeff, cellWeight);
+
+					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+
+					if (!optimiser.isSatisfiable()) {
+						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+						results.put(current, isMine);
+						pbSolver.reset();
+						optimiser.reset();
+						break;
+					}
+					pbSolver.reset();
+					optimiser.reset();
+				} catch (ContradictionException | TimeoutException ee) {
+					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+					results.put(current, isMine);
+				}
 			}
-			allSolutions.add(knownCells);
-			// Find another solution
-			for (int i = 0; i < model.length; i++) {
-				model[i] = model[i] * -1;
-			}
-			IVecInt block = new VecInt(model);
-
-			optimiser.addBlockingClause(block);
 		}
-		System.out.println("NOT SAT!");
-
-		// Save solutions in case there are no 100% known moves left
-		if (!allSolutions.isEmpty())
-			lastRun = allSolutions;
-		return allSolutions;
+		return results;
 	}
 
 	/**
