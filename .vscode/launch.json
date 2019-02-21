@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - MineField",
+            "request": "launch",
+            "mainClass": "MineField",
+            "projectName": "SATMinesweeper"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - PBtest",
             "request": "launch",
             "mainClass": "PBtest",
@@ -19,7 +26,7 @@
             "name": "CodeLens (Launch) - Main",
             "request": "launch",
             "mainClass": "Main",
-            "projectName": "SATMinesweeper",
+            "projectName": "SATMinesweeper"
         }
     ]
 }

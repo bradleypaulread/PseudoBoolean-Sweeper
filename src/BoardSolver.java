@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
 
@@ -22,7 +23,8 @@ import org.sat4j.specs.TimeoutException;
 public class BoardSolver {
 
 	private IPBSolver pbSolver;
-	private volatile boolean execute = true;
+
+	private boolean quiet;
 
 	private Minesweeper game;
 	private Cell[][] cells;
@@ -33,20 +35,7 @@ public class BoardSolver {
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
-	}
-
-	public void run() {
-		while (execute) {
-			try {
-				Thread.sleep((long) 15000);
-			} catch (InterruptedException e) {
-				execute = false;
-			}
-		}
-	}
-
-	public void terminate() {
-		execute = false;
+		quiet = false;
 	}
 
 	/**
@@ -109,8 +98,13 @@ public class BoardSolver {
 						for (int k = 0; k < n.size(); k++) {
 							// If the cell has not been affected by the user (is
 							// blank of behaviour)
-							if (n.get(k).isClosed() && !n.get(k).isFlagged()) {
-								game.select(n.get(k).getX(), n.get(k).getY());
+							Cell cell = n.get(k);
+							if (cell.isClosed() && !cell.isFlagged()) {
+								if (quiet) {
+									game.quietSelect(cell.getX(), cell.getY());
+								} else {
+									game.select(cell.getX(), cell.getY());
+								}
 								return true;
 							}
 						}
@@ -123,15 +117,17 @@ public class BoardSolver {
 								game.decrementMines();
 							}
 						}
-						game.refresh();
+						if (!quiet) {
+							game.refresh();
+						}
 						return true;
 					}
 				}
 			}
 		}
-		if (SATSolve()) {
-			return true;
-		}
+		// if (SATSolve()) {
+		// 	return true;
+		// }
 		return false;
 	}
 
@@ -149,13 +145,19 @@ public class BoardSolver {
 					}
 				} else {
 					if (current.isBlank()) {
-						game.select(current.getX(), current.getY());
+						if (quiet) {
+							game.quietSelect(current.getX(), current.getY());
+						} else {
+							game.select(current.getX(), current.getY());
+						}
 						change = true;
 					}
 				}
 			}
 		}
-		game.refresh();
+		if (!quiet) {
+			game.refresh();
+		}
 		return change;
 	}
 
@@ -210,7 +212,7 @@ public class BoardSolver {
 
 					lits.clear();
 					coeffs.clear();
-					// N-N pattern
+					// //N-N pattern
 					// if (calcClosedNeighbours(current.getX(), current.getY()) == current.getNumber()) {
 					// 	for (Cell c : neighbours) {
 					// 		if (c.isClosed()) {
@@ -222,7 +224,7 @@ public class BoardSolver {
 					// 		}
 					// 	}
 					// } else {
-						// Normal constraint
+						//Normal constraint
 						for (Cell c : neighbours) {
 							if (c.isClosed()) {
 								lits.push(encodeCellId(c));
@@ -236,18 +238,6 @@ public class BoardSolver {
 				}
 			}
 		}
-		// try {
-		// 	if (solver.isSatisfiable()) {
-		// 		for (int i : solver.model()) {
-		// 			if (getAdjacentCells(this.cells).contains(decodeCellId(i))) {
-		// 				String sign = i < 0 ? "-" : "";
-		// 				System.out.print(sign + decodeCellId(i) + ", ");
-		// 			}
-		// 		}
-		// 		System.out.println();
-		// 	}
-		// } catch (Exception e) {
-		// }
 	}
 
 	public Map<Cell, Boolean> solveMines() {
@@ -489,5 +479,24 @@ public class BoardSolver {
 		}
 		System.out.println(equalOddCells.get(bestCellIdx));
 		return equalOddCells.get(bestCellIdx); // Placeholder
+	}
+
+	// To Remove
+	public Cell selectRandomCell() {
+		cells = game.getCells();
+		List<Cell> closedCells = new ArrayList<>();
+		for(int i = 0; i < cells.length; i++) {
+			for (int j = 0; j < cells[i].length; j++) {
+				Cell current = cells[i][j];
+				if (current.isClosed()) {
+					closedCells.add(current);
+				}
+			}
+		}
+		return closedCells.get(new Random().nextInt(closedCells.size()));
+	}
+
+	public void setQuiet() {
+		quiet = true;
 	}
 }

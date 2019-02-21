@@ -31,7 +31,13 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 
-public class Minesweeper extends JFrame implements ActionListener {
+
+public class Minesweeper extends JFrame {
+
+	public enum Difficulty {
+		EASY, MEDIUM, HARD
+	} 
+
 	private static final long serialVersionUID = 1L;
 
 	// Password to unlock MineField.java
@@ -64,6 +70,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves = 0; // Number if moves made by the player.
 	private int minesLeft;
+	private boolean gameWon;
 
 	private BoardSolver solver;
 
@@ -76,8 +83,54 @@ public class Minesweeper extends JFrame implements ActionListener {
 		setup(x, y, d);
 	}
 
+	public Minesweeper(Difficulty d) {
+		switch (d) {
+			case EASY:
+				new Minesweeper(9, 9, 10);
+				break;
+			case MEDIUM:
+				new Minesweeper(16, 16, 40);
+				break;
+			case HARD:
+				new Minesweeper(30, 16, 99);
+				break;
+			default:
+				// If something unexpected happens simply
+				// load up an easy board.
+				new Minesweeper(9, 9, 10);
+				break;
+		}
+	}
+
 	public Minesweeper() {
-		setup(11, 11, 15);
+		new Minesweeper(Difficulty.EASY);
+	}
+
+	public Minesweeper(int x, int y, int d, MineField mf) {
+		width = x;
+		height = y;
+		noOfMines = d;
+		minesLeft = d;
+		gameWon = false;
+		// Load interface components
+		board = new Board(this, x, y);
+		loadButtons();
+		loadFileMenu();
+		Container fl = new Container();
+		fl.add(board);
+		fl.setLayout(new FlowLayout());
+		add(fl, BorderLayout.CENTER);
+
+		// Reset board to a fresh setting
+		reset();
+
+		//setTitle("Minesweeper");
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setResizable(false);
+		//pack();
+		//Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		//setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
+		//setVisible(true);
 	}
 
 	private void setup(int x, int y, int d) {
@@ -254,7 +307,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		diffEasyRb.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Minesweeper newGame = new Minesweeper(11, 11, 15);
+				Minesweeper newGame = new Minesweeper(Difficulty.EASY);
 				newGame.getDiffEasyRb().setSelected(true);
 				newGame.getDiffEasyRb().setEnabled(false);
 				newGame.getDiffMediumRb().setEnabled(true);
@@ -271,7 +324,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		diffMediumRb.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Minesweeper newGame = new Minesweeper(16, 16, 40);
+				Minesweeper newGame = new Minesweeper(Difficulty.MEDIUM);
 				newGame.getDiffMediumRb().setSelected(true);
 				newGame.getDiffEasyRb().setEnabled(true);
 				newGame.getDiffMediumRb().setEnabled(false);
@@ -288,7 +341,7 @@ public class Minesweeper extends JFrame implements ActionListener {
 		diffHardRb.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Minesweeper newGame = new Minesweeper(30, 16, 99);
+				Minesweeper newGame = new Minesweeper(Difficulty.HARD);
 				newGame.getDiffHardRb().setSelected(true);
 				newGame.getDiffEasyRb().setEnabled(true);
 				newGame.getDiffMediumRb().setEnabled(true);
@@ -373,6 +426,43 @@ public class Minesweeper extends JFrame implements ActionListener {
 		}
 
 		refresh();
+	}
+
+	public void quietSelect(int x, int y) {
+		// Dont perform any behaviour if cell is flagged or game has already been
+		// won/lost
+		if (cells[x][y].isFlagged() || isGameOver) {
+			return;
+		}
+
+		// How many mines are around the cell
+		// x and y has to be reversed as MineField.java takes parameters
+		// (height, width) not (width, height).
+		int cellNum = mineField.uncover(y, x);
+
+		cells[x][y].setNumber(cellNum);
+		cells[x][y].open();
+
+		// If there are 0 neighbouring mines then recursively open neighbouring
+		// cells
+		if (cellNum == 0) {
+			List<Cell> neighbours = solver.getNeighbours(x, y); // Reuse code thats in solver class
+			for (Cell c : neighbours) {
+			// Only attempt to open closed cells
+			if (c.isClosed() && !c.isFlagged()) {
+				quietSelect(c.getX(), c.getY());
+			}
+		}
+		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
+			System.out.println("LOST ON CELL " + cells[x][y]);
+			isGameOver = true;
+			return;
+		}
+
+		if (won()) { // If the game has been beaten (number of closed cells =
+			gameWon = true;
+			isGameOver = true;
+		}
 	}
 
 	public void clearNeighbours(int x, int y) {
@@ -589,8 +679,8 @@ public class Minesweeper extends JFrame implements ActionListener {
 		debug = value;
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public boolean isGameWon() {
+		return gameWon;
 	}
 }
 
