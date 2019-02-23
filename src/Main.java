@@ -14,8 +14,10 @@ import java.util.*;
 public class Main {
 	public static void main(String[] args) throws IOException {
 
-		Simulation sim = new Simulation(1000);
+		GameSimulation sim = new GameSimulation(1000);
 		sim.startPatternMatchSim();
+		sim.startSATSim();
+		sim.startJointSim();
 
 		int x = 6; // Width of the board
 		int y = 6; // Height of the board

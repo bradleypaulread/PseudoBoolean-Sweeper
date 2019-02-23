@@ -85,7 +85,7 @@ public class BoardSolver {
 	 *         cells left on the board that are considered "safe" and no cells that
 	 *         are guaranteed mines.
 	 */
-	public boolean assist() {
+	public boolean patternMatch() {
 		cells = game.getCells();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -125,9 +125,6 @@ public class BoardSolver {
 				}
 			}
 		}
-		// if (SATSolve()) {
-		// 	return true;
-		// }
 		return false;
 	}
 
@@ -159,6 +156,27 @@ public class BoardSolver {
 			game.refresh();
 		}
 		return change;
+	}
+
+	public boolean jointSolve() {
+		if (!patternMatch()) {
+			if (!SATSolve()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * 
+	 */
+	public boolean fullSolve() {
+		if (!patternMatch()) {
+			if (!SATSolve()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public List<Cell> getAdjacentCells(Cell[][] c) {

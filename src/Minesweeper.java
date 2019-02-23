@@ -192,13 +192,7 @@ public class Minesweeper extends JFrame {
 
 		// Add icon to JFrame and Taskbar
 		List<Image> icons = new ArrayList<Image>();
-		Image img1 = Toolkit.getDefaultToolkit().getImage("resources/bomb16x16.png");
-		Image img2 = Toolkit.getDefaultToolkit().getImage("resources/bomb24x24.png");
-		Image img3 = Toolkit.getDefaultToolkit().getImage("resources/bomb32x32.png");
 		Image img4 = Toolkit.getDefaultToolkit().getImage("resources/bomb64x64.png");
-		icons.add(img1);
-		icons.add(img2);
-		icons.add(img3);
 		icons.add(img4);
 		this.setIconImages(icons);
 
@@ -219,7 +213,7 @@ public class Minesweeper extends JFrame {
 		assistBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (!solver.assist() && !isGameOver()) {
+				if (!solver.patternMatch() && !isGameOver()) {
 					showNoMoreMovesDialog();
 				}
 			}
@@ -229,7 +223,7 @@ public class Minesweeper extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// Perform the assist action until no more safe moves exist
-				while (solver.assist())
+				while (solver.patternMatch())
 					;
 				if (!isGameOver) {
 					int dialogResult = JOptionPane.showConfirmDialog(null,
@@ -249,7 +243,7 @@ public class Minesweeper extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// Perform the assist action until no more safe moves exist
 				while (!isGameOver) {
-					while (solver.assist())
+					while (solver.patternMatch())
 						;
 					Cell cell = solver.calcCellOdds();
 					select(cell.getX(), cell.getY());
