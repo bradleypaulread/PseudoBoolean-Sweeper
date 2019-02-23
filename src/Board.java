@@ -72,10 +72,22 @@ public class Board extends JPanel {
 					}
 					// If cell is marked as a hint
 					// set colour to Pink
-				} else if (current.isHint()) {
+				} else if (current.isSafeHint()) {
+					g.setColor(Color.PINK);
+					drawCell(g, posX, posY);
+					g.setColor(Color.WHITE);
+					g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 2)));
+					g.drawString("S", (i * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
+				(j * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
+				g.setColor(Color.BLACK);
+
+				} else if (current.isMineHint()) {
 					g.setColor(Color.PINK);
 					drawCell(g, posX, posY);
 					g.setColor(Color.BLACK);
+					g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 2)));
+					g.drawString("M", (i * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
+				(j * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
 					// If cell has not been clicked
 					// set colour to Gray
 				} else if (current.isClosed()) {

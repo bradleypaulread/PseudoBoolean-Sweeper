@@ -19,7 +19,8 @@ public class Cell
 	// Cell behaviour
 	private boolean flagged;
 	private boolean open;
-	private boolean hint;
+	private boolean safeHint;
+	private boolean mineHint;
 	private boolean fail;
  
 	public Cell(int x, int y)
@@ -28,7 +29,8 @@ public class Cell
 		this.y = y;
 		flagged = false;
 		open = false;
-		hint = false;
+		safeHint = false;
+		mineHint = false;
 		fail = false;
 	}
  
@@ -73,43 +75,6 @@ public class Cell
 		return fail;
 	}
  
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (flagged ? 1231 : 1237);
-		result = prime * result + (hint ? 1231 : 1237);
-		result = prime * result + number;
-		result = prime * result + (open ? 1231 : 1237);
-		result = prime * result + x;
-		result = prime * result + y;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Cell other = (Cell) obj;
-		if (flagged != other.flagged)
-			return false;
-		if (hint != other.hint)
-			return false;
-		if (number != other.number)
-			return false;
-		if (open != other.open)
-			return false;
-		if (x != other.x)
-			return false;
-		if (y != other.y)
-			return false;
-		return true;
-	}
-
 	public boolean isOpen()
 	{
 		return open;
@@ -132,30 +97,34 @@ public class Cell
 		return (number == -1);
 	}
 	
-	public boolean isHint() {
-		return hint;
-	}
-	
-	public void setHint() {
-		hint = true;
-	}
-	
 	public void resetHint() {
-		hint = false;
+		safeHint = false;
+		mineHint = false;
 	}
+
+	public boolean isSafeHint() {
+		return safeHint;
+	}
+	
+	public void setSafeHint() {
+		safeHint = true;
+	}
+	
+	public boolean isMineHint() {
+		return mineHint;
+	}
+	
+	public void setMineHint() {
+		mineHint = true;
+	}
+	
 	
 	/**
 	 * @return If the cell has default values.
 	 */
 	public boolean isBlank() {
-		return !open && !flagged && !hint;
+		return !open && !flagged;
 	}
-
-	// @Override
-	// public String toString() {
-	// 	return "Cell [Pos=[" + x + "," + y + "]" + " isMine=" + this.isMine() + ", isFlagged=" + flagged + ", isOpen=" + open + ", isHint=" + isHint() + ", number="
-	// 			+ number + "]";
-	// }
 
 	@Override
 	public String toString() {
@@ -167,5 +136,48 @@ public class Cell
 	 */
 	public void invertFlag() {
 		flagged = !flagged;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (fail ? 1231 : 1237);
+		result = prime * result + (flagged ? 1231 : 1237);
+		result = prime * result + (mineHint ? 1231 : 1237);
+		result = prime * result + number;
+		result = prime * result + (open ? 1231 : 1237);
+		result = prime * result + (safeHint ? 1231 : 1237);
+		result = prime * result + x;
+		result = prime * result + y;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Cell other = (Cell) obj;
+		if (fail != other.fail)
+			return false;
+		if (flagged != other.flagged)
+			return false;
+		if (mineHint != other.mineHint)
+			return false;
+		if (number != other.number)
+			return false;
+		if (open != other.open)
+			return false;
+		if (safeHint != other.safeHint)
+			return false;
+		if (x != other.x)
+			return false;
+		if (y != other.y)
+			return false;
+		return true;
 	}
 }

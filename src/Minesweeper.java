@@ -31,12 +31,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 
-
 public class Minesweeper extends JFrame {
-
-	public enum Difficulty {
-		EASY, MEDIUM, HARD
-	} 
 
 	private static final long serialVersionUID = 1L;
 
@@ -45,14 +40,21 @@ public class Minesweeper extends JFrame {
 
 	// Swing components (buttons etc.)
 	private JButton resetBtn = new JButton("Reset");
-	private JButton assistBtn = new JButton("Assist");
-	private JButton autoBtn = new JButton("Auto");
+
+	private JButton ptHintBtn = new JButton("Hint");
+	private JButton ptAssistBtn = new JButton("Assist");
+	private JButton ptSolveBtn = new JButton("Solve");
+
+	private JButton SATHintBtn = new JButton("Hint");
+	private JButton SATAssistBtn = new JButton("Assist");
+	private JButton SATSolveBtn = new JButton("Solve");
+
 	private JButton fullAutoBtn = new JButton("Full Auto");
-	private JButton hintBtn = new JButton("Hint");
-	private JButton SATSolveBtn = new JButton("SAT Solve");
+
 	private JLabel movesLbl = new JLabel();
 	private JLabel minesLbl = new JLabel();
-	private JCheckBoxMenuItem debugCb = new JCheckBoxMenuItem("Debug Output");
+	private JCheckBoxMenuItem debugCb = new JCheckBoxMenuItem("Debug Mode");
+	private JCheckBoxMenuItem strategyCb = new JCheckBoxMenuItem("Use Strategy");
 	private JRadioButtonMenuItem diffEasyRb = new JRadioButtonMenuItem("Easy");
 	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Medium");
 	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Hard");
@@ -85,20 +87,20 @@ public class Minesweeper extends JFrame {
 
 	public Minesweeper(Difficulty d) {
 		switch (d) {
-			case EASY:
-				new Minesweeper(9, 9, 10);
-				break;
-			case MEDIUM:
-				new Minesweeper(16, 16, 40);
-				break;
-			case HARD:
-				new Minesweeper(30, 16, 99);
-				break;
-			default:
-				// If something unexpected happens simply
-				// load up an easy board.
-				new Minesweeper(9, 9, 10);
-				break;
+		case EASY:
+			new Minesweeper(9, 9, 10);
+			break;
+		case MEDIUM:
+			new Minesweeper(16, 16, 40);
+			break;
+		case HARD:
+			new Minesweeper(30, 16, 99);
+			break;
+		default:
+			// If something unexpected happens simply
+			// load up an easy board.
+			new Minesweeper(9, 9, 10);
+			break;
 		}
 	}
 
@@ -106,31 +108,43 @@ public class Minesweeper extends JFrame {
 		new Minesweeper(Difficulty.EASY);
 	}
 
-	public Minesweeper(int x, int y, int d, MineField mf) {
-		width = x;
-		height = y;
-		noOfMines = d;
-		minesLeft = d;
+	//
+	public Minesweeper(Difficulty d, MineField mf) {
+		switch (d) {
+			case EASY:
+				width = 9;
+				height = 9;
+				noOfMines = 10;
+				minesLeft = 10;
+				break;
+			case MEDIUM:
+				width = 16;
+				height = 16;
+				noOfMines = 40;
+				minesLeft = 40;
+				break;
+			case HARD:
+				width = 30;
+				height = 16;
+				noOfMines = 99;
+				minesLeft = 99;
+				break;
+			default:
+				break;
+		}
+		isGameOver = false;
+		moves = 0;
+		minesLeft = noOfMines;
+		cells = new Cell[width][height];
+
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				cells[i][j] = new Cell(i, j);
+			}
+		}
 		gameWon = false;
-		// Load interface components
-		board = new Board(this, x, y);
-		loadButtons();
-		loadFileMenu();
-		Container fl = new Container();
-		fl.add(board);
-		fl.setLayout(new FlowLayout());
-		add(fl, BorderLayout.CENTER);
-
 		// Reset board to a fresh setting
-		reset();
-
-		//setTitle("Minesweeper");
-		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//setResizable(false);
-		//pack();
-		//Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		//setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
-		//setVisible(true);
+		mineField = mf;
 	}
 
 	private void setup(int x, int y, int d) {
@@ -166,9 +180,12 @@ public class Minesweeper extends JFrame {
 	 * Load buttons to the JFrame and assign their action listeners.
 	 */
 	private void loadButtons() {
-		Container buttons = new Container();
+		Container controlBtns = new Container();
+		Container ptBtns = new Container();
+		Container SATBtns = new Container();
 		Container stats = new Container();
 		Container topBar = new Container();
+		controlBtns.setLayout(new FlowLayout());
 		topBar.setLayout(new BorderLayout());
 
 		stats.setLayout(new FlowLayout());
@@ -177,15 +194,22 @@ public class Minesweeper extends JFrame {
 		movesLbl.setText(Integer.toString(moves));
 		minesLbl.setText(Integer.toString(minesLeft));
 
-		buttons.setLayout(new FlowLayout());
-		buttons.add(fullAutoBtn);
-		buttons.add(autoBtn);
-		buttons.add(SATSolveBtn);
-		buttons.add(assistBtn);
-		buttons.add(hintBtn);
+		ptBtns.setLayout(new FlowLayout());
+		ptBtns.add(ptHintBtn);
+		ptBtns.add(ptAssistBtn);
+		ptBtns.add(ptSolveBtn);
+
+		SATBtns.setLayout(new FlowLayout());
+		SATBtns.add(SATHintBtn);
+		SATBtns.add(SATAssistBtn);
+		SATBtns.add(SATSolveBtn);
+
+		controlBtns.add(ptBtns);
+		controlBtns.add(fullAutoBtn);
+		controlBtns.add(SATBtns);
 
 		topBar.add(stats, BorderLayout.NORTH);
-		topBar.add(buttons, BorderLayout.SOUTH);
+		topBar.add(controlBtns, BorderLayout.SOUTH);
 
 		this.add(topBar, BorderLayout.NORTH);
 		this.add(resetBtn, BorderLayout.SOUTH);
@@ -203,14 +227,21 @@ public class Minesweeper extends JFrame {
 			}
 		});
 
-		hintBtn.addActionListener(new ActionListener() {
+		ptHintBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				solver.genHint();
+				solver.patternMatchHint();
 			}
 		});
 
-		assistBtn.addActionListener(new ActionListener() {
+		SATHintBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				solver.SATHint();
+			}
+		});
+
+		ptAssistBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!solver.patternMatch() && !isGameOver()) {
@@ -219,7 +250,16 @@ public class Minesweeper extends JFrame {
 			}
 		});
 
-		autoBtn.addActionListener(new ActionListener() {
+		SATAssistBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!solver.SATSolve() && !isGameOver()) {
+					showNoMoreMovesDialog();
+				}
+			}
+		});
+
+		ptSolveBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// Perform the assist action until no more safe moves exist
@@ -229,10 +269,29 @@ public class Minesweeper extends JFrame {
 					int dialogResult = JOptionPane.showConfirmDialog(null,
 							"No more known moves available. Would you like to select the 'least dangerous' cell?",
 							"No More Known Moves", JOptionPane.YES_NO_OPTION);
-							
+
 					if (dialogResult == JOptionPane.YES_OPTION) {
-						Cell cell = solver.calcCellOdds();
-						select(cell.getX(), cell.getY());
+						// Cell cell = solver.calcCellOdds();
+						// select(cell.getX(), cell.getY());
+					}
+				}
+			}
+		});
+
+		SATSolveBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Perform the assist action until no more safe moves exist
+				while (solver.SATSolve())
+					;
+				if (!isGameOver) {
+					int dialogResult = JOptionPane.showConfirmDialog(null,
+							"No more known moves available. Would you like to select the 'least dangerous' cell?",
+							"No More Known Moves", JOptionPane.YES_NO_OPTION);
+
+					if (dialogResult == JOptionPane.YES_OPTION) {
+						// Cell cell = solver.calcCellOdds();
+						// select(cell.getX(), cell.getY());
 					}
 				}
 			}
@@ -243,32 +302,9 @@ public class Minesweeper extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// Perform the assist action until no more safe moves exist
 				while (!isGameOver) {
-					while (solver.patternMatch())
+					while (solver.jointSolve())
 						;
-					Cell cell = solver.calcCellOdds();
-					select(cell.getX(), cell.getY());
-				}
-			}
-		});
-
-		SATSolveBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Find a guarenteed mine/safe cell, if non found (returns false):
-				// Ask the user if they would like to select the safest/least dangerous cell
-				/*if (!solver.SATSolve()) {
-					int dialogResult = JOptionPane.showConfirmDialog(null,
-							"No more known moves available. Would you like to select the 'least dangerous' cell?",
-							"No More Known Moves", JOptionPane.YES_NO_OPTION);
-					if (dialogResult == JOptionPane.YES_OPTION) {
-						Cell cell = solver.calcCellOdds();
-						select(cell.getX(), cell.getY());
-					}
-				}*/
-				try {
-					solver.SATSolve();
-				} catch (Exception e1) {
-					e1.printStackTrace();
+					break;
 				}
 			}
 		});
@@ -294,7 +330,15 @@ public class Minesweeper extends JFrame {
 			}
 		});
 
+		strategyCb.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// To implement
+			}
+		});
+
 		menu.add(debugCb);
+		menu.add(strategyCb);
 		menu.addSeparator();
 		diffEasyRb.setSelected(true);
 		diffEasyRb.setEnabled(false);
@@ -440,15 +484,14 @@ public class Minesweeper extends JFrame {
 		// If there are 0 neighbouring mines then recursively open neighbouring
 		// cells
 		if (cellNum == 0) {
-			List<Cell> neighbours = solver.getNeighbours(x, y); // Reuse code thats in solver class
+			List<Cell> neighbours = getNeighbours(x, y); // Reuse code thats in solver class
 			for (Cell c : neighbours) {
-			// Only attempt to open closed cells
-			if (c.isClosed() && !c.isFlagged()) {
-				quietSelect(c.getX(), c.getY());
+				// Only attempt to open closed cells
+				if (c.isClosed() && !c.isFlagged()) {
+					quietSelect(c.getX(), c.getY());
+				}
 			}
-		}
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
-			System.out.println("LOST ON CELL " + cells[x][y]);
 			isGameOver = true;
 			return;
 		}
@@ -460,7 +503,7 @@ public class Minesweeper extends JFrame {
 	}
 
 	public void clearNeighbours(int x, int y) {
-		List<Cell> neighbours = solver.getNeighbours(x, y); // Reuse code thats in solver class
+		List<Cell> neighbours = getNeighbours(x, y); // Reuse code thats in solver class
 		for (Cell c : neighbours) {
 			// Only attempt to open closed cells
 			if (c.isClosed() && !c.isFlagged()) {
@@ -474,11 +517,7 @@ public class Minesweeper extends JFrame {
 	 */
 	private void endGame() {
 		isGameOver = true;
-		hintBtn.setEnabled(false);
-		assistBtn.setEnabled(false);
-		autoBtn.setEnabled(false);
-		fullAutoBtn.setEnabled(false);
-		SATSolveBtn.setEnabled(false);
+		disableAllBtns();
 		try {
 			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
@@ -493,11 +532,7 @@ public class Minesweeper extends JFrame {
 	public void reset() {
 		isGameOver = false;
 		moves = 0;
-		hintBtn.setEnabled(true);
-		assistBtn.setEnabled(true);
-		autoBtn.setEnabled(true);
-		fullAutoBtn.setEnabled(true);
-		SATSolveBtn.setEnabled(true);
+		enableAllBtns();
 		minesLeft = noOfMines;
 		minesLbl.setText("Mines Left: " + Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
@@ -567,18 +602,50 @@ public class Minesweeper extends JFrame {
 	 * @param y Y-axis coordinate of cell.
 	 */
 	private void debug(int x, int y) {
-		//System.out.println("=======================");
-		//System.out.println("Cell info = " + cells[x][y]);
+		// System.out.println("=======================");
+		// System.out.println("Cell info = " + cells[x][y]);
 		// System.out.println("Set of neighbors = " + solver.getNeighbours(x, y));
 		// System.out.println("Num of uncovered neighbors = " +
 		// solver.calcClosedNeighbours(x, y));
 		// System.out.println("Num of flagged neighbors = " +
 		// solver.calcFlaggedNeighbours(x, y));
-		//System.out.println("=======================");
+		// System.out.println("=======================");
 	}
 
-	public void showNoMoreMovesDialog() {
+	private List<Cell> getNeighbours(int x, int y) {
+		List<Cell> neighbours = new ArrayList<Cell>();
+		for (int i = x - 1; i <= x + 1; ++i) {
+			for (int j = y - 1; j <= y + 1; ++j) {
+				if (i >= 0 && i < cells.length && j >= 0 && j < cells[i].length && !(i == x && j == y)) {
+					neighbours.add(cells[i][j]);
+				}
+			}
+		}
+		return neighbours;
+	}
+
+	private void showNoMoreMovesDialog() {
 		JOptionPane.showMessageDialog(null, "No known safe moves.");
+	}
+
+	private void disableAllBtns() {
+		ptHintBtn.setEnabled(false);
+		ptAssistBtn.setEnabled(false);
+		ptSolveBtn.setEnabled(false);
+		SATHintBtn.setEnabled(false);
+		SATAssistBtn.setEnabled(false);
+		SATSolveBtn.setEnabled(false);
+		fullAutoBtn.setEnabled(false);
+	}
+
+	private void enableAllBtns() {
+		ptHintBtn.setEnabled(true);
+		ptAssistBtn.setEnabled(true);
+		ptSolveBtn.setEnabled(true);
+		SATHintBtn.setEnabled(true);
+		SATAssistBtn.setEnabled(true);
+		SATSolveBtn.setEnabled(true);
+		fullAutoBtn.setEnabled(true);
 	}
 
 	// checks if (i,j) is within the field (taken from MineField.java)
@@ -605,20 +672,14 @@ public class Minesweeper extends JFrame {
 		return isGameOver;
 	}
 
-	public JButton getHintBtn() {
-		return hintBtn;
-	}
-
-	public JButton getAssistBtn() {
-		return assistBtn;
-	}
-
-	public JButton getAutoBtn() {
-		return autoBtn;
-	}
-
 	public List<Cell> getHintCells() {
 		return hintCells;
+	}
+
+	public void resetHints() {
+		for (Cell cell : hintCells) {
+			cell.resetHint();
+		}
 	}
 
 	public MineField getMineField() {

@@ -1,4 +1,8 @@
 import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JProgressBar;
+import java.awt.FlowLayout;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -15,6 +19,10 @@ public class GameSimulation {
 
     private int noOfSims;
     private List<List<MineField>> fields;
+    private Difficulty[] diffs = {Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD};
+
+    JFrame test = new JFrame("test");
+    final JProgressBar pb = new JProgressBar();
 
     public GameSimulation() {
         // fields = new ArrayList<>();
@@ -23,24 +31,32 @@ public class GameSimulation {
     public GameSimulation(int noOfSims) {
         this.noOfSims = noOfSims;
         reset(noOfSims);
-        warmup(noOfSims);
+        
+        warmup();
+
+        pb.setMinimum(0);
+        pb.setMaximum((noOfSims*fields.size())*3);
+        pb.setStringPainted(true);
+ 
+        // add progress bar
+        test.setLayout(new FlowLayout());
+        test.getContentPane().add(pb);
+ 
+        test.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        test.pack();
+        test.setLocationRelativeTo(null);
+        test.setVisible(true);
     }
 
-    private void warmup(int noOfSims) {
-        int limit = 0;
-        if (noOfSims < 200) {
-            limit = noOfSims;
-        } else if (noOfSims >= 200 && noOfSims < 400) {
-            limit = noOfSims / (noOfSims / 10);
-        } else {
-            limit = noOfSims / 200;
-        }
+    private void warmup() {
+        int limit = 3;
+        System.out.println("WARMING UP...");
         for (int init = 0; init < limit; init++) {
             for (int fieldDiff = 0; fieldDiff < fields.size(); fieldDiff++) {
                 for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
                     Gson gson = new Gson();
                     MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                    Minesweeper game = new Minesweeper(9, 9, 10, mineField);
+                    Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
                     BoardSolver solver = new BoardSolver(game);
                     solver.setQuiet();
                     while (!game.isGameOver()) {
@@ -67,7 +83,7 @@ public class GameSimulation {
             for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
                 Gson gson = new Gson();
                 MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                Minesweeper game = new Minesweeper(9, 9, 10, mineField);
+                Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
                 BoardSolver solver = new BoardSolver(game);
                 solver.setQuiet();
                 long start = System.nanoTime();
@@ -83,6 +99,7 @@ public class GameSimulation {
                     wins[fieldDiff] =  wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
+                pb.setValue(pb.getValue()+1);
             }
         }
 
@@ -93,11 +110,10 @@ public class GameSimulation {
             for (int j = 0; j < size; j++) {
                 total += times.get(i).get(j);
             }
-            long avg = (total / size);
+            long avg = size == 0 ? 0 : (total / size);
             avgTimes[i] = avg;
         }
         writeResults(wins, avgTimes, PATTERN_PATH);
-        System.out.println("Finished!");
     }
 
     public void startSATSim() {
@@ -113,12 +129,12 @@ public class GameSimulation {
             for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
                 Gson gson = new Gson();
                 MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                Minesweeper game = new Minesweeper(9, 9, 10, mineField);
+                Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
                 BoardSolver solver = new BoardSolver(game);
                 solver.setQuiet();
                 long start = System.nanoTime();
                 while (!game.isGameOver()) {
-                    if (!solver.patternMatch()) {
+                    if (!solver.SATSolve()) {
                         Cell c = solver.selectRandomCell();
                         game.quietSelect(c.getX(), c.getY());
                     }
@@ -129,6 +145,8 @@ public class GameSimulation {
                     wins[fieldDiff] =  wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
+                System.out.println("" + fieldDiff + " - " + i);
+                pb.setValue(pb.getValue()+1);
             }
         }
 
@@ -139,11 +157,10 @@ public class GameSimulation {
             for (int j = 0; j < size; j++) {
                 total += times.get(i).get(j);
             }
-            long avg = (total / size);
+            long avg = size == 0 ? 0 : (total / size);
             avgTimes[i] = avg;
         }
         writeResults(wins, avgTimes, SAT_PATH);
-        System.out.println("Finished!");
     }
 
     public void startJointSim() {
@@ -159,12 +176,12 @@ public class GameSimulation {
             for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
                 Gson gson = new Gson();
                 MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                Minesweeper game = new Minesweeper(9, 9, 10, mineField);
+                Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
                 BoardSolver solver = new BoardSolver(game);
                 solver.setQuiet();
                 long start = System.nanoTime();
                 while (!game.isGameOver()) {
-                    if (!solver.patternMatch()) {
+                    if (!solver.jointSolve()) {
                         Cell c = solver.selectRandomCell();
                         game.quietSelect(c.getX(), c.getY());
                     }
@@ -175,6 +192,7 @@ public class GameSimulation {
                     wins[fieldDiff] =  wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
+                pb.setValue(pb.getValue()+1);
             }
         }
 
@@ -185,11 +203,10 @@ public class GameSimulation {
             for (int j = 0; j < size; j++) {
                 total += times.get(i).get(j);
             }
-            long avg = (total / size);
+            long avg = size == 0 ? 0 : (total / size);
             avgTimes[i] = avg;
         }
         writeResults(wins, avgTimes, JOINT_PATH);
-        System.out.println("Finished!");
     }
 
     public void startJointStratSim() {
@@ -236,35 +253,35 @@ public class GameSimulation {
                 sb.append(times[i]);
                 sb.append('\n');
             }
-            sb.append("AVG.");
-            sb.append(',');
-            sb.append(noOfSims);
-            sb.append(',');
-            int totalWins = 0;
-            for (int i : wins) {
-                totalWins += i;
-            }
-            int avgWin = totalWins / wins.length;
-            sb.append(avgWin);
-            sb.append(',');
-            int totalLoss = 0;
-            for (int i : wins) {
-                totalLoss += noOfSims - i;
-            }
-            int avgLoss = totalLoss / wins.length;
-            sb.append(avgLoss);
-            sb.append(',');
-            double avgWinPercent = (double) avgWin / (double) noOfSims;
-            sb.append(avgWinPercent);
-            sb.append(',');
-            long totalTime = 0;
-            for (long i : times) {
-                totalTime += i;
-            }
-            long avgTime = totalTime / times.length;            
-            sb.append(avgTime);
-            sb.append(',');
-            sb.append('\n');
+            // sb.append("AVG.");
+            // sb.append(',');
+            // sb.append(noOfSims);
+            // sb.append(',');
+            // int totalWins = 0;
+            // for (int i : wins) {
+            //     totalWins += i;
+            // }
+            // int avgWin = totalWins / wins.length;
+            // sb.append(avgWin);
+            // sb.append(',');
+            // int totalLoss = 0;
+            // for (int i : wins) {
+            //     totalLoss += noOfSims - i;
+            // }
+            // int avgLoss = totalLoss / wins.length;
+            // sb.append(avgLoss);
+            // sb.append(',');
+            // double avgWinPercent = (double) avgWin / (double) noOfSims;
+            // sb.append(avgWinPercent);
+            // sb.append(',');
+            // long totalTime = 0;
+            // for (long i : times) {
+            //     totalTime += i;
+            // }
+            // long avgTime = totalTime / times.length;            
+            // sb.append(avgTime);
+            // sb.append(',');
+            // sb.append('\n');
 
             writer.write(sb.toString());
 
@@ -285,7 +302,7 @@ public class GameSimulation {
         }
         List<MineField> fieldsHard = new ArrayList<>(noOfSims);
         for (int i = 0; i < noOfSims; i++) {
-            fieldsHard.add(new MineField(30, 16, 99));
+            fieldsHard.add(new MineField(16, 30, 99));
         }
         fields = new ArrayList<>();
         fields.add(fieldsEasy);
