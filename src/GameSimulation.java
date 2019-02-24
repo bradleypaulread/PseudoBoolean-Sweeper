@@ -2,6 +2,8 @@ import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JProgressBar;
+
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,7 +11,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import com.google.gson.Gson;
 
-public class GameSimulation {
+public class GameSimulation extends JFrame {
 
     // File locations for storing simulation results
     private final String PATTERN_PATH = "resources/PatternMatching-Results.csv";
@@ -21,11 +23,42 @@ public class GameSimulation {
     private List<List<MineField>> fields;
     private Difficulty[] diffs = {Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD};
 
-    JFrame test = new JFrame("test");
-    final JProgressBar pb = new JProgressBar();
+    private final JProgressBar progressBar;
 
     public GameSimulation() {
+        progressBar = new JProgressBar();
         // fields = new ArrayList<>();
+    }
+
+    public GameSimulation(int noOfSims, JProgressBar pb) {
+        this.noOfSims = noOfSims;
+        reset(noOfSims);
+        progressBar = new JProgressBar();
+
+        warmup();
+        //progressBar = pb;
+        pb.setMinimum(0);
+        pb.setMaximum((noOfSims*fields.size())*3);
+        pb.setStringPainted(true);
+ 
+        // add progress bar
+        setLayout(new FlowLayout());
+        getContentPane().add(pb);
+ 
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        pack();
+        //setAlwaysOnTop(true);
+        setLocationRelativeTo(null);
+        setVisible(true);
+
+        for (int i = 1; i < (noOfSims*fields.size())*3; i++) {
+            pb.setValue(i);
+            try {
+                Thread.sleep(100);
+            } catch (Exception e) {
+                
+            }
+        }
     }
 
     public GameSimulation(int noOfSims) {
@@ -33,19 +66,28 @@ public class GameSimulation {
         reset(noOfSims);
         
         warmup();
-
-        pb.setMinimum(0);
-        pb.setMaximum((noOfSims*fields.size())*3);
-        pb.setStringPainted(true);
+        progressBar = new JProgressBar();
+        progressBar.setMinimum(0);
+        progressBar.setMaximum((noOfSims*fields.size())*3);
+        progressBar.setStringPainted(true);
  
         // add progress bar
-        test.setLayout(new FlowLayout());
-        test.getContentPane().add(pb);
+        setLayout(new FlowLayout());
+        getContentPane().add(progressBar);
  
-        test.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        test.pack();
-        test.setLocationRelativeTo(null);
-        test.setVisible(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        pack();
+        //setAlwaysOnTop(true);
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+    
+    private void progress() {
+        progressBar.setValue(progressBar.getValue()+1);
+        if (progressBar.getValue() == ((noOfSims*fields.size())*3)) {
+            setVisible(false);
+            dispose();
+        }
     }
 
     private void warmup() {
@@ -68,6 +110,15 @@ public class GameSimulation {
                 }
             }
         }
+    }
+
+    public void genericSim() {
+        System.out.println("PATTERN SIM");
+        startPatternMatchSim();
+        System.out.println("SAT SIM");
+        startSATSim();
+        System.out.println("JOINT SIM");
+        startJointSim();
     }
 
     public void startPatternMatchSim() {
@@ -99,7 +150,7 @@ public class GameSimulation {
                     wins[fieldDiff] =  wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
-                pb.setValue(pb.getValue()+1);
+                progress();
             }
         }
 
@@ -145,8 +196,7 @@ public class GameSimulation {
                     wins[fieldDiff] =  wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
-                System.out.println("" + fieldDiff + " - " + i);
-                pb.setValue(pb.getValue()+1);
+        progress();
             }
         }
 
@@ -192,7 +242,7 @@ public class GameSimulation {
                     wins[fieldDiff] =  wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
-                pb.setValue(pb.getValue()+1);
+        progress();
             }
         }
 

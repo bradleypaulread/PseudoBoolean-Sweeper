@@ -118,6 +118,9 @@ public class Cell
 		mineHint = true;
 	}
 	
+	public boolean isHint() {
+		return safeHint || mineHint;
+	}
 	
 	/**
 	 * @return If the cell has default values.

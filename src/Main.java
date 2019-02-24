@@ -13,7 +13,7 @@ import java.io.*;
 public class Main {
 	public static void main(String[] args) throws IOException {
 
-		// GameSimulation sim = new GameSimulation(50);
+		// GameSimulation sim = new GameSimulation(5);
 		// System.out.println("PATTERN SIM");
 		// sim.startPatternMatchSim();
 		// System.out.println("SAT SIM");
@@ -30,6 +30,6 @@ public class Main {
 
 		// new Minesweeper(x, y, diff); // Constructor for % mines
 		// new Minesweeper(x, y, mines); // Constructor for int mines
-		new Minesweeper(Difficulty.HARD);
+		new Minesweeper();
 	}
 }

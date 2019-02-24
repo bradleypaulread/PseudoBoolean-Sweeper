@@ -46,20 +46,38 @@ public class BoardSolver {
 			for (int j = 0; j < cells[i].length; ++j) {
 				if (game.is_good(i, j)) {
 					Cell current = cells[i][j];
+					if (game.getHintCells().contains(current)) {
+						continue;
+					}
 					// Only apply logic to open cells with n surrounding mines
 					// and n surrounding flags
 					int flagsNo = calcFlaggedNeighbours(i, j);
-					if (current.isOpen() && current.getNumber() == flagsNo) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbours
-						for (int k = 0; k < n.size(); ++k) {
-							// If the cell has not been affected by the user (is
-							// blank of behaviour)
-							if (n.get(k).isBlank()) {
-								n.get(k).setSafeHint();
-								game.getHintCells().add(n.get(k));
-								game.refresh();
-								return;
+					if (current.isOpen()) {
+						if (current.getNumber() == flagsNo) {
+							List<Cell> neighbours = getNeighbours(current); // List of
+							// neighbours
+							for (Cell c : neighbours) {
+								// If the cell has not been affected by the user (is
+								// blank of behaviour)
+								if (c.isBlank() && !c.isHint()) {
+									c.setSafeHint();
+									game.getHintCells().add(c);
+									game.refresh();
+									return;
+								}
+							}
+						}
+						if (current.getNumber() == calcClosedNeighbours(i, j)) {
+							List<Cell> neighbours = getNeighbours(current); // List of
+							for (Cell c : neighbours) {
+								// If the cell has not been affected by the user (is
+								// blank of behaviour)
+								if (c.isBlank() && !c.isHint()) {
+									c.setMineHint();
+									game.getHintCells().add(c);
+									game.refresh();
+									return;
+								}
 							}
 						}
 					}
@@ -74,7 +92,7 @@ public class BoardSolver {
 		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
 			Cell current = pair.getKey();
 			boolean mine = pair.getValue();
-			if (game.getHintCells().contains(current)) {
+			if (current.isHint() || !current.isBlank()) {
 				continue;
 			}
 			if (mine) {

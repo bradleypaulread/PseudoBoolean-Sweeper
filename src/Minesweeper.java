@@ -28,8 +28,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.border.TitledBorder;
 
 public class Minesweeper extends JFrame {
 
@@ -58,6 +62,7 @@ public class Minesweeper extends JFrame {
 	private JRadioButtonMenuItem diffEasyRb = new JRadioButtonMenuItem("Easy");
 	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Medium");
 	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Hard");
+	private JMenuItem startSimItem = new JMenuItem("Start Simulation");
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menu = new JMenu("File");
 
@@ -86,30 +91,38 @@ public class Minesweeper extends JFrame {
 		setup(x, y, d);
 	}
 
-	public Minesweeper(Difficulty d) {
-		switch (d) {
-		case EASY:
-			new Minesweeper(9, 9, 10);
+	public Minesweeper(Difficulty diff) {
+		int x, y, d;
+		switch (diff) {
+			case EASY:
+			x = 9;
+			y = 9;
+			d = 10;
 			break;
 		case MEDIUM:
-			new Minesweeper(16, 16, 40);
+			x = 16;
+			y = 16;
+			d = 40;
 			break;
 		case HARD:
-			new Minesweeper(30, 16, 99);
+			x = 30;
+			y = 16;
+			d = 99;
 			break;
 		default:
-			// If something unexpected happens simply
-			// load up an easy board.
-			new Minesweeper(9, 9, 10);
+			x = 9;
+			y = 9;
+			d = 10;
 			break;
 		}
+		setup(x, y, d);
 	}
 
 	public Minesweeper() {
-		new Minesweeper(Difficulty.EASY);
+		this(Difficulty.EASY);
 	}
 
-	//
+	// For use when no GUI is wanted
 	public Minesweeper(Difficulty d, MineField mf) {
 		switch (d) {
 			case EASY:
@@ -182,24 +195,33 @@ public class Minesweeper extends JFrame {
 	 */
 	private void loadButtons() {
 		Container controlBtns = new Container();
-		Container ptBtns = new Container();
-		Container SATBtns = new Container();
-		Container stats = new Container();
+		JPanel ptBtns = new JPanel();
+		JPanel SATBtns = new JPanel();
+		JPanel stats = new JPanel();
 		Container topBar = new Container();
 		controlBtns.setLayout(new FlowLayout());
 		topBar.setLayout(new BorderLayout());
-
+		
+		TitledBorder statsTitle = new TitledBorder("Stats");
+		statsTitle.setTitleJustification(TitledBorder.CENTER);
+		stats.setBorder(new TitledBorder(statsTitle));
 		stats.setLayout(new FlowLayout());
 		stats.add(movesLbl);
 		stats.add(minesLbl);
 		movesLbl.setText(Integer.toString(moves));
 		minesLbl.setText(Integer.toString(minesLeft));
 
+		TitledBorder ptTitle = new TitledBorder("Pattern Matching");
+		ptTitle.setTitleJustification(TitledBorder.CENTER);
+		ptBtns.setBorder(ptTitle);
 		ptBtns.setLayout(new FlowLayout());
-		ptBtns.add(ptHintBtn);
-		ptBtns.add(ptAssistBtn);
 		ptBtns.add(ptSolveBtn);
+		ptBtns.add(ptAssistBtn);
+		ptBtns.add(ptHintBtn);
 
+		TitledBorder SATtitle = new TitledBorder("SAT");
+		SATtitle.setTitleJustification(TitledBorder.CENTER);
+		SATBtns.setBorder(SATtitle);
 		SATBtns.setLayout(new FlowLayout());
 		SATBtns.add(SATHintBtn);
 		SATBtns.add(SATAssistBtn);
@@ -328,6 +350,7 @@ public class Minesweeper extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				debug = !debug;
+				refresh();
 			}
 		});
 
@@ -395,7 +418,21 @@ public class Minesweeper extends JFrame {
 		diffRdGroup.add(diffHardRb);
 		menu.add(diffHardRb);
 
+		startSimItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				test();
+				//sim.genericSim();
+			}
+		});
+		menu.add(startSimItem);
+
 		this.setJMenuBar(menuBar);
+	}
+
+	private void test() {
+		JProgressBar pb = new JProgressBar();
+		GameSimulation sim = new GameSimulation(5, pb);
 	}
 
 	/**
