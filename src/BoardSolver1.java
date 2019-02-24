@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
@@ -16,7 +17,7 @@ import org.sat4j.specs.IVec;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
-public class BoardSolver {
+public class BoardSolver1 {
 
 	private IPBSolver pbSolver;
 
@@ -25,7 +26,7 @@ public class BoardSolver {
 	private Minesweeper game;
 	private Cell[][] cells;
 
-	public BoardSolver(Minesweeper game) {
+	public BoardSolver1(Minesweeper game) {
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
@@ -87,28 +88,28 @@ public class BoardSolver {
 	}
 
 	public void SATHint() {
-		cells = game.getCells();
-		Map<Cell, Boolean> known = solveMines();
-		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
-			Cell current = pair.getKey();
-			boolean mine = pair.getValue();
-			if (current.isHint() || !current.isBlank()) {
-				continue;
-			}
-			if (mine) {
-				current.setMineHint();
-				game.getHintCells().add(current);
-				game.refresh();
-				return;
-			} else {
-				if (current.isBlank()) {
-					current.setSafeHint();
-					game.getHintCells().add(current);
-					game.refresh();
-					return;
-				}
-			}
-		}
+		// cells = game.getCells();
+		// Map<Cell, Boolean> known = solveMines();
+		// for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
+		// 	Cell current = pair.getKey();
+		// 	boolean mine = pair.getValue();
+		// 	if (current.isHint() || !current.isBlank()) {
+		// 		continue;
+		// 	}
+		// 	if (mine) {
+		// 		current.setMineHint();
+		// 		game.getHintCells().add(current);
+		// 		game.refresh();
+		// 		return;
+		// 	} else {
+		// 		if (current.isBlank()) {
+		// 			current.setSafeHint();
+		// 			game.getHintCells().add(current);
+		// 			game.refresh();
+		// 			return;
+		// 		}
+		// 	}
+		// }
 
 	}
 
@@ -122,10 +123,10 @@ public class BoardSolver {
 	 *         cells left on the board that are considered "safe" and no cells that
 	 *         are guaranteed mines.
 	 */
-	public boolean patternMatch() {
+	public boolean patternMatch(AtomicBoolean running) {
 		cells = game.getCells();
-		for (int i = 0; i < cells.length; i++) {
-			for (int j = 0; j < cells[i].length; j++) {
+		for (int i = 0; i < cells.length && running.get(); i++) {
+			for (int j = 0; j < cells[i].length && running.get(); j++) {
 				if (game.is_good(i, j)) {
 					Cell current = cells[i][j];
 					if (current.isOpen() && current.getNumber() != 0
@@ -165,10 +166,10 @@ public class BoardSolver {
 		return false;
 	}
 
-	public boolean SATSolve() {
+	public boolean SATSolve(AtomicBoolean running) {
 		boolean change = false;
-		Map<Cell, Boolean> results = solveMines();
-		if (results == null) {
+		Map<Cell, Boolean> results = solveMines(running);
+		if (results == null || !running.get()) {
 			return false;
 		}
 		// Iterate over map
@@ -198,9 +199,9 @@ public class BoardSolver {
 		return change;
 	}
 
-	public boolean jointSolve() {
-		if (!patternMatch()) {
-			if (!SATSolve()) {
+	public boolean jointSolve(AtomicBoolean running) {
+		if (!patternMatch(running)) {
+			if (!SATSolve(running)) {
 				return false;
 			}
 		}
@@ -208,9 +209,9 @@ public class BoardSolver {
 	}
 
 	/** */
-	public boolean fullSolve() {
-		if (!patternMatch()) {
-			if (!SATSolve()) {
+	public boolean fullSolve(AtomicBoolean running) {
+		if (!patternMatch(running)) {
+			if (!SATSolve(running)) {
 				// implement strategy here
 				return false;
 			}
@@ -282,11 +283,11 @@ public class BoardSolver {
 		}
 	}
 
-	public Map<Cell, Boolean> solveMines() {
+	public Map<Cell, Boolean> solveMines(AtomicBoolean running) {
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> adjacentCells = getAdjacentCells(this.cells);
-		for (int i = 0; i < adjacentCells.size() && !Thread.interrupted(); i++) {
+		for (int i = 0; i < adjacentCells.size() && running.get() && !Thread.interrupted(); i++) {
 
 			Cell current = adjacentCells.get(i);
 			for (int weight = 0; weight <= 1; weight++) {
@@ -321,37 +322,37 @@ public class BoardSolver {
 				}
 			}
 		}
-		if (Thread.interrupted()) {
+		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
 		return results;
 	}
 
 	public void SATStratergy() {
-		cells = game.getCells();
+		// cells = game.getCells();
 
-		int knownMines = 0;
-		for (boolean isMine : solveMines().values()) {
-			if (isMine) {
-				knownMines++;
-			}
-		}
+		// int knownMines = 0;
+		// for (boolean isMine : solveMines().values()) {
+		// 	if (isMine) {
+		// 		knownMines++;
+		// 	}
+		// }
 
-		int noOfMines = game.getNoOfMines();
-		int noOfLits = Integer.toBinaryString(noOfMines).length();
-		IVecInt lits = new VecInt();
-		IVec<BigInteger> coeffs = new Vec<BigInteger>();
+		// int noOfMines = game.getNoOfMines();
+		// int noOfLits = Integer.toBinaryString(noOfMines).length();
+		// IVecInt lits = new VecInt();
+		// IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
-		for (int i = 0; i < noOfLits; i++) {
-			lits.push(i);
-			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
-		}
+		// for (int i = 0; i < noOfLits; i++) {
+		// 	lits.push(i);
+		// 	coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+		// }
 
-		try {
-			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
-		} catch (ContradictionException e) {
-			e.printStackTrace();
-		}
+		// try {
+		// 	pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
+		// } catch (ContradictionException e) {
+		// 	e.printStackTrace();
+		// }
 	}
 
 	/**

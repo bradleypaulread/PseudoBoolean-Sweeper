@@ -11,7 +11,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import com.google.gson.Gson;
 
-public class GameSimulation extends JFrame {
+public class GameSimulation {
 
     // File locations for storing simulation results
     private final String PATTERN_PATH = "resources/PatternMatching-Results.csv";
@@ -21,73 +21,40 @@ public class GameSimulation extends JFrame {
 
     private int noOfSims;
     private List<List<MineField>> fields;
-    private Difficulty[] diffs = {Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD};
+    private Difficulty[] diffs = { Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD };
 
-    private final JProgressBar progressBar;
-
-    public GameSimulation() {
-        progressBar = new JProgressBar();
-        // fields = new ArrayList<>();
-    }
-
-    public GameSimulation(int noOfSims, JProgressBar pb) {
-        this.noOfSims = noOfSims;
-        reset(noOfSims);
-        progressBar = new JProgressBar();
-
-        warmup();
-        //progressBar = pb;
-        pb.setMinimum(0);
-        pb.setMaximum((noOfSims*fields.size())*3);
-        pb.setStringPainted(true);
- 
-        // add progress bar
-        setLayout(new FlowLayout());
-        getContentPane().add(pb);
- 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        pack();
-        //setAlwaysOnTop(true);
-        setLocationRelativeTo(null);
-        setVisible(true);
-
-        for (int i = 1; i < (noOfSims*fields.size())*3; i++) {
-            pb.setValue(i);
-            try {
-                Thread.sleep(100);
-            } catch (Exception e) {
-                
-            }
-        }
-    }
+    // private final JFrame window;
+    // private final JProgressBar progressBar;
 
     public GameSimulation(int noOfSims) {
         this.noOfSims = noOfSims;
         reset(noOfSims);
-        
+
         warmup();
-        progressBar = new JProgressBar();
-        progressBar.setMinimum(0);
-        progressBar.setMaximum((noOfSims*fields.size())*3);
-        progressBar.setStringPainted(true);
- 
-        // add progress bar
-        setLayout(new FlowLayout());
-        getContentPane().add(progressBar);
- 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        pack();
-        //setAlwaysOnTop(true);
-        setLocationRelativeTo(null);
-        setVisible(true);
+
+        // window = new JFrame();
+        // progressBar = new JProgressBar();
+        // progressBar.setMinimum(0);
+        // progressBar.setMaximum((noOfSims*fields.size())*3);
+        // progressBar.setStringPainted(true);
+
+        // // add progress bar
+        // window.setLayout(new FlowLayout());
+        // window.getContentPane().add(progressBar);
+
+        // window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // window.pack();
+        // //setAlwaysOnTop(true);
+        // window.setLocationRelativeTo(null);
+        // window.setVisible(true);
     }
-    
+
     private void progress() {
-        progressBar.setValue(progressBar.getValue()+1);
-        if (progressBar.getValue() == ((noOfSims*fields.size())*3)) {
-            setVisible(false);
-            dispose();
-        }
+        // progressBar.setValue(progressBar.getValue()+1);
+        // if (progressBar.getValue() == ((noOfSims*fields.size())*3)) {
+        // window.setVisible(false);
+        // window.dispose();
+        // }
     }
 
     private void warmup() {
@@ -147,7 +114,7 @@ public class GameSimulation extends JFrame {
 
                 if (game.isGameWon()) {
                     long end = System.nanoTime();
-                    wins[fieldDiff] =  wins[fieldDiff] + 1;
+                    wins[fieldDiff] = wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
                 progress();
@@ -193,10 +160,10 @@ public class GameSimulation extends JFrame {
 
                 if (game.isGameWon()) {
                     long end = System.nanoTime();
-                    wins[fieldDiff] =  wins[fieldDiff] + 1;
+                    wins[fieldDiff] = wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
-        progress();
+                progress();
             }
         }
 
@@ -239,10 +206,10 @@ public class GameSimulation extends JFrame {
 
                 if (game.isGameWon()) {
                     long end = System.nanoTime();
-                    wins[fieldDiff] =  wins[fieldDiff] + 1;
+                    wins[fieldDiff] = wins[fieldDiff] + 1;
                     times.get(fieldDiff).add(end - start);
                 }
-        progress();
+                progress();
             }
         }
 
@@ -309,14 +276,14 @@ public class GameSimulation extends JFrame {
             // sb.append(',');
             // int totalWins = 0;
             // for (int i : wins) {
-            //     totalWins += i;
+            // totalWins += i;
             // }
             // int avgWin = totalWins / wins.length;
             // sb.append(avgWin);
             // sb.append(',');
             // int totalLoss = 0;
             // for (int i : wins) {
-            //     totalLoss += noOfSims - i;
+            // totalLoss += noOfSims - i;
             // }
             // int avgLoss = totalLoss / wins.length;
             // sb.append(avgLoss);
@@ -326,9 +293,9 @@ public class GameSimulation extends JFrame {
             // sb.append(',');
             // long totalTime = 0;
             // for (long i : times) {
-            //     totalTime += i;
+            // totalTime += i;
             // }
-            // long avgTime = totalTime / times.length;            
+            // long avgTime = totalTime / times.length;
             // sb.append(avgTime);
             // sb.append(',');
             // sb.append('\n');

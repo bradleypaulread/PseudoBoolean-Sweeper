@@ -15,8 +15,6 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -31,7 +29,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.border.TitledBorder;
 
@@ -44,6 +41,7 @@ public class Minesweeper extends JFrame {
 
 	// Swing components (buttons etc.)
 	private JButton resetBtn = new JButton("Reset");
+	private JButton stopBtn = new JButton("Stop");
 
 	private JButton ptHintBtn = new JButton("Hint");
 	private JButton ptAssistBtn = new JButton("Assist");
@@ -94,7 +92,7 @@ public class Minesweeper extends JFrame {
 	public Minesweeper(Difficulty diff) {
 		int x, y, d;
 		switch (diff) {
-			case EASY:
+		case EASY:
 			x = 9;
 			y = 9;
 			d = 10;
@@ -125,26 +123,26 @@ public class Minesweeper extends JFrame {
 	// For use when no GUI is wanted
 	public Minesweeper(Difficulty d, MineField mf) {
 		switch (d) {
-			case EASY:
-				width = 9;
-				height = 9;
-				noOfMines = 10;
-				minesLeft = 10;
-				break;
-			case MEDIUM:
-				width = 16;
-				height = 16;
-				noOfMines = 40;
-				minesLeft = 40;
-				break;
-			case HARD:
-				width = 30;
-				height = 16;
-				noOfMines = 99;
-				minesLeft = 99;
-				break;
-			default:
-				break;
+		case EASY:
+			width = 9;
+			height = 9;
+			noOfMines = 10;
+			minesLeft = 10;
+			break;
+		case MEDIUM:
+			width = 16;
+			height = 16;
+			noOfMines = 40;
+			minesLeft = 40;
+			break;
+		case HARD:
+			width = 30;
+			height = 16;
+			noOfMines = 99;
+			minesLeft = 99;
+			break;
+		default:
+			break;
 		}
 		isGameOver = false;
 		moves = 0;
@@ -186,7 +184,7 @@ public class Minesweeper extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
-
+		
 		solver = new BoardSolver(this);
 	}
 
@@ -201,7 +199,7 @@ public class Minesweeper extends JFrame {
 		Container topBar = new Container();
 		controlBtns.setLayout(new FlowLayout());
 		topBar.setLayout(new BorderLayout());
-		
+
 		TitledBorder statsTitle = new TitledBorder("Stats");
 		statsTitle.setTitleJustification(TitledBorder.CENTER);
 		stats.setBorder(new TitledBorder(statsTitle));
@@ -228,6 +226,8 @@ public class Minesweeper extends JFrame {
 		SATBtns.add(SATSolveBtn);
 
 		controlBtns.add(ptBtns);
+		stopBtn.setEnabled(false);
+		controlBtns.add(stopBtn);
 		controlBtns.add(fullAutoBtn);
 		controlBtns.add(SATBtns);
 
@@ -243,93 +243,68 @@ public class Minesweeper extends JFrame {
 		icons.add(img4);
 		this.setIconImages(icons);
 
-		resetBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				reset();
+		resetBtn.addActionListener(e -> reset());
+
+		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
+
+		SATHintBtn.addActionListener(e -> solver.SATHint());
+
+		ptAssistBtn.addActionListener(e -> {
+			if (!solver.patternMatch() && !isGameOver()) {
+				showNoMoreMovesDialog();
 			}
 		});
 
-		ptHintBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				solver.patternMatchHint();
+		SATAssistBtn.addActionListener(e -> {
+			if (!solver.SATSolve() && !isGameOver()) {
+				showNoMoreMovesDialog();
 			}
 		});
 
-		SATHintBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				solver.SATHint();
-			}
-		});
+		ptSolveBtn.addActionListener(e -> {
+			// Perform the assist action until no more safe moves exist
+			while (solver.patternMatch())
+				;
+			if (!isGameOver) {
+				int dialogResult = JOptionPane.showConfirmDialog(null,
+						"No more known moves available. Would you like to select the 'least dangerous' cell?",
+						"No More Known Moves", JOptionPane.YES_NO_OPTION);
 
-		ptAssistBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (!solver.patternMatch() && !isGameOver()) {
-					showNoMoreMovesDialog();
+				if (dialogResult == JOptionPane.YES_OPTION) {
+					// Cell cell = solver.calcCellOdds();
+					// select(cell.getX(), cell.getY());
 				}
 			}
 		});
 
-		SATAssistBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (!solver.SATSolve() && !isGameOver()) {
-					showNoMoreMovesDialog();
+		SATSolveBtn.addActionListener(e -> {
+			// Perform the assist action until no more safe moves exist
+			while (solver.SATSolve())
+				;
+			if (!isGameOver) {
+				int dialogResult = JOptionPane.showConfirmDialog(null,
+						"No more known moves available. Would you like to select the 'least dangerous' cell?",
+						"No More Known Moves", JOptionPane.YES_NO_OPTION);
+
+				if (dialogResult == JOptionPane.YES_OPTION) {
+					// Cell cell = solver.calcCellOdds();
+					// select(cell.getX(), cell.getY());
 				}
 			}
 		});
-
-		ptSolveBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Perform the assist action until no more safe moves exist
-				while (solver.patternMatch())
-					;
-				if (!isGameOver) {
-					int dialogResult = JOptionPane.showConfirmDialog(null,
-							"No more known moves available. Would you like to select the 'least dangerous' cell?",
-							"No More Known Moves", JOptionPane.YES_NO_OPTION);
-
-					if (dialogResult == JOptionPane.YES_OPTION) {
-						// Cell cell = solver.calcCellOdds();
-						// select(cell.getX(), cell.getY());
-					}
-				}
-			}
+		AutoSATSolve[] l = new AutoSATSolve[1];
+		fullAutoBtn.addActionListener(e -> {
+			// Perform the assist action until no more safe moves exist
+			AutoSATSolve t1 = new AutoSATSolve(this);
+			l[0] = t1;
+			stopBtn.setEnabled(true);
+			disableAllBtns();
 		});
-
-		SATSolveBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Perform the assist action until no more safe moves exist
-				while (solver.SATSolve())
-					;
-				if (!isGameOver) {
-					int dialogResult = JOptionPane.showConfirmDialog(null,
-							"No more known moves available. Would you like to select the 'least dangerous' cell?",
-							"No More Known Moves", JOptionPane.YES_NO_OPTION);
-
-					if (dialogResult == JOptionPane.YES_OPTION) {
-						// Cell cell = solver.calcCellOdds();
-						// select(cell.getX(), cell.getY());
-					}
-				}
-			}
-		});
-
-		fullAutoBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Perform the assist action until no more safe moves exist
-				while (!isGameOver) {
-					while (solver.jointSolve())
-						;
-					break;
-				}
-			}
+		
+		stopBtn.addActionListener(e -> {
+			l[0].end();
+			stopBtn.setEnabled(false);
+			enableAllBtns();
 		});
 	}
 
@@ -341,25 +316,18 @@ public class Minesweeper extends JFrame {
 		menu.setMnemonic(KeyEvent.VK_A);
 		menu.getAccessibleContext().setAccessibleDescription("Playability settings.");
 		menuBar.add(menu);
-		debugCb.setMnemonic(KeyEvent.VK_C);
 
 		ButtonGroup diffRdGroup = new ButtonGroup();
 
 		// When option selected invert the debug variable.
-		debugCb.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				debug = !debug;
-				refresh();
-			}
+		debugCb.addActionListener(e -> {
+			debug = !debug;
+			refresh();
 		});
 
-		strategyCb.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				strategy = !strategy;
-				System.out.println(strategy);
-			}
+		strategyCb.addActionListener(e -> {
+			strategy = !strategy;
+			System.out.println(strategy);
 		});
 
 		menu.add(debugCb);
@@ -367,72 +335,64 @@ public class Minesweeper extends JFrame {
 		menu.addSeparator();
 		diffEasyRb.setSelected(true);
 		diffEasyRb.setEnabled(false);
-		diffEasyRb.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Minesweeper newGame = new Minesweeper(Difficulty.EASY);
-				newGame.getDiffEasyRb().setSelected(true);
-				newGame.getDiffEasyRb().setEnabled(false);
-				newGame.getDiffMediumRb().setEnabled(true);
-				newGame.getDiffHardRb().setEnabled(true);
-				newGame.setDebug(debugCb.isSelected());
-				newGame.getDebugCB().setSelected(debugCb.isSelected());
-				setVisible(false);
-				dispose();
-			}
+		diffEasyRb.addActionListener(e -> {
+			Minesweeper newGame = new Minesweeper(Difficulty.EASY);
+			newGame.getDiffEasyRb().setSelected(true);
+			newGame.getDiffEasyRb().setEnabled(false);
+			newGame.getDiffMediumRb().setEnabled(true);
+			newGame.getDiffHardRb().setEnabled(true);
+			newGame.setDebug(debugCb.isSelected());
+			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			setVisible(false);
+			dispose();
 		});
 		diffRdGroup.add(diffEasyRb);
 		menu.add(diffEasyRb);
 
-		diffMediumRb.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Minesweeper newGame = new Minesweeper(Difficulty.MEDIUM);
-				newGame.getDiffMediumRb().setSelected(true);
-				newGame.getDiffEasyRb().setEnabled(true);
-				newGame.getDiffMediumRb().setEnabled(false);
-				newGame.getDiffHardRb().setEnabled(true);
-				newGame.setDebug(debugCb.isSelected());
-				newGame.getDebugCB().setSelected(debugCb.isSelected());
-				setVisible(false);
-				dispose();
-			}
+		diffMediumRb.addActionListener(e -> {
+			Minesweeper newGame = new Minesweeper(Difficulty.MEDIUM);
+			newGame.getDiffMediumRb().setSelected(true);
+			newGame.getDiffEasyRb().setEnabled(true);
+			newGame.getDiffMediumRb().setEnabled(false);
+			newGame.getDiffHardRb().setEnabled(true);
+			newGame.setDebug(debugCb.isSelected());
+			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			setVisible(false);
+			dispose();
 		});
 		diffRdGroup.add(diffMediumRb);
 		menu.add(diffMediumRb);
 
-		diffHardRb.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Minesweeper newGame = new Minesweeper(Difficulty.HARD);
-				newGame.getDiffHardRb().setSelected(true);
-				newGame.getDiffEasyRb().setEnabled(true);
-				newGame.getDiffMediumRb().setEnabled(true);
-				newGame.getDiffHardRb().setEnabled(false);
-				newGame.setDebug(debugCb.isSelected());
-				newGame.getDebugCB().setSelected(debugCb.isSelected());
-				setVisible(false);
-				dispose();
-			}
+		diffHardRb.addActionListener(e -> {
+			Minesweeper newGame = new Minesweeper(Difficulty.HARD);
+			newGame.getDiffHardRb().setSelected(true);
+			newGame.getDiffEasyRb().setEnabled(true);
+			newGame.getDiffMediumRb().setEnabled(true);
+			newGame.getDiffHardRb().setEnabled(false);
+			newGame.setDebug(debugCb.isSelected());
+			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			setVisible(false);
+			dispose();
 		});
 		diffRdGroup.add(diffHardRb);
 		menu.add(diffHardRb);
 
-		startSimItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				test();
-				//sim.genericSim();
-			}
+		startSimItem.addActionListener(e -> {
+			solver.SATStratergy();
+			// JFrame simWindow = new JFrame("Simulating...");
+			// simWindow.add(new JLabel("Simulating..."));
+			// simWindow.setSize(new Dimension(100, 100));
+			// simWindow.setVisible(true);
+			// simWindow.setLocationRelativeTo(null);
+			// GameSimulation gameSim = new GameSimulation(5);
+			// gameSim.genericSim();
+			// simWindow.setVisible(false);
+			// simWindow.dispose();
 		});
+		menu.addSeparator();
 		menu.add(startSimItem);
 
 		this.setJMenuBar(menuBar);
-	}
-
-	private void test() {
-		JProgressBar pb = new JProgressBar();
-		GameSimulation sim = new GameSimulation(5, pb);
 	}
 
 	/**
@@ -677,7 +637,7 @@ public class Minesweeper extends JFrame {
 		fullAutoBtn.setEnabled(false);
 	}
 
-	private void enableAllBtns() {
+	public void enableAllBtns() {
 		ptHintBtn.setEnabled(true);
 		ptAssistBtn.setEnabled(true);
 		ptSolveBtn.setEnabled(true);
@@ -775,6 +735,14 @@ public class Minesweeper extends JFrame {
 
 	public boolean isGameWon() {
 		return gameWon;
+	}
+
+	public JButton getFullAutoBtn() {
+		return fullAutoBtn;
+	}
+
+	public JButton getStopBtn() {
+		return stopBtn;
 	}
 }
 
