@@ -230,7 +230,7 @@ public class GameSimulation {
     }
 
     private void writeResults(int[] wins, long[] times, String path) {
-        try (PrintWriter writer = new PrintWriter(new File(path))) {
+        try (PrintWriter writer = new PrintWriter(path)) {
             StringBuilder sb = new StringBuilder();
             sb.append("difficulty");
             sb.append(',');
@@ -302,7 +302,7 @@ public class GameSimulation {
             writer.write(sb.toString());
 
         } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
+        	System.out.println(e.getMessage());
         }
 
     }
