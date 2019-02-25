@@ -292,10 +292,10 @@ public class Minesweeper extends JFrame {
 				}
 			}
 		});
-		AutoSATSolve[] l = new AutoSATSolve[1];
+		ThreadSATWrapper[] l = new ThreadSATWrapper[1];
 		fullAutoBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
-			AutoSATSolve t1 = new AutoSATSolve(this);
+			ThreadSATWrapper t1 = new ThreadSATWrapper(this, true);
 			l[0] = t1;
 			stopBtn.setEnabled(true);
 			disableAllBtns();

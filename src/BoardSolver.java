@@ -343,7 +343,7 @@ public class BoardSolver {
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
 		for (int i = 0; i < noOfLits; i++) {
-			lits.push(i);
+			lits.push(i+1);
 			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		}
 
