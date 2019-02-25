@@ -27,10 +27,10 @@ public class BoardSolver1 {
 	private Cell[][] cells;
 
 	public BoardSolver1(Minesweeper game) {
+		quiet = false;
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
-		quiet = false;
 	}
 
 	/**
@@ -91,24 +91,24 @@ public class BoardSolver1 {
 		// cells = game.getCells();
 		// Map<Cell, Boolean> known = solveMines();
 		// for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
-		// 	Cell current = pair.getKey();
-		// 	boolean mine = pair.getValue();
-		// 	if (current.isHint() || !current.isBlank()) {
-		// 		continue;
-		// 	}
-		// 	if (mine) {
-		// 		current.setMineHint();
-		// 		game.getHintCells().add(current);
-		// 		game.refresh();
-		// 		return;
-		// 	} else {
-		// 		if (current.isBlank()) {
-		// 			current.setSafeHint();
-		// 			game.getHintCells().add(current);
-		// 			game.refresh();
-		// 			return;
-		// 		}
-		// 	}
+		// Cell current = pair.getKey();
+		// boolean mine = pair.getValue();
+		// if (current.isHint() || !current.isBlank()) {
+		// continue;
+		// }
+		// if (mine) {
+		// current.setMineHint();
+		// game.getHintCells().add(current);
+		// game.refresh();
+		// return;
+		// } else {
+		// if (current.isBlank()) {
+		// current.setSafeHint();
+		// game.getHintCells().add(current);
+		// game.refresh();
+		// return;
+		// }
+		// }
 		// }
 
 	}
@@ -155,9 +155,7 @@ public class BoardSolver1 {
 								game.decrementMines();
 							}
 						}
-						if (!quiet) {
 							game.refresh();
-						}
 						return true;
 					}
 				}
@@ -193,9 +191,7 @@ public class BoardSolver1 {
 				}
 			}
 		}
-		if (!quiet) {
 			game.refresh();
-		}
 		return change;
 	}
 
@@ -287,8 +283,12 @@ public class BoardSolver1 {
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> adjacentCells = getAdjacentCells(this.cells);
+		// for (int i = 0; i < cells.length && running.get() && !Thread.interrupted();
+		// i++) {
+		// for (int j = 0; j < cells[i].length && running.get() &&
+		// !Thread.interrupted(); j++) {
+		// Cell current = cells[i][j];
 		for (int i = 0; i < adjacentCells.size() && running.get() && !Thread.interrupted(); i++) {
-
 			Cell current = adjacentCells.get(i);
 			for (int weight = 0; weight <= 1; weight++) {
 				IVecInt lit = new VecInt();
@@ -333,9 +333,9 @@ public class BoardSolver1 {
 
 		// int knownMines = 0;
 		// for (boolean isMine : solveMines().values()) {
-		// 	if (isMine) {
-		// 		knownMines++;
-		// 	}
+		// if (isMine) {
+		// knownMines++;
+		// }
 		// }
 
 		// int noOfMines = game.getNoOfMines();
@@ -344,14 +344,15 @@ public class BoardSolver1 {
 		// IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
 		// for (int i = 0; i < noOfLits; i++) {
-		// 	lits.push(i);
-		// 	coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+		// lits.push(i);
+		// coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		// }
 
 		// try {
-		// 	pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
+		// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines -
+		// knownMines));
 		// } catch (ContradictionException e) {
-		// 	e.printStackTrace();
+		// e.printStackTrace();
 		// }
 	}
 

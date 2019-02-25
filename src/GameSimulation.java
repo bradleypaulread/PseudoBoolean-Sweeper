@@ -22,39 +22,38 @@ public class GameSimulation {
     private int noOfSims;
     private List<List<MineField>> fields;
     private Difficulty[] diffs = { Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD };
-
-    // private final JFrame window;
-    // private final JProgressBar progressBar;
+    private boolean pattternMatch, SAT, joint;
+//    private final JFrame window;
+//    private final JProgressBar progressBar;
 
     public GameSimulation(int noOfSims) {
         this.noOfSims = noOfSims;
         reset(noOfSims);
-
         warmup();
 
-        // window = new JFrame();
-        // progressBar = new JProgressBar();
-        // progressBar.setMinimum(0);
-        // progressBar.setMaximum((noOfSims*fields.size())*3);
-        // progressBar.setStringPainted(true);
-
-        // // add progress bar
-        // window.setLayout(new FlowLayout());
-        // window.getContentPane().add(progressBar);
-
-        // window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // window.pack();
-        // //setAlwaysOnTop(true);
-        // window.setLocationRelativeTo(null);
-        // window.setVisible(true);
+//        window = new JFrame();
+//        progressBar = new JProgressBar();
+//        progressBar.setMinimum(0);
+//        progressBar.setMaximum((noOfSims * fields.size()) * 3);
+//        progressBar.setStringPainted(true);
+//
+//        // add progress bar
+//        window.setLayout(new FlowLayout());
+//        window.getContentPane().add(progressBar);
+//
+//        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        window.pack();
+//        // setAlwaysOnTop(true);
+//        window.setLocationRelativeTo(null);
+//        window.setVisible(true);
     }
 
     private void progress() {
-        // progressBar.setValue(progressBar.getValue()+1);
-        // if (progressBar.getValue() == ((noOfSims*fields.size())*3)) {
-        // window.setVisible(false);
-        // window.dispose();
-        // }
+//        progressBar.setValue(progressBar.getValue() + 1);
+//        if (progressBar.getValue() == ((noOfSims * fields.size()) * 3)) {
+//            window.setVisible(false);
+//            window.dispose();
+//        }
     }
 
     private void warmup() {

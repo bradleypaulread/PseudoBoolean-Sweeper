@@ -287,8 +287,10 @@ public class BoardSolver {
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> adjacentCells = getAdjacentCells(this.cells);
 		for (int i = 0; i < adjacentCells.size() && !Thread.interrupted(); i++) {
-
 			Cell current = adjacentCells.get(i);
+			// for (int i = 0; i < cells.length; i++) {
+			// for (int j = 0; j < cells[i].length; j++) {
+			// Cell current = cells[i][j];
 			for (int weight = 0; weight <= 1; weight++) {
 				IVecInt lit = new VecInt();
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
@@ -319,6 +321,7 @@ public class BoardSolver {
 					results.put(current, isMine);
 				} catch (TimeoutException te) {
 				}
+				// }
 			}
 		}
 		if (Thread.interrupted()) {
@@ -343,7 +346,7 @@ public class BoardSolver {
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
 		for (int i = 0; i < noOfLits; i++) {
-			lits.push(i+1);
+			lits.push(i + 1);
 			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		}
 
