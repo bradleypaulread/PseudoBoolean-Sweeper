@@ -13,15 +13,18 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Container;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -60,6 +63,7 @@ public class Minesweeper extends JFrame {
 	private JRadioButtonMenuItem diffEasyRb = new JRadioButtonMenuItem("Easy");
 	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Medium");
 	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Hard");
+	private JMenuItem customGameItem = new JMenuItem("Custom Game");
 	private JMenuItem startSimItem = new JMenuItem("Start Simulation");
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menu = new JMenu("File");
@@ -385,6 +389,53 @@ public class Minesweeper extends JFrame {
 		});
 		menu.addSeparator();
 		menu.add(startSimItem);
+
+		customGameItem.addActionListener(e -> {
+			// Formats to format and parse numbers
+			NumberFormat newWidth;
+			NumberFormat newHeight;
+			NumberFormat newNoOfMines;
+
+			newWidth = NumberFormat.getIntegerInstance();
+			newHeight = NumberFormat.getIntegerInstance();
+			newNoOfMines = NumberFormat.getIntegerInstance();
+
+			// Fields for data entry
+			JFormattedTextField widthField = new JFormattedTextField(newWidth);
+			JFormattedTextField heightField = new JFormattedTextField(newHeight);
+			JFormattedTextField noOfMinesField = new JFormattedTextField(newNoOfMines);
+
+			widthField.setValue(0);
+			heightField.setValue(0);
+			noOfMinesField.setValue(0);
+
+			JPanel fieldPane = new JPanel(new GridLayout(0, 1));
+			fieldPane.add(widthField);
+			fieldPane.add(heightField);
+			fieldPane.add(noOfMinesField);
+
+			JFrame frame = new JFrame("Custom Board Test");
+
+			
+			JButton btn = new JButton("Create");
+			btn.addActionListener(e2 -> {
+				int newX = ((Number) widthField.getValue()).intValue();
+				int newY = ((Number)widthField.getValue()).intValue();
+				int newMines = ((Number)widthField.getValue()).intValue();
+				Minesweeper newGame = new Minesweeper(newX, newY, newMines);
+				frame.setVisible(false);
+				frame.dispose();
+				setVisible(false);
+				dispose();
+			});
+			fieldPane.add(btn);
+			frame.add(fieldPane);
+			// Display the window.
+			frame.pack();
+			frame.setLocationRelativeTo(null);
+			frame.setVisible(true);
+		});
+		menu.add(customGameItem);
 
 		this.setJMenuBar(menuBar);
 	}
