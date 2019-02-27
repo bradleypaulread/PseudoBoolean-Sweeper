@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class LaunchSim {
 	public static void main(String[] args) {
-		int noOfSims = 25;
+		int noOfSims = 500;
 		if (args.length > 0) {
 			noOfSims = Integer.valueOf(args[0]);
 		}
@@ -21,6 +21,13 @@ public class LaunchSim {
 		ExecutorService pool = sim.getPool();
 		sim.genericSim();
 		pool.shutdown();
+		while (!pool.isTerminated()) {
+			try {
+				System.out.println(pool);
+				Thread.sleep(10000);
+			} catch (Exception e) {
+			}
+		}
 		try {
 			pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 		} catch (InterruptedException e) {

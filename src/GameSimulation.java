@@ -36,7 +36,7 @@ public class GameSimulation {
 
     public GameSimulation(int noOfSims) {
         this.noOfSims = noOfSims;
-        int noOfThreads = Runtime.getRuntime().availableProcessors();
+        int noOfThreads = Runtime.getRuntime().availableProcessors()+1;
 		pool = Executors.newFixedThreadPool(noOfThreads);
         reset(noOfSims);
         warmup();
