@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - LaunchSim",
+            "request": "launch",
+            "mainClass": "LaunchSim",
+            "projectName": "SATMinesweeper"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - LaunchGame",
             "request": "launch",
             "mainClass": "LaunchGame",

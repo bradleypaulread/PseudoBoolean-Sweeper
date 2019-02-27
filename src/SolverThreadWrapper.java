@@ -2,17 +2,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SolverThreadWrapper implements Runnable {
 
+    private static int threadID = 0;
+
     private final AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
     boolean quiet;
+    boolean sim = false;
     boolean loop;
     boolean patternMatch;
     boolean SAT;
     boolean strat;
     Thread thread;
 
-    public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT, boolean strat) {
-        thread = new Thread(this);
+    public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT,
+            boolean strat) {
+        thread = new Thread(this, Integer.toString(threadID++));
         game = g;
 
         this.quiet = quiet;
@@ -23,15 +27,54 @@ public class SolverThreadWrapper implements Runnable {
         thread.start();
     }
 
+    public SolverThreadWrapper(Minesweeper g, boolean sim, boolean patternMatch, boolean SAT, boolean strat) {
+        thread = new Thread(this, Integer.toString(threadID++));
+        game = g;
+        this.patternMatch = patternMatch;
+        this.SAT = SAT;
+        this.strat = strat;
+        this.sim = sim;
+        thread.start();
+    }
+
     @Override
     public void run() {
-        if (loop) {
+        if (sim) {
             if (patternMatch && SAT) {
-                joint(quiet);
+                BoardSolver1 solver = new BoardSolver1(game);
+                solver.setQuiet();
+                while (!game.isGameOver()) {
+                    if (!solver.jointSolve(running)) {
+                        Cell c = solver.selectRandomCell();
+                        game.quietSelect(c.getX(), c.getY());
+                    }
+                }
             } else if (patternMatch) {
-                patternMatch(quiet);
+                BoardSolver1 solver = new BoardSolver1(game);
+                solver.setQuiet();
+                while (!game.isGameOver()) {
+                    if (!solver.patternMatch(running)) {
+                        Cell c = solver.selectRandomCell();
+                        game.quietSelect(c.getX(), c.getY());
+                    }
+                }
             } else if (SAT) {
-                SAT(quiet);
+                BoardSolver1 solver = new BoardSolver1(game);
+                solver.setQuiet();
+                while (!game.isGameOver()) {
+                    if (!solver.SATSolve(running)) {
+                        Cell c = solver.selectRandomCell();
+                        game.quietSelect(c.getX(), c.getY());
+                    }
+                }
+            }
+        } else if (loop) {
+            if (patternMatch && SAT) {
+                joint();
+            } else if (patternMatch) {
+                patternMatch();
+            } else if (SAT) {
+                SAT();
             }
         } else {
             if (patternMatch && SAT) {
@@ -42,7 +85,8 @@ public class SolverThreadWrapper implements Runnable {
                 new BoardSolver1(game).SATSolve(running);
             }
         }
-        java.awt.Toolkit.getDefaultToolkit().beep();
+        //java.awt.Toolkit.getDefaultToolkit().beep();
+        System.out.println(Thread.currentThread().toString() + " DONE!");
         game.enableAllBtns();
         game.getStopBtn().setEnabled(false);
     }
@@ -51,7 +95,7 @@ public class SolverThreadWrapper implements Runnable {
         running.set(false);
     }
 
-    private void patternMatch(boolean quiet) {
+    private void patternMatch() {
         BoardSolver1 solver = new BoardSolver1(game);
         while (running.get() && !game.isGameOver() && solver.patternMatch(running)) {
             if (Thread.interrupted()) {
@@ -60,7 +104,7 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void SAT(boolean quiet) {
+    private void SAT() {
         BoardSolver1 solver = new BoardSolver1(game);
         while (running.get() && !game.isGameOver() && solver.SATSolve(running)) {
             if (Thread.interrupted()) {
@@ -69,7 +113,7 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void joint(boolean quiet) {
+    private void joint() {
         BoardSolver1 solver = new BoardSolver1(game);
         while (running.get() && !game.isGameOver() && solver.jointSolve(running)) {
             if (Thread.interrupted()) {
@@ -78,7 +122,7 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void strat(boolean quiet) {
+    private void strat() {
         BoardSolver1 solver = new BoardSolver1(game);
         while (running.get() && !game.isGameOver() && solver.fullSolve(running)) {
             if (Thread.interrupted()) {
@@ -87,6 +131,4 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    
-    
 }

@@ -1,3 +1,6 @@
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 /*
  * Main.java
  * 
@@ -15,13 +18,15 @@ public class LaunchSim {
 			noOfSims = Integer.valueOf(args[0]);
 		}
 		GameSimulation sim = new GameSimulation(noOfSims);
-		System.out.println("SAT SIM");
-		sim.startSATSim();
-		System.out.println("JOINT SIM");
-		sim.startJointSim();
-		System.out.println("PATTERN SIM");
-		sim.startPatternMatchSim();
-		System.out.println("DONE!");
+		ExecutorService pool = sim.getPool();
+		sim.genericSim();
+		pool.shutdown();
+		try {
+			pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+		}
+		sim.calcResults();
+		System.out.println("\n\n\nDONE!!!!!");
 	}
 
 }

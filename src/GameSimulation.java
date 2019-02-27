@@ -1,4 +1,6 @@
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.JFrame;
 import javax.swing.JProgressBar;
@@ -19,8 +21,14 @@ public class GameSimulation {
     private final String JOINT_PATH = "resources/Joint-Results.csv";
     private final String FULL_PATH = "resources/Full-Results.csv";
 
+    
     private int noOfSims;
+    ExecutorService pool;
     private List<List<MineField>> fields;
+    List<List<Minesweeper>> gamesPattern;
+    List<List<Minesweeper>> gamesSAT;
+    List<List<Minesweeper>> gamesJoint;
+
     private Difficulty[] diffs = { Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD };
     private boolean pattternMatch, SAT, joint;
 //    private final JFrame window;
@@ -28,6 +36,8 @@ public class GameSimulation {
 
     public GameSimulation(int noOfSims) {
         this.noOfSims = noOfSims;
+        int noOfThreads = Runtime.getRuntime().availableProcessors();
+		pool = Executors.newFixedThreadPool(noOfThreads);
         reset(noOfSims);
         warmup();
 
@@ -46,6 +56,10 @@ public class GameSimulation {
 //        // setAlwaysOnTop(true);
 //        window.setLocationRelativeTo(null);
 //        window.setVisible(true);
+    }
+
+    public ExecutorService getPool() {
+        return pool;
     }
 
     private void progress() {
@@ -88,148 +102,64 @@ public class GameSimulation {
     }
 
     public void startPatternMatchSim() {
-        int noOfDiff = fields.size();
-        int[] wins = new int[noOfDiff];
-
-        List<List<Long>> times = new ArrayList<>();
-        times.add(new ArrayList<Long>());
-        times.add(new ArrayList<Long>());
-        times.add(new ArrayList<Long>());
-
-        for (int fieldDiff = 0; fieldDiff < fields.size(); fieldDiff++) {
-            for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
-                Gson gson = new Gson();
-                MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
-                BoardSolver solver = new BoardSolver(game);
-                solver.setQuiet();
-                long start = System.nanoTime();
-                while (!game.isGameOver()) {
-                    if (!solver.patternMatch()) {
-                        Cell c = solver.selectRandomCell();
-                        game.quietSelect(c.getX(), c.getY());
-                    }
-                }
-
-                if (game.isGameWon()) {
-                    long end = System.nanoTime();
-                    wins[fieldDiff] = wins[fieldDiff] + 1;
-                    times.get(fieldDiff).add(end - start);
-                }
-                progress();
+        for (List<Minesweeper> diff : gamesPattern) {
+            for (Minesweeper game : diff) {
+                pool.execute(new SolverThreadWrapper(game, true, true, false, false));
             }
         }
-
-        long[] avgTimes = new long[noOfDiff];
-        for (int i = 0; i < times.size(); i++) {
-            long total = 0;
-            int size = times.get(i).size();
-            for (int j = 0; j < size; j++) {
-                total += times.get(i).get(j);
-            }
-            long avg = size == 0 ? 0 : (total / size);
-            avgTimes[i] = avg;
-        }
-        writeResults(wins, avgTimes, PATTERN_PATH);
     }
 
     public void startSATSim() {
-        int noOfDiff = fields.size();
-        int[] wins = new int[noOfDiff];
-
-        List<List<Long>> times = new ArrayList<>();
-        times.add(new ArrayList<Long>());
-        times.add(new ArrayList<Long>());
-        times.add(new ArrayList<Long>());
-
-        for (int fieldDiff = 0; fieldDiff < fields.size(); fieldDiff++) {
-            for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
-                Gson gson = new Gson();
-                MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
-                BoardSolver solver = new BoardSolver(game);
-                solver.setQuiet();
-                long start = System.nanoTime();
-                while (!game.isGameOver()) {
-                    if (!solver.SATSolve()) {
-                        Cell c = solver.selectRandomCell();
-                        game.quietSelect(c.getX(), c.getY());
-                    }
-                }
-
-                if (game.isGameWon()) {
-                    long end = System.nanoTime();
-                    wins[fieldDiff] = wins[fieldDiff] + 1;
-                    times.get(fieldDiff).add(end - start);
-                }
-                progress();
+        for (List<Minesweeper> diff : gamesSAT) {
+            for (Minesweeper game : diff) {
+                pool.execute(new SolverThreadWrapper(game, true, false, true, false));
             }
         }
-
-        long[] avgTimes = new long[noOfDiff];
-        for (int i = 0; i < times.size(); i++) {
-            long total = 0;
-            int size = times.get(i).size();
-            for (int j = 0; j < size; j++) {
-                total += times.get(i).get(j);
-            }
-            long avg = size == 0 ? 0 : (total / size);
-            avgTimes[i] = avg;
-        }
-        writeResults(wins, avgTimes, SAT_PATH);
     }
 
     public void startJointSim() {
-        int noOfDiff = fields.size();
-        int[] wins = new int[noOfDiff];
-
-        List<List<Long>> times = new ArrayList<>();
-        times.add(new ArrayList<Long>());
-        times.add(new ArrayList<Long>());
-        times.add(new ArrayList<Long>());
-
-        for (int fieldDiff = 0; fieldDiff < fields.size(); fieldDiff++) {
-            for (int i = 0; i < fields.get(fieldDiff).size(); i++) {
-                Gson gson = new Gson();
-                MineField mineField = gson.fromJson(gson.toJson(fields.get(fieldDiff).get(i)), MineField.class);
-                Minesweeper game = new Minesweeper(diffs[fieldDiff], mineField);
-                BoardSolver solver = new BoardSolver(game);
-                solver.setQuiet();
-                long start = System.nanoTime();
-                while (!game.isGameOver()) {
-                    if (!solver.jointSolve()) {
-                        Cell c = solver.selectRandomCell();
-                        game.quietSelect(c.getX(), c.getY());
-                    }
-                }
-
-                if (game.isGameWon()) {
-                    long end = System.nanoTime();
-                    wins[fieldDiff] = wins[fieldDiff] + 1;
-                    times.get(fieldDiff).add(end - start);
-                }
-                progress();
+        for (List<Minesweeper> diff : gamesJoint) {
+            for (Minesweeper game : diff) {
+                pool.execute(new SolverThreadWrapper(game, true, true, true, false));
             }
         }
-
-        long[] avgTimes = new long[noOfDiff];
-        for (int i = 0; i < times.size(); i++) {
-            long total = 0;
-            int size = times.get(i).size();
-            for (int j = 0; j < size; j++) {
-                total += times.get(i).get(j);
-            }
-            long avg = size == 0 ? 0 : (total / size);
-            avgTimes[i] = avg;
-        }
-        writeResults(wins, avgTimes, JOINT_PATH);
     }
 
     public void startJointStratSim() {
 
     }
 
-    private void writeResults(int[] wins, long[] times, String path) {
+    public void calcResults() {
+        int[] wins = new int[3];
+        for (int i = 0; i < gamesPattern.size(); i++) {
+            for (Minesweeper game : gamesPattern.get(i)) {
+                if (game.isGameWon()) {
+                    wins[i]++;
+                }
+            }
+        }
+        writeResults(wins, PATTERN_PATH);
+        wins = new int[3];
+        for (int i = 0; i < gamesSAT.size(); i++) {
+            for (Minesweeper game : gamesSAT.get(i)) {
+                if (game.isGameWon()) {
+                    wins[i]++;
+                }
+            }
+        }
+        writeResults(wins, SAT_PATH);
+        wins = new int[3];
+        for (int i = 0; i < gamesJoint.size(); i++) {
+            for (Minesweeper game : gamesJoint.get(i)) {
+                if (game.isGameWon()) {
+                    wins[i]++;
+                }
+            }
+        }
+        writeResults(wins, JOINT_PATH);
+    }
+
+    private void writeResults(int[] wins, String path) {
         try (PrintWriter writer = new PrintWriter(path)) {
             StringBuilder sb = new StringBuilder();
             sb.append("difficulty");
@@ -241,8 +171,6 @@ public class GameSimulation {
             sb.append("loss");
             sb.append(',');
             sb.append("win/loss (%)");
-            sb.append(',');
-            sb.append("avg time");
             sb.append(',');
             sb.append('\n');
 
@@ -265,8 +193,6 @@ public class GameSimulation {
                 sb.append(',');
                 double percent = (double) wins[i] / (double) noOfSims;
                 sb.append(percent);
-                sb.append(',');
-                sb.append(times[i]);
                 sb.append('\n');
             }
             // sb.append("AVG.");
@@ -324,5 +250,21 @@ public class GameSimulation {
         fields.add(fieldsEasy);
         fields.add(fieldsMedium);
         fields.add(fieldsHard);
+        gamesPattern = new ArrayList<>();
+        gamesSAT = new ArrayList<>();
+        gamesJoint = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            gamesPattern.add(new ArrayList<Minesweeper>());
+            gamesSAT.add(new ArrayList<Minesweeper>());
+            gamesJoint.add(new ArrayList<Minesweeper>());
+        }
+		for (int i = 0; i < fields.size(); i++) {
+			for (int j = 0; j < fields.get(i).size(); j++) {
+				Gson gson = new Gson();
+				gamesPattern.get(i).add(new Minesweeper(diffs[i], gson.fromJson(gson.toJson(fields.get(i).get(j)), MineField.class)));
+				gamesSAT.get(i).add(new Minesweeper(diffs[i], gson.fromJson(gson.toJson(fields.get(i).get(j)), MineField.class)));
+				gamesJoint.get(i).add(new Minesweeper(diffs[i], gson.fromJson(gson.toJson(fields.get(i).get(j)), MineField.class)));
+			}
+		}
     }
 }

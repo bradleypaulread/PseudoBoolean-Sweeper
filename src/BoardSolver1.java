@@ -155,7 +155,9 @@ public class BoardSolver1 {
 								game.decrementMines();
 							}
 						}
+						if (!quiet) {
 							game.refresh();
+						}
 						return true;
 					}
 				}
@@ -191,7 +193,9 @@ public class BoardSolver1 {
 				}
 			}
 		}
+		if (!quiet) {
 			game.refresh();
+		}
 		return change;
 	}
 
