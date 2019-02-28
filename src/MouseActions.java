@@ -22,16 +22,6 @@ public class MouseActions implements MouseListener {
 	}
 
 	public void mouseClicked(MouseEvent e) {
-		// // If mouse 1 is pressed
-		if (e.getButton() == MouseEvent.BUTTON1) {
-			int x = e.getX() / board.getCellWidth();
-			int y = e.getY() / board.getCellWidth();
-			if (game.is_good(x, y)) {
-				if (e.getClickCount() == 2) { // Double click, clear all neighbours around selected cell
-					game.clearNeighbours(x, y);
-				}
-			}
-		}
 	}
 
 	public void mouseEntered(MouseEvent e) {
@@ -63,7 +53,7 @@ public class MouseActions implements MouseListener {
 				}
 				game.getCell(x, y).invertFlag();
 			}
-			//    public void repaint(int x, int y, int width, int height) {
+			// public void repaint(int x, int y, int width, int height) {
 			board.repaint(10);
 		}
 	}

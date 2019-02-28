@@ -36,7 +36,7 @@ public class GameSimulation {
 
     public GameSimulation(int noOfSims) {
         this.noOfSims = noOfSims;
-        int noOfThreads = Runtime.getRuntime().availableProcessors()+1;
+        int noOfThreads = Runtime.getRuntime().availableProcessors();
 		pool = Executors.newFixedThreadPool(noOfThreads);
         reset(noOfSims);
         warmup();
@@ -71,7 +71,7 @@ public class GameSimulation {
     }
 
     private void warmup() {
-        int limit = 3;
+        int limit = 1;
         System.out.println("WARMING UP...");
         for (int init = 0; init < limit; init++) {
             for (int fieldDiff = 0; fieldDiff < fields.size(); fieldDiff++) {

@@ -10,8 +10,8 @@
  */
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -255,9 +256,10 @@ public class Minesweeper extends JFrame {
 		SATHintBtn.addActionListener(e -> solver.SATHint());
 
 		ptAssistBtn.addActionListener(e -> {
-			if (!solver.patternMatch() && !isGameOver()) {
-				showNoMoreMovesDialog();
-			}
+			disableAllBtns();
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, false, true, false, false);
+			thead[0] = t1;
+			stopBtn.setEnabled(true);
 		});
 
 		SATAssistBtn.addActionListener(e -> {
@@ -269,34 +271,26 @@ public class Minesweeper extends JFrame {
 
 		ptSolveBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
-			while (solver.patternMatch())
-				;
-			if (!isGameOver) {
-				int dialogResult = JOptionPane.showConfirmDialog(null,
-						"No more known moves available. Would you like to select the 'least dangerous' cell?",
-						"No More Known Moves", JOptionPane.YES_NO_OPTION);
-
-				if (dialogResult == JOptionPane.YES_OPTION) {
-					// Cell cell = solver.calcCellOdds();
-					// select(cell.getX(), cell.getY());
-				}
-			}
+			disableAllBtns();
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, true, false, false);
+			thead[0] = t1;
+			stopBtn.setEnabled(true);
 		});
 
 		SATSolveBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
+			disableAllBtns();
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, false, true, false);
 			thead[0] = t1;
 			stopBtn.setEnabled(true);
-			disableAllBtns();
 		});
 
 		fullAutoBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
+			disableAllBtns();
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this, true, true, true, true, false);
 			thead[0] = t1;
 			stopBtn.setEnabled(true);
-			disableAllBtns();
 		});
 
 		stopBtn.addActionListener(e -> {

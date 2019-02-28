@@ -13,9 +13,11 @@ import java.util.concurrent.TimeUnit;
 
 public class LaunchSim {
 	public static void main(String[] args) {
-		int noOfSims = 500;
+		int noOfSims = 50;
 		if (args.length > 0) {
-			noOfSims = Integer.valueOf(args[0]);
+			if (Integer.valueOf(args[0]) > 0) {
+				noOfSims = Integer.valueOf(args[0]);
+			}
 		}
 		GameSimulation sim = new GameSimulation(noOfSims);
 		ExecutorService pool = sim.getPool();
@@ -23,9 +25,11 @@ public class LaunchSim {
 		pool.shutdown();
 		while (!pool.isTerminated()) {
 			try {
+				System.out.println(
+						"==============================================================================================================================================");
 				System.out.println(pool);
 				Thread.sleep(10000);
-			} catch (Exception e) {
+			} catch (InterruptedException e1) {
 			}
 		}
 		try {
@@ -35,5 +39,4 @@ public class LaunchSim {
 		sim.calcResults();
 		System.out.println("\n\n\nDONE!!!!!");
 	}
-
 }
