@@ -131,7 +131,7 @@ public class Cell
 
 	@Override
 	public String toString() {
-		return "[" + x + "," + y + "]:"+ flagged;
+		return "[" + x + "," + y + "]";
 	}
 
 	/**

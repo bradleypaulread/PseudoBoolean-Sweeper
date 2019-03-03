@@ -92,158 +92,137 @@ public class BoardSolver {
 								}
 							}
 						}
-						if (j == 0) {
-							List<Cell> currentN = getNeighbours(current);
-							List<Cell> compareN = getNeighbours(i, j + 1);
-							currentN.removeIf(c -> c.isOpen());
-							compareN.removeIf(c -> c.isOpen());
-							if (current.getNumber() == cells[i][j + 1].getNumber()) {
-								for (Cell c : compareN) {
-									if (!c.isHint() && !currentN.contains(c)) {
-										c.setSafeHint();
-										game.getHintCells().add(c);
-										game.refresh();
-										return;
-									}
-								}
-							}
+						Cell c1 = oneTwoPattern(current);
+						if (c1 != null && !c1.isHint()) {
+							c1.setMineHint();
+							game.getHintCells().add(c1);
+							game.refresh();
+							return;
 						}
-						if (j == cells[i].length - 2) {
-							if (current.getNumber() == cells[i][j + 1].getNumber()) {
-								List<Cell> currentN = getNeighbours(current);
-								List<Cell> compareN = getNeighbours(i, j + 1);
-								currentN.removeIf(c -> c.isOpen());
-								compareN.removeIf(c -> c.isOpen());
-								for (Cell c : currentN) {
-									if (!c.isHint() && !compareN.contains(c)) {
-										c.setSafeHint();
-										game.getHintCells().add(c);
-										game.refresh();
-										return;
-									}
-								}
-							}
-						}
-						if (i == 0) {
-							if (current.getNumber() == cells[i + 1][j].getNumber()) {
-								List<Cell> currentN = getNeighbours(current);
-								List<Cell> compareN = getNeighbours(i + 1, j);
-								currentN.removeIf(c -> c.isOpen());
-								compareN.removeIf(c -> c.isOpen());
-								for (Cell c : compareN) {
-									if (!c.isHint() && !currentN.contains(c)) {
-										c.setSafeHint();
-										game.getHintCells().add(c);
-										game.refresh();
-										return;
-									}
-								}
-							}
-						}
-						if (i == cells.length - 2) {
-							if (current.getNumber() == cells[i + 1][j].getNumber()) {
-								List<Cell> currentN = getNeighbours(current);
-								List<Cell> compareN = getNeighbours(i + 1, j);
-								currentN.removeIf(c -> c.isOpen());
-								compareN.removeIf(c -> c.isOpen());
-								for (Cell c : currentN) {
-									if (!c.isHint() && !compareN.contains(c)) {
-										c.setSafeHint();
-										game.getHintCells().add(c);
-										game.refresh();
-										return;
-									}
-								}
-							}
-						}
-						if (isLineX(current)) {
-							List<List<Cell>> lines = getLineX(current);
-							if (lines.isEmpty()) {
-								continue;
-							}
-							List<Cell> openLine = lines.get(0);
-							List<Cell> closedLine = lines.get(1);
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 1
-										&& openLine.get(lineIdx + 1).getNumber() == 2)
-										&& calcClosedNeighbours(openLine.get(lineIdx + 1).getX(),
-												openLine.get(lineIdx + 1).getY()) <= 3) {
-									if (closedLine.size() > lineIdx + 2) {
-										Cell c = closedLine.get(lineIdx + 2);
-										if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
-											c.setMineHint();
-											game.getHintCells().add(c);
-											game.refresh();
-											return;
-										}
-									}
-								}
-							}
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 2
-										&& openLine.get(lineIdx + 1).getNumber() == 1)
-										&& calcClosedNeighbours(openLine.get(lineIdx).getX(),
-												openLine.get(lineIdx).getY()) <= 3) {
-									if (openLine.get(lineIdx).getX() - 1 >= 0
-											&& openLine.get(lineIdx).getY() - 1 >= 0) {
-										Cell c = cells[openLine.get(lineIdx).getX() - 1][openLine.get(lineIdx).getY()
-												- 1];
-										if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
-											c.setMineHint();
-											game.getHintCells().add(c);
-											game.refresh();
-											return;
-										}
-									}
-								}
-							}
-						}
-						if (isLineY(current)) {
-							List<List<Cell>> lines = getLineY(current);
-							if (lines.isEmpty()) {
-								continue;
-							}
-							List<Cell> openLine = lines.get(0);
-							List<Cell> closedLine = lines.get(1);
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 1
-										&& openLine.get(lineIdx + 1).getNumber() == 2)
-										&& calcClosedNeighbours(openLine.get(lineIdx + 1).getX(),
-												openLine.get(lineIdx + 1).getY()) <= 3) {
-									if (closedLine.size() > lineIdx + 2) {
-										Cell c = closedLine.get(lineIdx + 2);
-										if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
-											c.setMineHint();
-											game.getHintCells().add(c);
-											game.refresh();
-											return;
-										}
-									}
-								}
-							}
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 2
-										&& openLine.get(lineIdx + 1).getNumber() == 1)
-										&& calcClosedNeighbours(openLine.get(lineIdx).getX(),
-												openLine.get(lineIdx).getY()) <= 3) {
-									if (openLine.get(lineIdx).getX() - 1 >= 0
-											&& openLine.get(lineIdx).getY() - 1 >= 0) {
-										Cell c = cells[openLine.get(lineIdx).getX() - 1][openLine.get(lineIdx).getY()
-												- 1];
-										if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
-											c.setMineHint();
-											game.getHintCells().add(c);
-											game.refresh();
-											return;
-										}
-									}
-								}
-							}
+						Cell c2 = fromEdge(current);
+						if (c2 != null && !c2.isHint()) {
+							c2.setSafeHint();
+							game.getHintCells().add(c2);
+							game.refresh();
+							return;
 						}
 					}
 				}
 			}
 		}
+	}
+
+	private Cell fromEdge(Cell cell) {
+		int xPos = cell.getX();
+		int yPos = cell.getY();
+		if (yPos == 0 && cell.getNumber() == cells[xPos][yPos + 1].getNumber()) {
+			List<Cell> currentN = getNeighbours(cell);
+			List<Cell> compareN = getNeighbours(xPos, yPos + 1);
+			currentN.removeIf(c -> c.isOpen());
+			compareN.removeIf(c -> c.isOpen());
+			for (Cell c : compareN) {
+				if (!c.isHint() && c.isBlank() && !currentN.contains(c)) {
+					return c;
+				}
+			}
+		} else if (yPos == cells[xPos].length - 2 && cell.getNumber() == cells[xPos][yPos + 1].getNumber()) {
+			List<Cell> currentN = getNeighbours(cell);
+			List<Cell> compareN = getNeighbours(xPos, yPos + 1);
+			currentN.removeIf(c -> c.isOpen());
+			compareN.removeIf(c -> c.isOpen());
+			for (Cell c : currentN) {
+				if (!c.isHint() && c.isBlank() && !compareN.contains(c)) {
+					return c;
+				}
+			}
+		} else if (xPos == 0 && cell.getNumber() == cells[xPos + 1][yPos].getNumber()) {
+			List<Cell> currentN = getNeighbours(cell);
+			List<Cell> compareN = getNeighbours(xPos + 1, yPos);
+			currentN.removeIf(c -> c.isOpen());
+			compareN.removeIf(c -> c.isOpen());
+			for (Cell c : compareN) {
+				if (!c.isHint() && c.isBlank()&& !currentN.contains(c)) {
+					return c;
+				}
+			}
+		} else if (xPos == cells.length - 2 && cell.getNumber() == cells[xPos + 1][yPos].getNumber()) {
+			List<Cell> currentN = getNeighbours(cell);
+			List<Cell> compareN = getNeighbours(xPos + 1, yPos);
+			currentN.removeIf(c -> c.isOpen());
+			compareN.removeIf(c -> c.isOpen());
+			for (Cell c : currentN) {
+				if (!c.isHint() && c.isBlank() && !compareN.contains(c)) {
+					return c;
+				}
+			}
+		}
+		return null;
+	}
+
+	private Cell oneTwoPattern(Cell cell) {
+		if (isLineX(cell)) {
+			List<List<Cell>> lines = getLineX(cell);
+			if (lines.isEmpty()) {
+				return null;
+			}
+			List<Cell> openLine = lines.get(0);
+			List<Cell> closedLine = lines.get(1);
+			for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
+				if ((openLine.get(lineIdx).getNumber() == 1 && openLine.get(lineIdx + 1).getNumber() == 2)
+						&& calcClosedNeighbours(openLine.get(lineIdx + 1).getX(),
+								openLine.get(lineIdx + 1).getY()) <= 3) {
+					if (closedLine.size() > lineIdx + 2) {
+						Cell c = closedLine.get(lineIdx + 2);
+						if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
+							return c;
+						}
+					}
+				}
+			}
+			for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
+				if ((openLine.get(lineIdx).getNumber() == 2 && openLine.get(lineIdx + 1).getNumber() == 1)
+						&& calcClosedNeighbours(openLine.get(lineIdx).getX(), openLine.get(lineIdx).getY()) <= 3) {
+					if (openLine.get(lineIdx).getX() - 1 >= 0 && openLine.get(lineIdx).getY() - 1 >= 0) {
+						Cell c = cells[openLine.get(lineIdx).getX() - 1][openLine.get(lineIdx).getY() - 1];
+						if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
+							return c;
+						}
+					}
+				}
+			}
+		}
+		if (isLineY(cell)) {
+			List<List<Cell>> lines = getLineY(cell);
+			if (lines.isEmpty()) {
+				return null;
+			}
+			List<Cell> openLine = lines.get(0);
+			List<Cell> closedLine = lines.get(1);
+			for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
+				if ((openLine.get(lineIdx).getNumber() == 1 && openLine.get(lineIdx + 1).getNumber() == 2)
+						&& calcClosedNeighbours(openLine.get(lineIdx + 1).getX(),
+								openLine.get(lineIdx + 1).getY()) <= 3) {
+					if (closedLine.size() > lineIdx + 2) {
+						Cell c = closedLine.get(lineIdx + 2);
+						if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
+							return c;
+						}
+					}
+				}
+			}
+			for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
+				if ((openLine.get(lineIdx).getNumber() == 2 && openLine.get(lineIdx + 1).getNumber() == 1)
+						&& calcClosedNeighbours(openLine.get(lineIdx).getX(), openLine.get(lineIdx).getY()) <= 3) {
+					if (openLine.get(lineIdx).getX() - 1 >= 0 && openLine.get(lineIdx).getY() - 1 >= 0) {
+						Cell c = cells[openLine.get(lineIdx).getX() - 1][openLine.get(lineIdx).getY() - 1];
+						if (!c.isFlagged() && !c.isHint() && c.isClosed()) {
+							return c;
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	private boolean isLineX(Cell cell) {
@@ -353,29 +332,31 @@ public class BoardSolver {
 	}
 
 	public void SATHint() {
-		// cells = game.getCells();
-		// Map<Cell, Boolean> known = solveMines();
-		// for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
-		// Cell current = pair.getKey();
-		// boolean mine = pair.getValue();
-		// if (current.isHint() || !current.isBlank()) {
-		// continue;
-		// }
-		// if (mine) {
-		// current.setMineHint();
-		// game.getHintCells().add(current);
-		// game.refresh();
-		// return;
-		// } else {
-		// if (current.isBlank()) {
-		// current.setSafeHint();
-		// game.getHintCells().add(current);
-		// game.refresh();
-		// return;
-		// }
-		// }
-		// }
-
+		cells = game.getCells();
+		Map<Cell, Boolean> known = shallowSolveMines();
+		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
+			Cell current = pair.getKey();
+			boolean mine = pair.getValue();
+			// Skip cells that are already marked as hints
+			if (current.isHint()) {
+				continue;
+			}
+			if (mine) {
+				if (current.isBlank()) {
+					current.setMineHint();
+					game.getHintCells().add(current);
+					game.refresh();
+					return;
+				}
+			} else {
+				if (current.isBlank()) {
+					current.setSafeHint();
+					game.getHintCells().add(current);
+					game.refresh();
+					return;
+				}
+			}
+		}
 	}
 
 	/**
@@ -394,206 +375,52 @@ public class BoardSolver {
 			for (int j = 0; j < cells[i].length && running.get(); j++) {
 				if (game.is_good(i, j)) {
 					Cell current = cells[i][j];
-					if (current.isOpen() && current.getNumber() != 0
-							&& current.getNumber() == calcFlaggedNeighbours(i, j)) {
-						List<Cell> n = getNeighbours(current); // List of
-																// neighbours
-						for (int k = 0; k < n.size(); k++) {
-							// If the cell has not been affected by the user (is
-							// blank of behaviour)
-							Cell cell = n.get(k);
-							if (cell.isClosed() && !cell.isFlagged()) {
-								if (quiet) {
-									game.quietSelect(cell.getX(), cell.getY());
-								} else {
-									game.select(cell.getX(), cell.getY());
-								}
-								return true;
-							}
-						}
-					} else if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
-							&& current.getNumber() != calcFlaggedNeighbours(i, j)) {
-						List<Cell> n = getNeighbours(current); // List of neighbouring cells
-						for (Cell c : n) {
-							if (c.isClosed() && !c.isFlagged()) {
-								c.flag();
-								game.decrementMines();
-							}
-						}
-						if (!quiet) {
-							game.refresh();
-						}
-						return true;
-					}
 					if (current.isOpen()) {
-						if (j == 0 && current.getNumber() == cells[i][j + 1].getNumber()) {
-							List<Cell> currentN = getNeighbours(current);
-							List<Cell> compareN = getNeighbours(i, j + 1);
-							currentN.removeIf(c -> c.isOpen());
-							compareN.removeIf(c -> c.isOpen());
-							for (Cell c : compareN) {
-								if (c.isClosed() && !c.isFlagged() && !currentN.contains(c)) {
+						if (current.getNumber() != 0 && current.getNumber() == calcFlaggedNeighbours(i, j)) {
+							List<Cell> n = getNeighbours(current); // List of neighbours
+							for (int k = 0; k < n.size(); k++) {
+								// If the cell has not been affected by the user (is
+								// blank of behaviour)
+								Cell cell = n.get(k);
+								if (cell.isClosed() && !cell.isFlagged()) {
 									if (quiet) {
-										game.quietSelect(c.getX(), c.getY());
+										game.quietSelect(cell.getX(), cell.getY());
 									} else {
-										game.select(c.getX(), c.getY());
-									}
-									if (!quiet) {
-										game.refresh();
+										game.select(cell.getX(), cell.getY());
 									}
 									return true;
 								}
 							}
+						} else if (current.getNumber() != 0 && current.getNumber() == calcClosedNeighbours(i, j)
+								&& current.getNumber() != calcFlaggedNeighbours(i, j)) {
+							List<Cell> n = getNeighbours(current); // List of neighbouring cells
+							for (Cell c : n) {
+								if (c.isClosed() && !c.isFlagged()) {
+									c.flag();
+									game.decrementMines();
+								}
+							}
+							if (!quiet) {
+								game.refresh();
+							}
+							return true;
 						}
-						if (j == cells[i].length - 2 && current.getNumber() == cells[i][j + 1].getNumber()) {
-							List<Cell> currentN = getNeighbours(current);
-							List<Cell> compareN = getNeighbours(i, j + 1);
-							currentN.removeIf(c -> c.isOpen());
-							compareN.removeIf(c -> c.isOpen());
-							for (Cell c : currentN) {
-								if (c.isClosed() && !c.isFlagged() && !compareN.contains(c)) {
-									if (quiet) {
-										game.quietSelect(c.getX(), c.getY());
-									} else {
-										game.select(c.getX(), c.getY());
-									}
-									if (!quiet) {
-										game.refresh();
-									}
-									return true;
-								}
+						Cell c;
+						if ((c = oneTwoPattern(current)) != null) {
+							c.flag();
+							game.decrementMines();
+							if (!quiet) {
+								game.refresh();
 							}
+							return true;
 						}
-						if (i == 0 && current.getNumber() == cells[i + 1][j].getNumber()) {
-							List<Cell> currentN = getNeighbours(current);
-							List<Cell> compareN = getNeighbours(i + 1, j);
-							currentN.removeIf(c -> c.isOpen());
-							compareN.removeIf(c -> c.isOpen());
-							for (Cell c : compareN) {
-								if (c.isClosed() && !c.isFlagged() && !currentN.contains(c)) {
-									if (quiet) {
-										game.quietSelect(c.getX(), c.getY());
-									} else {
-										game.select(c.getX(), c.getY());
-									}
-									if (!quiet) {
-										game.refresh();
-									}
-									return true;
-								}
+						if ((c = fromEdge(current)) != null) {
+							if (quiet) {
+								game.quietSelect(c.getX(), c.getY());
+							} else {
+								game.select(c.getX(), c.getY());
 							}
-						}
-						if (i == cells.length - 2 && current.getNumber() == cells[i + 1][j].getNumber()) {
-							List<Cell> currentN = getNeighbours(current);
-							List<Cell> compareN = getNeighbours(i + 1, j);
-							currentN.removeIf(c -> c.isOpen());
-							compareN.removeIf(c -> c.isOpen());
-							for (Cell c : currentN) {
-								if (c.isClosed() && !c.isFlagged() && !compareN.contains(c)) {
-									if (quiet) {
-										game.quietSelect(c.getX(), c.getY());
-									} else {
-										game.select(c.getX(), c.getY());
-									}
-									if (!quiet) {
-										game.refresh();
-									}
-									return true;
-								}
-							}
-						}
-						if (isLineX(current)) {
-							List<List<Cell>> lines = getLineX(current);
-							if (lines.isEmpty()) {
-								continue;
-							}
-							List<Cell> openLine = lines.get(0);
-							List<Cell> closedLine = lines.get(1);
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 1
-										&& openLine.get(lineIdx + 1).getNumber() == 2)
-										&& calcClosedNeighbours(openLine.get(lineIdx + 1).getX(),
-												openLine.get(lineIdx + 1).getY()) <= 3) {
-									if (closedLine.size() > lineIdx + 2) {
-										Cell c = closedLine.get(lineIdx + 2);
-										if (c.isClosed() && !c.isFlagged()) {
-											c.flag();
-											game.decrementMines();
-											if (!quiet) {
-												game.refresh();
-											}
-											return true;
-										}
-
-									}
-								}
-							}
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 2
-										&& openLine.get(lineIdx + 1).getNumber() == 1)
-										&& calcClosedNeighbours(openLine.get(lineIdx).getX(),
-												openLine.get(lineIdx).getY()) <= 3) {
-									if (openLine.get(lineIdx).getX() - 1 >= 0
-											&& openLine.get(lineIdx).getY() - 1 >= 0) {
-										Cell c = cells[openLine.get(lineIdx).getX() - 1][openLine.get(lineIdx).getY()
-												- 1];
-										if (c.isClosed() && !c.isFlagged()) {
-											c.flag();
-											game.decrementMines();
-											if (!quiet) {
-												game.refresh();
-											}
-											return true;
-										}
-									}
-								}
-							}
-						}
-						if (isLineY(current)) {
-							List<List<Cell>> lines = getLineY(current);
-							if (lines.isEmpty()) {
-								continue;
-							}
-							List<Cell> openLine = lines.get(0);
-							List<Cell> closedLine = lines.get(1);
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 1
-										&& openLine.get(lineIdx + 1).getNumber() == 2)
-										&& calcClosedNeighbours(openLine.get(lineIdx + 1).getX(),
-												openLine.get(lineIdx + 1).getY()) <= 3) {
-									if (closedLine.size() > lineIdx + 2) {
-										Cell c = closedLine.get(lineIdx + 2);
-										if (c.isClosed() && !c.isFlagged()) {
-											c.flag();
-											game.decrementMines();
-											if (!quiet) {
-												game.refresh();
-											}
-											return true;
-										}
-									}
-								}
-							}
-							for (int lineIdx = 0; lineIdx < openLine.size() - 2; lineIdx++) {
-								if ((openLine.get(lineIdx).getNumber() == 2
-										&& openLine.get(lineIdx + 1).getNumber() == 1)
-										&& calcClosedNeighbours(openLine.get(lineIdx).getX(),
-												openLine.get(lineIdx).getY()) <= 3) {
-									if (openLine.get(lineIdx).getX() - 1 >= 0
-											&& openLine.get(lineIdx).getY() - 1 >= 0) {
-										Cell c = cells[openLine.get(lineIdx).getX() - 1][openLine.get(lineIdx).getY()
-												- 1];
-										if (c.isClosed() && !c.isFlagged()) {
-											c.flag();
-											game.decrementMines();
-											if (!quiet) {
-												game.refresh();
-											}
-											return true;
-										}
-									}
-								}
-							}
+							return true;
 						}
 					}
 				}
@@ -641,12 +468,12 @@ public class BoardSolver {
 
 	public boolean SATSolve() {
 		boolean change = false;
-		Map<Cell, Boolean> results = shallowSolveMines();
-		if (results == null || !running.get()) {
+		Map<Cell, Boolean> known = shallowSolveMines();
+		if (known == null || !running.get()) {
 			return false;
 		}
 		// Iterate over map
-		for (Map.Entry<Cell, Boolean> pair : results.entrySet()) {
+		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
 			Cell current = pair.getKey();
 			boolean mine = pair.getValue();
 			if (mine) {

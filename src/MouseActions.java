@@ -39,7 +39,6 @@ public class MouseActions implements MouseListener {
 				if (game.getCell(x, y).isClosed()) {
 					game.select(x, y);
 				}
-				game.refresh();
 			}
 		} else if (e.getButton() == MouseEvent.BUTTON3) { // If right click is pressed
 			int x = e.getX() / board.getCellWidth();
@@ -52,9 +51,9 @@ public class MouseActions implements MouseListener {
 					game.incrementMines();
 				}
 				game.getCell(x, y).invertFlag();
+				game.resetHints();
+				game.refresh();
 			}
-			// public void repaint(int x, int y, int width, int height) {
-			board.repaint(10);
 		}
 	}
 

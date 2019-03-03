@@ -231,7 +231,7 @@ public class Minesweeper extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				currentGameTime++;
 				if (currentGameTime < 100000) {
-					timeLbl.setText(Integer.toString(currentGameTime));
+					timeLbl.setText(" ~ Time: " + Integer.toString(currentGameTime));
 				} else {
 					((Timer) (e.getSource())).stop();
 				}
@@ -437,8 +437,8 @@ public class Minesweeper extends JFrame {
 			JButton btn = new JButton("Create");
 			btn.addActionListener(e2 -> {
 				int newX = ((Number) widthField.getValue()).intValue();
-				int newY = ((Number) widthField.getValue()).intValue();
-				int newMines = ((Number) widthField.getValue()).intValue();
+				int newY = ((Number) heightField.getValue()).intValue();
+				int newMines = ((Number) noOfMinesField.getValue()).intValue();
 				Minesweeper newGame = new Minesweeper(newX, newY, newMines);
 				newGame.getDiffEasyRb().setEnabled(true);
 				newGame.getDiffMediumRb().setEnabled(true);
@@ -621,6 +621,7 @@ public class Minesweeper extends JFrame {
 			}
 		}
 		enableAllBtns();
+		gameTimer.start();
 		refresh();
 		solver = new BoardSolver(this);
 	}
@@ -758,6 +759,7 @@ public class Minesweeper extends JFrame {
 		for (Cell cell : hintCells) {
 			cell.resetHint();
 		}
+		hintCells.clear();
 	}
 
 	public MineField getMineField() {

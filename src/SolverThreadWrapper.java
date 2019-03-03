@@ -73,11 +73,11 @@ public class SolverThreadWrapper implements Runnable {
             }
         } else if (loop) {
             if (patternMatch && SAT) {
-                joint();
+                jointSolve();
             } else if (patternMatch) {
-                patternMatch();
+                patternMatchSolve();
             } else if (SAT) {
-                SAT();
+                SATSolve();
             }
         } else {
             if (patternMatch && SAT) {
@@ -88,17 +88,15 @@ public class SolverThreadWrapper implements Runnable {
                 new BoardSolver(game, running).SATSolve();
             }
         }
-        //java.awt.Toolkit.getDefaultToolkit().beep();
-        //System.out.println(Thread.currentThread().toString() + " DONE!");
-        game.enableAllBtns();
         game.getStopBtn().setEnabled(false);
+        game.enableAllBtns();
     }
 
     public void end() {
         running.set(false);
     }
 
-    private void patternMatch() {
+    private void patternMatchSolve() {
         BoardSolver solver = new BoardSolver(game, running);
         while (running.get() && !game.isGameOver() && solver.patternMatch()) {
             if (Thread.interrupted()) {
@@ -107,7 +105,7 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void SAT() {
+    private void SATSolve() {
         BoardSolver solver = new BoardSolver(game, running);
         while (running.get() && !game.isGameOver() && solver.SATSolve()) {
             if (Thread.interrupted()) {
@@ -116,7 +114,7 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void joint() {
+    private void jointSolve() {
         BoardSolver solver = new BoardSolver(game, running);
         while (running.get() && !game.isGameOver() && solver.jointSolve()) {
             if (Thread.interrupted()) {
@@ -125,7 +123,7 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void strat() {
+    private void stratSovle() {
         BoardSolver solver = new BoardSolver(game, running);
         while (running.get() && !game.isGameOver() && solver.fullSolve()) {
             if (Thread.interrupted()) {
