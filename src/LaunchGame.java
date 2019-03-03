@@ -9,8 +9,8 @@ public class LaunchGame {
         int mines = 3; // Integer number of mines on the board
         assert diff >= 0.00 && diff < 1.00 && mines >= 0 && mines < (x * y);
         
-        // new Minesweeper(x, y, diff); // Constructor for % mines
 		new Minesweeper();
+        // new Minesweeper(x, y, diff); // Constructor for % mines
         // new Minesweeper(x, y, mines); // Constructor for int mines
 	}
 

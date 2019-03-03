@@ -48,7 +48,7 @@ public class SolverThreadWrapper implements Runnable {
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.jointSolve()) {
-                        Cell c = solver.selectRandomCell();
+                        Cell c = solver.getRandomCell();
                         game.quietSelect(c.getX(), c.getY());
                     }
                 }
@@ -57,7 +57,7 @@ public class SolverThreadWrapper implements Runnable {
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.patternMatch()) {
-                        Cell c = solver.selectRandomCell();
+                        Cell c = solver.getRandomCell();
                         game.quietSelect(c.getX(), c.getY());
                     }
                 }
@@ -66,7 +66,7 @@ public class SolverThreadWrapper implements Runnable {
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.SATSolve()) {
-                        Cell c = solver.selectRandomCell();
+                        Cell c = solver.getRandomCell();
                         game.quietSelect(c.getX(), c.getY());
                     }
                 }

@@ -857,10 +857,9 @@ public class BoardSolver {
 	 * When passed a cell and a board, create a unique identifier (a single integer)
 	 * for that cell.
 	 * 
-	 * @param c
-	 *            Cell to encode.
-	 * @param board
-	 *            Board the cell is present in, used to get the width of the board.
+	 * @param c     Cell to encode.
+	 * @param board Board the cell is present in, used to get the width of the
+	 *              board.
 	 * @return Unique integer identifier for given cell.
 	 */
 	private int encodeCellId(Cell c) {
@@ -870,11 +869,9 @@ public class BoardSolver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id
-	 *            Unique encoded identity id.
-	 * @param board
-	 *            Board the cell would be present in, used to get the width of the
-	 *            board.
+	 * @param id    Unique encoded identity id.
+	 * @param board Board the cell would be present in, used to get the width of the
+	 *              board.
 	 * @return Cell that the id refers to.
 	 */
 	private Cell decodeCellId(int id) {
@@ -904,10 +901,8 @@ public class BoardSolver {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	private int calcFlaggedNeighbours(int x, int y) {
@@ -925,10 +920,8 @@ public class BoardSolver {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	private int calcClosedNeighbours(int x, int y) {
@@ -948,7 +941,7 @@ public class BoardSolver {
 	}
 
 	// To Remove
-	public Cell selectRandomCell() {
+	public Cell getRandomCell() {
 		cells = game.getCells();
 		List<Cell> closedCells = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
@@ -959,28 +952,7 @@ public class BoardSolver {
 				}
 			}
 		}
-		if (closedCells.isEmpty()) {
-			int flagCount = 0;
-			int closedCount = 0;
-			List<Cell> c = new ArrayList<>();
-			for (int i = 0; i < cells.length; i++) {
-				for (int j = 0; j < cells[i].length; j++) {
-					Cell current = cells[i][j];
-					c.add(current);
-					if (current.isClosed()) {
-						closedCount++;
-					}
-					if (current.isFlagged()) {
-						flagCount++;
-					}
-				}
-			}
-			System.out.println(c.size());
-			System.out.println(closedCount);
-			System.out.println(flagCount);
-			System.out.println(c);
-			System.out.println();
-		}
-		return closedCells.get(new Random().nextInt(closedCells.size()));
+		Cell selectedCell = closedCells.get(new Random().nextInt(closedCells.size()));
+		return selectedCell;
 	}
 }

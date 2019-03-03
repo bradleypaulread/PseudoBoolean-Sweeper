@@ -13,7 +13,8 @@ import java.util.concurrent.TimeUnit;
 
 public class LaunchSim {
 	public static void main(String[] args) {
-		int noOfSims = 50;
+		int consoleNum = 0;
+		int noOfSims = 100;
 		if (args.length > 0) {
 			if (Integer.valueOf(args[0]) > 0) {
 				noOfSims = Integer.valueOf(args[0]);
@@ -27,8 +28,8 @@ public class LaunchSim {
 			try {
 				System.out.println(
 						"==============================================================================================================================================");
-				System.out.println(pool);
-				Thread.sleep(10000);
+				System.out.println(++consoleNum + ":" + pool);
+				Thread.sleep(5000);
 			} catch (InterruptedException e1) {
 			}
 		}

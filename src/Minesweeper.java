@@ -16,11 +16,14 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.Timer;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -80,6 +83,10 @@ public class Minesweeper extends JFrame {
 	private boolean strategy = false;
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves = 0; // Number if moves made by the player.
+	private int currentGameTime;
+	private Timer gameTimer;
+	private long startTime;
+	private long endTime;
 	private int minesLeft;
 	private boolean gameWon;
 
@@ -162,6 +169,7 @@ public class Minesweeper extends JFrame {
 		gameWon = false;
 		// Reset board to a fresh setting
 		mineField = mf;
+		startTime = System.nanoTime();
 	}
 
 	private void setup(int x, int y, int d) {
@@ -172,7 +180,7 @@ public class Minesweeper extends JFrame {
 
 		// Load interface components
 		board = new Board(this, x, y);
-		loadButtons();
+		loadUI();
 		loadFileMenu();
 		Container fl = new Container();
 		fl.add(board);
@@ -189,14 +197,14 @@ public class Minesweeper extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
-
+		startTime = System.nanoTime();
 		solver = new BoardSolver(this);
 	}
 
 	/**
 	 * Load buttons to the JFrame and assign their action listeners.
 	 */
-	private void loadButtons() {
+	private void loadUI() {
 		SolverThreadWrapper[] thead = new SolverThreadWrapper[1];
 		Container controlBtns = new Container();
 		JPanel ptBtns = new JPanel();
@@ -214,6 +222,23 @@ public class Minesweeper extends JFrame {
 		stats.add(minesLbl);
 		movesLbl.setText(Integer.toString(moves));
 		minesLbl.setText(Integer.toString(minesLeft));
+
+		JLabel timeLbl = new JLabel();
+		stats.add(timeLbl);
+		// Tick every second
+		gameTimer = new Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				currentGameTime++;
+				if (currentGameTime < 100000) {
+					timeLbl.setText(Integer.toString(currentGameTime));
+				} else {
+					((Timer) (e.getSource())).stop();
+				}
+			}
+		});
+		gameTimer.setInitialDelay(0);
+		gameTimer.start();
 
 		TitledBorder ptTitle = new TitledBorder("Pattern Matching");
 		ptTitle.setTitleJustification(TitledBorder.CENTER);
@@ -409,14 +434,17 @@ public class Minesweeper extends JFrame {
 			fieldPane.add(noOfMinesField);
 
 			JFrame frame = new JFrame("Custom Board Test");
-
-			
 			JButton btn = new JButton("Create");
 			btn.addActionListener(e2 -> {
 				int newX = ((Number) widthField.getValue()).intValue();
-				int newY = ((Number)widthField.getValue()).intValue();
-				int newMines = ((Number)widthField.getValue()).intValue();
+				int newY = ((Number) widthField.getValue()).intValue();
+				int newMines = ((Number) widthField.getValue()).intValue();
 				Minesweeper newGame = new Minesweeper(newX, newY, newMines);
+				newGame.getDiffEasyRb().setEnabled(true);
+				newGame.getDiffMediumRb().setEnabled(true);
+				newGame.getDiffHardRb().setEnabled(true);
+				newGame.setDebug(debugCb.isSelected());
+				newGame.getDebugCB().setSelected(debugCb.isSelected());
 				frame.setVisible(false);
 				frame.dispose();
 				setVisible(false);
@@ -466,6 +494,8 @@ public class Minesweeper extends JFrame {
 			debug(x, y);
 		}
 
+		incrementMoves();
+
 		// How many mines are around the cell
 		// x and y has to be reversed as MineField.java takes parameters
 		// (height, width) not (width, height).
@@ -478,6 +508,7 @@ public class Minesweeper extends JFrame {
 		// cells
 		if (cellNum == 0) {
 			clearNeighbours(x, y);
+			movesLbl.setText("Moves: " + Integer.toString(moves));
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
 			cells[x][y].setFail();
 			System.out.println("LOST ON CELL " + cells[x][y]);
@@ -530,11 +561,13 @@ public class Minesweeper extends JFrame {
 				}
 			}
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
+			endTime = System.nanoTime();
 			isGameOver = true;
 			return;
 		}
 
 		if (won()) { // If the game has been beaten (number of closed cells =
+			endTime = System.nanoTime();
 			gameWon = true;
 			isGameOver = true;
 		}
@@ -546,6 +579,7 @@ public class Minesweeper extends JFrame {
 			// Only attempt to open closed cells
 			if (c.isClosed() && !c.isFlagged()) {
 				select(c.getX(), c.getY());
+				--moves;
 			}
 		}
 	}
@@ -554,7 +588,9 @@ public class Minesweeper extends JFrame {
 	 * Called when the game has been won or lost.
 	 */
 	private void endGame() {
+		endTime = System.nanoTime();
 		isGameOver = true;
+		gameTimer.stop();
 		disableAllBtns();
 		try {
 			openAllCells();
@@ -569,10 +605,13 @@ public class Minesweeper extends JFrame {
 	 */
 	public void reset() {
 		isGameOver = false;
+		endTime = 0;
+		currentGameTime = 0;
+		startTime = 0;
 		moves = 0;
-		enableAllBtns();
+		movesLbl.setText("Moves: " + Integer.toString(moves));
 		minesLeft = noOfMines;
-		minesLbl.setText("Mines Left: " + Integer.toString(minesLeft));
+		minesLbl.setText(" ~ Mines Left: " + Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
 		cells = new Cell[width][height];
 
@@ -581,6 +620,7 @@ public class Minesweeper extends JFrame {
 				cells[i][j] = new Cell(i, j);
 			}
 		}
+		enableAllBtns();
 		refresh();
 		solver = new BoardSolver(this);
 	}
@@ -627,10 +667,6 @@ public class Minesweeper extends JFrame {
 		// game is
 		// won
 		return (closedCount == noOfMines);
-	}
-
-	public void incrementMoves() {
-		++moves;
 	}
 
 	/**
@@ -692,12 +728,16 @@ public class Minesweeper extends JFrame {
 		return i >= 0 && i < cells.length && j >= 0 && j < cells[i].length;
 	}
 
+	public void incrementMoves() {
+		movesLbl.setText("Moves: " + Integer.toString(++moves));
+	}
+
 	public void decrementMines() {
-		minesLbl.setText(Integer.toString(--minesLeft));
+		minesLbl.setText(" ~ Mines Left: " + Integer.toString(--minesLeft));
 	}
 
 	public void incrementMines() {
-		minesLbl.setText(Integer.toString(++minesLeft));
+		minesLbl.setText(" ~ Mines Left: " + Integer.toString(++minesLeft));
 	}
 
 	/* Getters/Setters */
@@ -782,6 +822,10 @@ public class Minesweeper extends JFrame {
 
 	public JButton getStopBtn() {
 		return stopBtn;
+	}
+
+	public Long getElapsedTime() {
+		return endTime - startTime;
 	}
 }
 
