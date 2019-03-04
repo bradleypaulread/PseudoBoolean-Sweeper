@@ -6,12 +6,8 @@ public class SolverThreadWrapper implements Runnable {
 
     private final AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
-    boolean quiet;
     boolean sim = false;
-    boolean loop;
-    boolean patternMatch;
-    boolean SAT;
-    boolean strat;
+    boolean quiet, hint, loop, patternMatch, SAT, strat;
     Thread thread;
 
     public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT,
@@ -27,6 +23,18 @@ public class SolverThreadWrapper implements Runnable {
         thread.start();
     }
 
+    public SolverThreadWrapper(Minesweeper g, boolean hint, boolean SAT) {
+        thread = new Thread(this, Integer.toString(threadID++));
+        game = g;
+        this.hint = hint;
+        this.quiet = false;
+        this.loop = false;
+        this.patternMatch = false;
+        this.SAT = SAT;
+        this.strat = false;
+        thread.start();
+    }
+    
     /**
      * For use by simulators only.
      */
@@ -42,7 +50,16 @@ public class SolverThreadWrapper implements Runnable {
 
     @Override
     public void run() {
-        if (sim) {
+        if (hint) {
+            BoardSolver solver = new BoardSolver(game, running);
+            if (patternMatch && !SAT) {
+                solver.patternMatchHint();
+            } else if (!patternMatch && SAT) {
+                solver.SATHint();
+            } else {
+                solver.SATHint();
+            }
+        } else if (sim) {
             if (patternMatch && SAT) {
                 BoardSolver solver = new BoardSolver(game, running);
                 solver.setQuiet();

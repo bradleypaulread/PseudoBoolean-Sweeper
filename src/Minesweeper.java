@@ -278,7 +278,12 @@ public class Minesweeper extends JFrame {
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
 
-		SATHintBtn.addActionListener(e -> solver.SATHint());
+		SATHintBtn.addActionListener(e -> {
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this, true, true);
+			thead[0] = t1;
+			stopBtn.setEnabled(true);
+			disableAllBtns();
+		});
 
 		ptAssistBtn.addActionListener(e -> {
 			disableAllBtns();
@@ -513,7 +518,7 @@ public class Minesweeper extends JFrame {
 			cells[x][y].setFail();
 			System.out.println("LOST ON CELL " + cells[x][y]);
 			endGame();
-			JOptionPane.showMessageDialog(null, "             BOOOOM!");
+			JOptionPane.showMessageDialog(null, "              BOOOOM!");
 			return;
 		}
 
@@ -522,14 +527,14 @@ public class Minesweeper extends JFrame {
 			// Flag remaining unflagged mines
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
-					if (cells[i][j].isClosed() && !cells[i][j].isFlagged()) {
+					if (cells[i][j].isBlank()) {
 						cells[i][j].flag();
 						decrementMines();
 					}
 				}
 			}
 			endGame();
-			JOptionPane.showMessageDialog(null, "Congratulations! You won!");
+			JOptionPane.showMessageDialog(null, "     Congratulations! You won!");
 		}
 
 		refresh();
@@ -591,12 +596,12 @@ public class Minesweeper extends JFrame {
 		endTime = System.nanoTime();
 		isGameOver = true;
 		gameTimer.stop();
-		disableAllBtns();
 		try {
 			openAllCells();
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
+		disableAllBtns();
 		refresh();
 	}
 

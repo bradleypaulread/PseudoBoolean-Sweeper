@@ -1,4 +1,3 @@
-
 /*
  * Board.java
  * 
@@ -52,42 +51,34 @@ public class Board extends JPanel {
 						// If the game has finished and a mine has been correctly flagged
 						// set colour to Orange with a 'X' pattern
 						if (current.isMine()) {
-							g.setColor(Color.ORANGE);
+							g.setColor(new Color(233, 237, 149));
 							drawCell(g, posX, posY);
 							g.setColor(Color.BLACK);
 							g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
 							g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
 							// Otherwise incorrect flag so set cell to plain Red
 						} else {
-							g.setColor(Color.RED);
+							g.setColor(new Color(255, 159, 155));
 							drawCell(g, posX, posY);
 							g.setColor(Color.BLACK);
 						}
 						// If cell was flagged but game has not finished
 						// set colour to Yellow
 					} else {
-						g.setColor(Color.YELLOW);
+						g.setColor(new Color(233, 237, 149));
 						drawCell(g, posX, posY);
 						g.setColor(Color.BLACK);
 					}
 					// If cell is marked as a hint
 					// set colour to Pink
 				} else if (current.isSafeHint()) {
-					g.setColor(Color.PINK);
-					drawCell(g, posX, posY);
-					g.setColor(Color.WHITE);
-					g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 2)));
-					g.drawString("S", (i * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
-				(j * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
-				g.setColor(Color.BLACK);
-
-				} else if (current.isMineHint()) {
-					g.setColor(Color.PINK);
+					g.setColor(new Color(130, 217, 130));
 					drawCell(g, posX, posY);
 					g.setColor(Color.BLACK);
-					g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 2)));
-					g.drawString("M", (i * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
-				(j * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
+				} else if (current.isMineHint()) {
+					g.setColor(new Color(214, 159, 155));
+					drawCell(g, posX, posY);
+					g.setColor(Color.BLACK);
 					// If cell has not been clicked
 					// set colour to Gray
 				} else if (current.isClosed()) {
@@ -100,12 +91,12 @@ public class Board extends JPanel {
 					if (current.isCellThatLost()) {
 						g.setColor(new Color(51, 51, 51));
 					} else {
-						g.setColor(Color.RED);
+						g.setColor(new Color(255, 159, 155));
 					}
 					drawCell(g, posX, posY);
-						g.setColor(Color.BLACK);
-						g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
-						g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
+					g.setColor(Color.BLACK);
+					g.drawLine(posX, posY, posX + CELL_WIDTH, posY + CELL_WIDTH);
+					g.drawLine(posX, posY + CELL_WIDTH, posX + CELL_WIDTH, posY);
 					// If cell is open
 					// set colour to Light Grey and paint cell number
 				} else {
@@ -131,7 +122,7 @@ public class Board extends JPanel {
 		if (game.getDebug()) {
 			g.setFont(new Font("", Font.BOLD, (int) (CELL_WIDTH / 3)));
 			g.setColor(Color.BLACK);
-			g.drawString("" + (x / CELL_WIDTH) + "," + (y / CELL_WIDTH), x + 1, y + 13);
+			g.drawString("" + (x / CELL_WIDTH) + "," + (y / CELL_WIDTH), x + 2, y + ((int) (CELL_WIDTH / 3)));
 			game.refresh();
 		}
 	}

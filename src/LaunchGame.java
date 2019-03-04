@@ -13,5 +13,4 @@ public class LaunchGame {
         // new Minesweeper(x, y, diff); // Constructor for % mines
         // new Minesweeper(x, y, mines); // Constructor for int mines
 	}
-
 }
