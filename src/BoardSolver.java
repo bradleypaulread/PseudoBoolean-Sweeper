@@ -3,10 +3,13 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
@@ -540,11 +543,7 @@ public class BoardSolver {
 		if (!quiet) {
 			game.refresh();
 		}
-		try {
-			System.out.println(calcAllCellsProb());
-		} catch (ContradictionException e) {
-			e.printStackTrace();
-		}
+		calcAllCellsProb();
 		return change;
 	}
 
@@ -739,15 +738,70 @@ public class BoardSolver {
 		}
 	}
 
-	private Map<Cell, Double> calcAllCellsProb() throws ContradictionException {
+	private Map<Cell, Double> calcAllCellsProb() {
 		cells = game.getCells();
 
 		Map<Cell, Double> results = new HashMap<>();
 
-		List<Cell> nonAdjacentCells = getNonAdjacentCells();
+		List<Cell> adjacentCells = getAdjacentCells();
+
+		int knownMines = 0;
+		for (boolean isMine : deepSolveMines().values()) {
+			if (isMine) {
+				++knownMines;
+			}
+		}
+
+		// int noOfMines = game.getNoOfMines();
+		// int noOfLits = Integer.toBinaryString(noOfMines).length();
+		// IVecInt lits = new VecInt();
+		// IVec<BigInteger> coeffs = new Vec<>();
 
 		pbSolver = SolverFactory.newDefault();
-		genBasicConstraints(pbSolver);
+
+		// for (int i = 0; i < cells.length; i++) {
+		// for (int j = 0; j < cells[i].length; j++) {
+		// Cell current = cells[i][j];
+
+		// if (current.isOpen()) {
+		// List<Cell> neighbours = getNeighbours(i, j);
+		// lits.clear();
+		// coeffs.clear();
+
+		// // Every open cell is guaranteed to not be a mine
+		// lits.push(encodeCellId(current));
+		// coeffs.push(BigInteger.ONE);
+		// pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
+		// lits.clear();
+		// coeffs.clear();
+
+		// // Normal constraint
+		// for (Cell c : neighbours) {
+		// if (c.isClosed()) {
+		// lits.push(encodeCellId(c));
+		// coeffs.push(BigInteger.ONE);
+		// }
+		// }
+		// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+		// lits.clear();
+		// coeffs.clear();
+		// }
+		// }
+		// }
+		// lits.clear();
+		// coeffs.clear();
+		// for (int i = 0; i < noOfLits; i++) {
+		// lits.push(i+10000000);
+		// coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+		// }
+
+		// pbSolver.addExactly(lits, coeffs,
+		// BigInteger.valueOf(game.getNoOfMines()-knownMines));
+		try {
+			genBasicConstraints(pbSolver);
+		} catch (ContradictionException e3) {
+			e3.printStackTrace();
+		}
 
 		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 		int noOfSolutions = 0;
@@ -776,15 +830,24 @@ public class BoardSolver {
 			}
 		} catch (TimeoutException e) {
 			e.printStackTrace();
+		} catch (ContradictionException e) {
+			e.printStackTrace();
 		}
-		System.out.println(noOfSolutions);
-		System.out.println(results);
-		System.out.println();
+
 		Double div = (double) noOfSolutions;
 		results.replaceAll((key, val) -> {
 			return val / div;
 		});
-		return results;
+		Map<Cell, Double> sortedByCount = results.entrySet().stream().sorted(Map.Entry.comparingByValue())
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+		// To Remove
+		// Remove all cells that are 100% mines
+		sortedByCount.values().removeAll(Collections.singleton(1.0));
+		System.out.println(noOfSolutions);
+		System.out.println(sortedByCount);
+		System.out.println();
+		return sortedByCount;
 	}
 
 	/**

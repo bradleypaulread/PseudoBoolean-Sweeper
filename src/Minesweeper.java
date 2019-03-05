@@ -231,7 +231,7 @@ public class Minesweeper extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				currentGameTime++;
 				if (currentGameTime < 100000) {
-					timeLbl.setText(" ~ Time: " + Integer.toString(currentGameTime));
+					timeLbl.setText("~ Time: " + Integer.toString(currentGameTime));
 				} else {
 					((Timer) (e.getSource())).stop();
 				}
@@ -616,7 +616,7 @@ public class Minesweeper extends JFrame {
 		moves = 0;
 		movesLbl.setText("Moves: " + Integer.toString(moves));
 		minesLeft = noOfMines;
-		minesLbl.setText(" ~ Mines Left: " + Integer.toString(minesLeft));
+		minesLbl.setText("~ Mines Left: " + Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
 		cells = new Cell[width][height];
 
@@ -739,11 +739,11 @@ public class Minesweeper extends JFrame {
 	}
 
 	public void decrementMines() {
-		minesLbl.setText(" ~ Mines Left: " + Integer.toString(--minesLeft));
+		minesLbl.setText("~ Mines Left: " + Integer.toString(--minesLeft));
 	}
 
 	public void incrementMines() {
-		minesLbl.setText(" ~ Mines Left: " + Integer.toString(++minesLeft));
+		minesLbl.setText("~ Mines Left: " + Integer.toString(++minesLeft));
 	}
 
 	/* Getters/Setters */
