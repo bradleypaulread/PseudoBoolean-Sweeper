@@ -682,7 +682,7 @@ public class BoardSolver {
 		}
 
 		Map<Cell, Boolean> results = new HashMap<>();
-		List<Cell> adjacentCells = getAdjacentClosedCells();
+		List<Cell> adjacentCells = getAdjacentOpenCells();
 		for (int i = 0; i < adjacentCells.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = adjacentCells.get(i);
 			if (current.isOpen()) {
@@ -729,31 +729,65 @@ public class BoardSolver {
 		return results;
 	}
 
-	public void SATStratergy() {
+	public void testSATSovle() {
 		cells = game.getCells();
-
-		int knownMines = 0;
-		for (boolean isMine : deepSolveMines().values()) {
-			if (isMine) {
-				++knownMines;
-			}
-		}
 
 		int noOfMines = game.getNoOfMines();
 		int noOfLits = Integer.toBinaryString(noOfMines).length();
+		System.out.println(noOfLits);
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
+		pbSolver = SolverFactory.newDefault();
 
 		for (int i = 0; i < noOfLits; i++) {
-			lits.push(i);
-			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+			lits.push(encodeLit(i));
+			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));	
 		}
 
 		try {
-			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
+			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines));
 		} catch (ContradictionException e) {
 			e.printStackTrace();
 		}
+
+		lits.clear();
+		coeffs.clear();
+		
+		List<Cell> shore = getAdjacentOpenCells();
+		
+		for (int i = 0; i < shore.size() && running.get() && !Thread.interrupted(); i++) {
+			lits.clear();
+			coeffs.clear();
+			Cell current = shore.get(i);
+			for (Cell c : getNeighbours(current)) {
+				lits.push(encodeCellId(c));
+				coeffs.push(BigInteger.ONE);
+			}
+
+			try {
+				pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+			} catch (ContradictionException e) {
+				e.printStackTrace();
+			}
+
+			lits.clear();
+			coeffs.clear();
+		}
+
+		try {
+			if (pbSolver.isSatisfiable()) {
+				System.out.println("SAT!");
+				System.out.println();
+				for (int i : pbSolver.model()) {
+					System.out.print("" + i + ", ");
+				}
+			} else {
+				System.out.println("UNSAT!");
+			}
+		} catch (TimeoutException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public Map<Cell, Double> calcAllCellsProb() {
@@ -770,51 +804,8 @@ public class BoardSolver {
 			}
 		}
 
-		// int noOfMines = game.getNoOfMines();
-		// int noOfLits = Integer.toBinaryString(noOfMines).length();
-		// IVecInt lits = new VecInt();
-		// IVec<BigInteger> coeffs = new Vec<>();
-
 		pbSolver = SolverFactory.newDefault();
 
-		// for (int i = 0; i < cells.length; i++) {
-		// for (int j = 0; j < cells[i].length; j++) {
-		// Cell current = cells[i][j];
-
-		// if (current.isOpen()) {
-		// List<Cell> neighbours = getNeighbours(i, j);
-		// lits.clear();
-		// coeffs.clear();
-
-		// // Every open cell is guaranteed to not be a mine
-		// lits.push(encodeCellId(current));
-		// coeffs.push(BigInteger.ONE);
-		// pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
-		// lits.clear();
-		// coeffs.clear();
-
-		// // Normal constraint
-		// for (Cell c : neighbours) {
-		// if (c.isClosed()) {
-		// lits.push(encodeCellId(c));
-		// coeffs.push(BigInteger.ONE);
-		// }
-		// }
-		// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
-		// lits.clear();
-		// coeffs.clear();
-		// }
-		// }
-		// }
-		// lits.clear();
-		// coeffs.clear();
-		// for (int i = 0; i < noOfLits; i++) {
-		// lits.push(i+10000000);
-		// coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
-		// }
-
-		// pbSolver.addExactly(lits, coeffs,
-		// BigInteger.valueOf(game.getNoOfMines()-knownMines));
 		try {
 			genBasicConstraints(pbSolver);
 		} catch (ContradictionException e3) {
@@ -867,8 +858,8 @@ public class BoardSolver {
 		// To Remove, debug
 		// Remove all cells that are 100% mines
 		// sortedByCount.values().removeAll(Collections.singleton(1.0));
-		System.out.println(noOfSolutions);
-		System.out.println(sortedByCount);
+		// System.out.println(noOfSolutions);
+		// System.out.println(sortedByCount);
 		for (Map.Entry<Cell, Double> pair : sortedByCount.entrySet()) {
 			Cell current = pair.getKey();
 			Double prob = pair.getValue();
@@ -893,7 +884,7 @@ public class BoardSolver {
 	private int encodeCellId(Cell c) {
 		return (c.getY() * cells.length + c.getX()) + 1;
 	}
-
+	
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
@@ -906,6 +897,17 @@ public class BoardSolver {
 		int posId = id < 0 ? id * -1 : id;
 		int x = (posId - 1) % cells.length;
 		int y = ((posId - 1) - x) / cells.length;
+		return cells[x][y];
+	}
+	
+	private int encodeLit(int i) {
+		return ((cells[0].length-1) * cells.length + (cells.length-1)) + 1;
+	}
+
+	private Cell decodeLit(int lit) {
+		int posLit = lit < 0 ? lit * -1 : lit;
+		int x = (posLit - 1) % cells.length;
+		int y = ((posLit - 1) - x) / cells.length;
 		return cells[x][y];
 	}
 

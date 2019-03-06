@@ -283,8 +283,9 @@ public class Minesweeper extends JFrame {
 		resetBtn.addActionListener(e -> reset());
 
 		randCellBtn.addActionListener(e -> {
-			solver.selectRandomCell();
-			refresh();
+			solver.testSATSovle();
+			// solver.selectRandomCell();
+			// refresh();
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
@@ -414,7 +415,7 @@ public class Minesweeper extends JFrame {
 		menu.add(diffHardRb);
 
 		startSimItem.addActionListener(e -> {
-			solver.SATStratergy();
+			// solver.SATStratergy();
 			// JFrame simWindow = new JFrame("Simulating...");
 			// simWindow.add(new JLabel("Simulating..."));
 			// simWindow.setSize(new Dimension(100, 100));
@@ -581,12 +582,6 @@ public class Minesweeper extends JFrame {
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
 			gameWon = false;
 			isGameOver = false;
-			try {
-				// Unlock the minefield
-				mineField.open(PASSWORD);
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			}
 			return;
 		}
 
