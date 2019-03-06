@@ -581,7 +581,7 @@ public class Minesweeper extends JFrame {
 			}
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
 			gameWon = false;
-			isGameOver = false;
+			isGameOver = true;
 			return;
 		}
 
