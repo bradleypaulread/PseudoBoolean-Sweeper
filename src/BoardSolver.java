@@ -1,9 +1,6 @@
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -484,7 +481,7 @@ public class BoardSolver {
 
 	private List<Cell> getNonAdjacentCells() {
 		List<Cell> nonAdjacentCells = new ArrayList<>();
-		List<Cell> adjacentCells = getAdjacentCells();
+		List<Cell> adjacentCells = getAdjacentClosedCells();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
@@ -496,17 +493,36 @@ public class BoardSolver {
 		return nonAdjacentCells;
 	}
 
-	private List<Cell> getAdjacentCells() {
+	private List<Cell> getAdjacentClosedCells() {
 		List<Cell> adjacentCells = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
-				List<Cell> neighbours = getNeighbours(current);
-				int noOfNeighbours = neighbours.size();
-				neighbours.removeIf(cell -> cell.isOpen());
-				int noOfClosedNeighbours = neighbours.size();
-				if (current.isClosed() && noOfClosedNeighbours < noOfNeighbours) {
-					adjacentCells.add(current);
+				if (current.isClosed()) {
+					List<Cell> neighbours = getNeighbours(current);
+					int noOfNeighbours = neighbours.size();
+					neighbours.removeIf(cell -> cell.isOpen());
+					int noOfClosedNeighbours = neighbours.size();
+					if (noOfClosedNeighbours < noOfNeighbours) {
+						adjacentCells.add(current);
+					}
+				}
+			}
+		}
+		return adjacentCells;
+	}
+
+	private List<Cell> getAdjacentOpenCells() {
+		List<Cell> adjacentCells = new ArrayList<>();
+		for (int i = 0; i < cells.length; i++) {
+			for (int j = 0; j < cells[i].length; j++) {
+				Cell current = cells[i][j];
+				if (current.isOpen()) {
+					List<Cell> neighbours = getNeighbours(current);
+					neighbours.removeIf(cell -> cell.isOpen());
+					if (!neighbours.isEmpty()) {
+						adjacentCells.add(current);
+					}
 				}
 			}
 		}
@@ -543,7 +559,9 @@ public class BoardSolver {
 		if (!quiet) {
 			game.refresh();
 		}
-		calcAllCellsProb();
+		if (!game.isGameOver() && game.getProb()) {
+			calcAllCellsProb();
+		}
 		return change;
 	}
 
@@ -664,7 +682,7 @@ public class BoardSolver {
 		}
 
 		Map<Cell, Boolean> results = new HashMap<>();
-		List<Cell> adjacentCells = getAdjacentCells();
+		List<Cell> adjacentCells = getAdjacentClosedCells();
 		for (int i = 0; i < adjacentCells.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = adjacentCells.get(i);
 			if (current.isOpen()) {
@@ -738,12 +756,12 @@ public class BoardSolver {
 		}
 	}
 
-	private Map<Cell, Double> calcAllCellsProb() {
+	public Map<Cell, Double> calcAllCellsProb() {
 		cells = game.getCells();
 
 		Map<Cell, Double> results = new HashMap<>();
 
-		List<Cell> adjacentCells = getAdjacentCells();
+		List<Cell> adjacentCells = getAdjacentClosedCells();
 
 		int knownMines = 0;
 		for (boolean isMine : deepSolveMines().values()) {
@@ -803,21 +821,22 @@ public class BoardSolver {
 			e3.printStackTrace();
 		}
 
+		for (Cell[] col : cells) {
+			for (Cell c : col) {
+				results.put(c, 0.0);
+			}
+		}
+
 		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 		int noOfSolutions = 0;
 		try {
-			while (optimiser.isSatisfiable()) {
+			while (optimiser.isSatisfiable() && running.get()) {
 				++noOfSolutions;
 				int[] model = pbSolver.model();
 				for (int i : model) {
 					boolean mine = i < 0 ? false : true;
 					if (mine) {
-						Double testForNull = results.get(decodeCellId(i));
-						if (testForNull == null) {
-							results.put(decodeCellId(i), 1.0);
-						} else {
-							results.put(decodeCellId(i), testForNull + 1.0);
-						}
+						results.put(decodeCellId(i), results.get(decodeCellId(i)) + 1.0);
 					}
 				}
 				// Find another solution
@@ -841,11 +860,23 @@ public class BoardSolver {
 		Map<Cell, Double> sortedByCount = results.entrySet().stream().sorted(Map.Entry.comparingByValue())
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
-		// To Remove
+		if (!running.get()) {
+			return null;
+		}
+
+		// To Remove, debug
 		// Remove all cells that are 100% mines
-		sortedByCount.values().removeAll(Collections.singleton(1.0));
+		// sortedByCount.values().removeAll(Collections.singleton(1.0));
 		System.out.println(noOfSolutions);
 		System.out.println(sortedByCount);
+		for (Map.Entry<Cell, Double> pair : sortedByCount.entrySet()) {
+			Cell current = pair.getKey();
+			Double prob = pair.getValue();
+			if (current.isBlank()) {
+				current.setProb(prob);
+			}
+		}
+		game.refresh();
 		System.out.println();
 		return sortedByCount;
 	}
@@ -937,19 +968,22 @@ public class BoardSolver {
 		quiet = true;
 	}
 
-	// To Remove
-	public Cell getRandomCell() {
+	public void selectRandomCell() {
 		cells = game.getCells();
 		List<Cell> closedCells = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
-				if (current.isClosed()) {
+				if (current.isBlank()) {
 					closedCells.add(current);
 				}
 			}
 		}
-		Cell selectedCell = closedCells.get(new Random().nextInt(closedCells.size()));
-		return selectedCell;
+		if (!closedCells.isEmpty()) {
+			Cell selectedCell = closedCells.get(new Random().nextInt(closedCells.size()));
+			game.quietSelect(selectedCell.getX(), selectedCell.getY());
+		} else {
+			game.setGameOver(true);
+		}
 	}
 }

@@ -52,6 +52,7 @@ public class MouseActions implements MouseListener {
 				}
 				game.getCell(x, y).invertFlag();
 				game.resetHints();
+				game.resetProbs();
 				game.refresh();
 			}
 		}

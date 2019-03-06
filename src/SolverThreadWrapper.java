@@ -7,14 +7,26 @@ public class SolverThreadWrapper implements Runnable {
     private final AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
     boolean sim = false;
-    boolean quiet, hint, loop, patternMatch, SAT, strat;
+    boolean quiet, hint, loop, patternMatch, SAT, strat, prob;
     Thread thread;
+
+
+    public SolverThreadWrapper(Minesweeper g) {
+        thread = new Thread(this, Integer.toString(threadID++));
+        game = g;
+        this.quiet = false;
+        this.loop = false;
+        this.patternMatch = false;
+        this.SAT = false;
+        this.strat = false;
+        this.prob = true;
+        thread.start();
+    }
 
     public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT,
             boolean strat) {
         thread = new Thread(this, Integer.toString(threadID++));
         game = g;
-
         this.quiet = quiet;
         this.loop = loop;
         this.patternMatch = patternMatch;
@@ -34,7 +46,7 @@ public class SolverThreadWrapper implements Runnable {
         this.strat = false;
         thread.start();
     }
-    
+
     /**
      * For use by simulators only.
      */
@@ -59,14 +71,15 @@ public class SolverThreadWrapper implements Runnable {
             } else {
                 solver.SATHint();
             }
+        } else if (prob) {
+            new BoardSolver(game, running).calcAllCellsProb();
         } else if (sim) {
             if (patternMatch && SAT) {
                 BoardSolver solver = new BoardSolver(game, running);
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.jointSolve()) {
-                        Cell c = solver.getRandomCell();
-                        game.quietSelect(c.getX(), c.getY());
+                        solver.selectRandomCell();
                     }
                 }
             } else if (patternMatch) {
@@ -74,8 +87,7 @@ public class SolverThreadWrapper implements Runnable {
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.patternMatch()) {
-                        Cell c = solver.getRandomCell();
-                        game.quietSelect(c.getX(), c.getY());
+                        solver.selectRandomCell();
                     }
                 }
             } else if (SAT) {
@@ -83,8 +95,7 @@ public class SolverThreadWrapper implements Runnable {
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.SATSolve()) {
-                        Cell c = solver.getRandomCell();
-                        game.quietSelect(c.getX(), c.getY());
+                        solver.selectRandomCell();
                     }
                 }
             }
@@ -106,7 +117,9 @@ public class SolverThreadWrapper implements Runnable {
             }
         }
         game.getStopBtn().setEnabled(false);
-        game.enableAllBtns();
+        if (!game.isGameOver()) {
+            game.enableAllBtns();
+        }
     }
 
     public void end() {

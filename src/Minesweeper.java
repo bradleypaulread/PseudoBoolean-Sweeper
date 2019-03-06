@@ -57,6 +57,7 @@ public class Minesweeper extends JFrame {
 	private JButton SATHintBtn = new JButton("Hint");
 	private JButton SATAssistBtn = new JButton("Assist");
 	private JButton SATSolveBtn = new JButton("Solve");
+	private JButton SATProbBtn = new JButton("Show Probabilities");
 
 	private JButton fullAutoBtn = new JButton("Full Auto");
 
@@ -80,7 +81,7 @@ public class Minesweeper extends JFrame {
 	private int noOfMines; // Number of mines
 	private Board board; // Board instance, where cells appearance is processed
 	private boolean debug; // If debug information should be printed to console
-	private boolean strategy = false;
+	private boolean prob = false;
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves = 0; // Number if moves made by the player.
 	private int currentGameTime;
@@ -255,11 +256,16 @@ public class Minesweeper extends JFrame {
 		SATBtns.add(SATHintBtn);
 		SATBtns.add(SATAssistBtn);
 		SATBtns.add(SATSolveBtn);
+		SATBtns.add(SATProbBtn);
 
 		controlBtns.add(ptBtns);
 		stopBtn.setEnabled(false);
 		controlBtns.add(stopBtn);
 		controlBtns.add(fullAutoBtn);
+
+		JButton randCellBtn = new JButton("Rand. Cell");
+
+		controlBtns.add(randCellBtn);
 		controlBtns.add(SATBtns);
 
 		topBar.add(stats, BorderLayout.NORTH);
@@ -276,6 +282,11 @@ public class Minesweeper extends JFrame {
 
 		resetBtn.addActionListener(e -> reset());
 
+		randCellBtn.addActionListener(e -> {
+			solver.selectRandomCell();
+			refresh();
+		});
+
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
 
 		SATHintBtn.addActionListener(e -> {
@@ -285,12 +296,7 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 		});
 
-		ptAssistBtn.addActionListener(e -> {
-			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, false, true, false, false);
-			thead[0] = t1;
-			stopBtn.setEnabled(true);
-		});
+		ptAssistBtn.addActionListener(e -> solver.patternMatch());
 
 		SATAssistBtn.addActionListener(e -> {
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, false, false, true, false);
@@ -299,12 +305,21 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 		});
 
+		SATProbBtn.addActionListener(e -> {
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			thead[0] = t1;
+			stopBtn.setEnabled(true);
+			disableAllBtns();
+		});
+
 		ptSolveBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, true, false, false);
-			thead[0] = t1;
-			stopBtn.setEnabled(true);
+			while (solver.patternMatch())
+				;
+			if (!isGameOver) {
+				enableAllBtns();
+			}
 		});
 
 		SATSolveBtn.addActionListener(e -> {
@@ -348,8 +363,7 @@ public class Minesweeper extends JFrame {
 		});
 
 		strategyCb.addActionListener(e -> {
-			strategy = !strategy;
-			System.out.println(strategy);
+			prob = !prob;
 		});
 
 		menu.add(debugCb);
@@ -490,10 +504,10 @@ public class Minesweeper extends JFrame {
 
 		// If there are any cells set as hints,
 		// reset them back to plain closed cells
-		for (Cell c : hintCells) {
-			c.resetHint();
-		}
-		hintCells.clear();
+		resetHints();
+
+		// Reset probabilies
+		resetProbs();
 
 		if (debug) {
 			debug(x, y);
@@ -536,7 +550,6 @@ public class Minesweeper extends JFrame {
 			endGame();
 			JOptionPane.showMessageDialog(null, "     Congratulations! You won!");
 		}
-
 		refresh();
 	}
 
@@ -566,12 +579,18 @@ public class Minesweeper extends JFrame {
 				}
 			}
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
-			endTime = System.nanoTime();
-			isGameOver = true;
+			gameWon = false;
+			isGameOver = false;
+			try {
+				// Unlock the minefield
+				mineField.open(PASSWORD);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
 			return;
 		}
 
-		if (won()) { // If the game has been beaten (number of closed cells =
+		if (won()) { // If the game has been beaten (number of closed cells = no of mines)
 			endTime = System.nanoTime();
 			gameWon = true;
 			isGameOver = true;
@@ -715,6 +734,7 @@ public class Minesweeper extends JFrame {
 		SATHintBtn.setEnabled(false);
 		SATAssistBtn.setEnabled(false);
 		SATSolveBtn.setEnabled(false);
+		SATProbBtn.setEnabled(false);
 		fullAutoBtn.setEnabled(false);
 	}
 
@@ -725,6 +745,7 @@ public class Minesweeper extends JFrame {
 		SATHintBtn.setEnabled(true);
 		SATAssistBtn.setEnabled(true);
 		SATSolveBtn.setEnabled(true);
+		SATProbBtn.setEnabled(true);
 		fullAutoBtn.setEnabled(true);
 	}
 
@@ -819,6 +840,10 @@ public class Minesweeper extends JFrame {
 		debug = value;
 	}
 
+	public boolean getProb() {
+		return prob;
+	}
+
 	public boolean isGameWon() {
 		return gameWon;
 	}
@@ -834,8 +859,19 @@ public class Minesweeper extends JFrame {
 	public Long getElapsedTime() {
 		return endTime - startTime;
 	}
-}
 
+	public void resetProbs() {
+		for (Cell[] col : cells) {
+			for (Cell c : col) {
+				c.resetProb();
+			}
+		}
+	}
+
+	public void setGameOver(boolean isGameOver) {
+		this.isGameOver = isGameOver;
+	}
+}
 // Sample for loop for copy and paste
 // for(int i = 0;i<width;i++) {
 // for (int j = 0; j < height; j++) {

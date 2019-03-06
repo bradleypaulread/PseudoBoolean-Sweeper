@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class LaunchSim {
 	public static void main(String[] args) {
 		int consoleNum = 0;
-		int noOfSims = 100;
+		int noOfSims = 50;
 		if (args.length > 0) {
 			if (Integer.valueOf(args[0]) > 0) {
 				noOfSims = Integer.valueOf(args[0]);
@@ -22,7 +22,7 @@ public class LaunchSim {
 		}
 		GameSimulation sim = new GameSimulation(noOfSims);
 		ExecutorService pool = sim.getPool();
-		sim.genericSim();
+		sim.startGenericSim();
 		pool.shutdown();
 		while (!pool.isTerminated()) {
 			try {

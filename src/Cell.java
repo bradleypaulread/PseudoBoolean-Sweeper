@@ -22,9 +22,9 @@ public class Cell
 	private boolean safeHint;
 	private boolean mineHint;
 	private boolean fail;
- 
-	public Cell(int x, int y)
-	{
+	private Double prob; // Percentage of cell being a mine
+
+	public Cell(int x, int y) {
 		this.x = x;
 		this.y = y;
 		flagged = false;
@@ -32,8 +32,30 @@ public class Cell
 		safeHint = false;
 		mineHint = false;
 		fail = false;
+		prob = null;
 	}
- 
+
+	/**
+	 * @return the prob
+	 */
+	public Double getProb() {
+		return prob;
+	}
+
+	/**
+	 * @param prob the prob to set
+	 */
+	public void setProb(double prob) {
+		this.prob = prob;
+	}
+	
+	/**
+	 * @param prob the prob to set
+	 */
+	public void resetProb() {
+		this.prob = null;
+	}
+
 	public int getX() {
 		return x;
 	}

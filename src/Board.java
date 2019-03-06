@@ -1,3 +1,4 @@
+
 /*
  * Board.java
  * 
@@ -118,7 +119,17 @@ public class Board extends JPanel {
 	}
 
 	private void drawCell(Graphics g, int x, int y) {
-		g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
+		if (cells[x / CELL_WIDTH][y / CELL_WIDTH].getProb() != null) {
+			double cellProb = cells[x / CELL_WIDTH][y / CELL_WIDTH].getProb();
+			int redness = (int) (255 * cellProb);
+			g.setColor(new Color(255, 255 - redness, 255 - redness));
+			g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
+			g.setColor(Color.BLACK);
+			g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 4)));
+			g.drawString(String.format("%.2f", cellProb * 100.00) + "%", x + 2, y + ((int) (CELL_WIDTH / 3)));
+		} else {
+			g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
+		}
 		if (game.getDebug()) {
 			g.setFont(new Font("", Font.BOLD, (int) (CELL_WIDTH / 3)));
 			g.setColor(Color.BLACK);
@@ -160,5 +171,4 @@ public class Board extends JPanel {
 		g.drawString(Integer.toString(num), (x * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
 				(y * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
 	}
-
 }

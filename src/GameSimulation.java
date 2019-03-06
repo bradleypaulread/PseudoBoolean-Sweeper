@@ -42,7 +42,7 @@ public class GameSimulation {
     }
 
     private void warmup() {
-        int limit = noOfSims*10;
+        int limit = noOfSims;
         System.out.println("WARMING UP...");
         for (int init = 0; init < limit; init++) {
             Minesweeper newGame = new Minesweeper(Difficulty.HARD, new MineField(16, 30, 99));
@@ -50,14 +50,13 @@ public class GameSimulation {
             solver.setQuiet();
             while (!newGame.isGameOver()) {
                 if (!solver.patternMatch()) {
-                    Cell c = solver.getRandomCell();
-                    newGame.quietSelect(c.getX(), c.getY());
+                    solver.selectRandomCell();
                 }
             }
         }
     }
 
-    public void genericSim() {
+    public void startGenericSim() {
         System.out.println("PATTERN SIM");
         startPatternMatchSim();
         System.out.println("SAT SIM");
