@@ -107,7 +107,7 @@ public class SolverThreadWrapper implements Runnable {
             } else if (SAT) {
                 SATSolve();
             }
-        } else {
+        } else { // Just Assist
             if (patternMatch && SAT) {
                 new BoardSolver(game, running).jointSolve();
             } else if (patternMatch) {

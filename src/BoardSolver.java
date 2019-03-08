@@ -583,34 +583,31 @@ public class BoardSolver {
 		lits.clear();
 		coeffs.clear();
 
-		for (int i = 0; i < cells.length; i++) {
-			for (int j = 0; j < cells[i].length; j++) {
-				Cell current = cells[i][j];
+		List<Cell> shore = getAdjacentOpenCells();
+		for (int i = 0; i < shore.size(); i++) {
+			Cell current = shore.get(i);
 
-				if (current.isOpen()) {
-					List<Cell> neighbours = getNeighbours(i, j);
-					lits.clear();
-					coeffs.clear();
+			List<Cell> neighbours = getNeighbours(current);
+			lits.clear();
+			coeffs.clear();
 
-					// Every open cell is guaranteed to not be a mine
-					lits.push(encodeCellId(current));
+			// Every open cell is guaranteed to not be a mine
+			lits.push(encodeCellId(current));
+			coeffs.push(BigInteger.ONE);
+			solver.addExactly(lits, coeffs, BigInteger.ZERO);
+			lits.clear();
+			coeffs.clear();
+
+			// Normal constraint
+			for (Cell c : neighbours) {
+				if (c.isClosed()) {
+					lits.push(encodeCellId(c));
 					coeffs.push(BigInteger.ONE);
-					solver.addExactly(lits, coeffs, BigInteger.ZERO);
-					lits.clear();
-					coeffs.clear();
-
-					// Normal constraint
-					for (Cell c : neighbours) {
-						if (c.isClosed()) {
-							lits.push(encodeCellId(c));
-							coeffs.push(BigInteger.ONE);
-						}
-					}
-					solver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
-					lits.clear();
-					coeffs.clear();
 				}
 			}
+			solver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+			lits.clear();
+			coeffs.clear();
 		}
 	}
 
@@ -719,44 +716,46 @@ public class BoardSolver {
 			}
 		}
 		for (int i = 0; i < shore.size() && running.get() && !Thread.interrupted(); i++) {
-				Cell current = shore.get(i);
+			Cell current = shore.get(i);
+			if (current.isFlagged()) {
+				continue;
+			}
+			// Find if cell safe (weight=0) or mine (weight=1)
+			for (int weight = 0; weight <= 1; weight++) {
+				IVecInt lit = new VecInt();
+				IVec<BigInteger> coeff = new Vec<BigInteger>();
+				BigInteger cellWeight = BigInteger.valueOf(weight);
+				try {
+					pbSolver = SolverFactory.newDefault();
+					// Generate the known constraints on the board
+					genBasicConstraints(pbSolver);
 
-				// Find if cell safe (weight=0) or mine (weight=1)
-				for (int weight = 0; weight <= 1; weight++) {
-					IVecInt lit = new VecInt();
-					IVec<BigInteger> coeff = new Vec<BigInteger>();
-					BigInteger cellWeight = BigInteger.valueOf(weight);
-					try {
-						pbSolver = SolverFactory.newDefault();
-						// Generate the known constraints on the board
-						genBasicConstraints(pbSolver);
+					// Create literal for current cell
+					lit.push(encodeCellId(current));
+					coeff.push(BigInteger.ONE);
+					// Safe/Mine
+					pbSolver.addExactly(lit, coeff, cellWeight);
 
-						// Create literal for current cell
-						lit.push(encodeCellId(current));
-						coeff.push(BigInteger.ONE);
-						// Safe/Mine
-						pbSolver.addExactly(lit, coeff, cellWeight);
+					// Optimise wrapper
+					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 
-						// Optimise wrapper
-						OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
-						// Find if cell is safe or mine
-						if (!optimiser.isSatisfiable()) {
-							boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-							results.put(current, isMine);
-							pbSolver.reset();
-							optimiser.reset();
-							break; // Break as no need to check if cell is also a mine
-						}
-						pbSolver.reset();
-						optimiser.reset();
-					} catch (ContradictionException ce) {
-						// Contradiction Exception is thrown when the tested cell is already known to be
-						// safe/a mine.
+					// Find if cell is safe or mine
+					if (!optimiser.isSatisfiable()) {
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 						results.put(current, isMine);
-					} catch (TimeoutException te) {
+						pbSolver.reset();
+						optimiser.reset();
+						break; // Break as no need to check if cell is also a mine
 					}
+					pbSolver.reset();
+					optimiser.reset();
+				} catch (ContradictionException ce) {
+					// Contradiction Exception is thrown when the tested cell is already known to be
+					// safe/a mine.
+					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+					results.put(current, isMine);
+				} catch (TimeoutException te) {
+				}
 			}
 		}
 		if (Thread.interrupted() || !running.get()) {
@@ -772,14 +771,18 @@ public class BoardSolver {
 		int noOfLits = Integer.toBinaryString(noOfMines).length();
 		System.out.println(noOfLits);
 		IVecInt lits = new VecInt();
+		IVecInt lits2 = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 		pbSolver = SolverFactory.newDefault();
 
 		for (int i = 0; i < noOfLits; i++) {
-			lits.push(encodeLit(i));
+			lits.push(encodeLit(i) + i);
+			lits2.push(i);
 			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		}
-
+		System.out.println(lits);
+		System.out.println(lits2);
+		System.out.println(coeffs);
 		try {
 			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines));
 		} catch (ContradictionException e) {
@@ -811,16 +814,32 @@ public class BoardSolver {
 		}
 
 		try {
-			if (pbSolver.isSatisfiable()) {
+			while (pbSolver.isSatisfiable()) {
 				System.out.println("SAT!");
-				System.out.println();
+				String cellStr = "";
 				for (int i : pbSolver.model()) {
-					System.out.print("" + i + ", ");
+					String sign = i < 0 ? "-" : "+";
+					Cell ccc = decodeCellId(i);
+					if (ccc != null) {
+						//if (ccc.isOpen()) {
+						//	cellStr = "";
+						//	break;
+					//	} else {
+							cellStr += sign + ccc + ", ";
+					//	}
+					}
 				}
-			} else {
-				System.out.println("UNSAT!");
+				System.out.println(cellStr);
+				int[] model = pbSolver.model();
+				for (int m = 0; m < model.length; m++) {
+					model[m] = model[m] * -1;
+				}
+				System.out.println();
+				IVecInt block = new VecInt(model);
+				pbSolver.addBlockingClause(block);
 			}
-		} catch (TimeoutException e) {
+			System.out.println("UNSAT!");
+		} catch (TimeoutException | ContradictionException e) {
 			e.printStackTrace();
 		}
 
@@ -834,7 +853,7 @@ public class BoardSolver {
 		List<Cell> adjacentCells = getAdjacentClosedCells();
 
 		int knownMines = 0;
-		for (boolean isMine : deepSolveMines().values()) {
+		for (boolean isMine : shallowSolveMines().values()) {
 			if (isMine) {
 				++knownMines;
 			}
@@ -871,7 +890,7 @@ public class BoardSolver {
 					model[i] = model[i] * -1;
 				}
 				IVecInt block = new VecInt(model);
-
+				
 				optimiser.addBlockingClause(block);
 			}
 		} catch (TimeoutException e) {
@@ -931,6 +950,9 @@ public class BoardSolver {
 	 */
 	private Cell decodeCellId(int id) {
 		int posId = id < 0 ? id * -1 : id;
+		if (posId > ((cells[0].length-1) * cells.length + (cells.length-1)) + 1) {
+			return null;
+		}
 		int x = (posId - 1) % cells.length;
 		int y = ((posId - 1) - x) / cells.length;
 		return cells[x][y];
