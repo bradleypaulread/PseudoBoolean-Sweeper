@@ -355,6 +355,37 @@ public class BoardSolver {
 
 	public void SATHint() {
 		cells = game.getCells();
+		Map<Cell, Boolean> known = binaryShallowSolveMines();
+		if (known == null || !running.get()) {
+			return;
+		}
+		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
+			Cell current = pair.getKey();
+			boolean mine = pair.getValue();
+			// Skip cells that are already marked as hints
+			if (current.isHint()) {
+				continue;
+			}
+			if (mine) {
+				if (current.isBlank()) {
+					current.setMineHint();
+					game.getHintCells().add(current);
+					game.refresh();
+					return;
+				}
+			} else {
+				if (current.isBlank()) {
+					current.setSafeHint();
+					game.getHintCells().add(current);
+					game.refresh();
+					return;
+				}
+			}
+		}
+	}
+
+	public void oldSATHint() {
+		cells = game.getCells();
 		Map<Cell, Boolean> known = shallowSolveMines();
 		if (known == null || !running.get()) {
 			return;
@@ -529,13 +560,12 @@ public class BoardSolver {
 		return adjacentCells;
 	}
 
-	public boolean SATSolve() {
+	public boolean oldSATSolve() {
 		boolean change = false;
-		Map<Cell, Boolean> known = testShallowSolveMines();
+		Map<Cell, Boolean> known = shallowSolveMines();
 		if (known == null || !running.get()) {
 			return false;
 		}
-		System.out.println(known);
 		// Iterate over map
 		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
 			Cell current = pair.getKey();
@@ -566,7 +596,44 @@ public class BoardSolver {
 		return change;
 	}
 
-	private void genBasicConstraints(IPBSolver solver) throws ContradictionException {
+	// new sat solve that uses binary lits
+	public boolean SATSolve() {
+		boolean change = false;
+		Map<Cell, Boolean> known = binaryShallowSolveMines();
+		if (known == null || !running.get()) {
+			return false;
+		}
+		// Iterate over map
+		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
+			Cell current = pair.getKey();
+			boolean mine = pair.getValue();
+			if (mine) {
+				if (current.isClosed() && !current.isFlagged()) {
+					current.flag();
+					game.decrementMines();
+					change = true;
+				}
+			} else {
+				if (current.isBlank()) {
+					if (quiet) {
+						game.quietSelect(current.getX(), current.getY());
+					} else {
+						game.select(current.getX(), current.getY());
+					}
+					change = true;
+				}
+			}
+		}
+		if (!quiet) {
+			game.refresh();
+		}
+		if (!game.isGameOver() && game.getProb()) {
+			calcAllCellsProb();
+		}
+		return change;
+	}
+
+	private void genAllConstraints(IPBSolver solver) throws ContradictionException {
 
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
@@ -630,7 +697,7 @@ public class BoardSolver {
 					try {
 						pbSolver = SolverFactory.newDefault();
 						// Generate the known constraints on the board
-						genBasicConstraints(pbSolver);
+						genAllConstraints(pbSolver);
 
 						// Create literal for current cell
 						lit.push(encodeCellId(current));
@@ -682,7 +749,7 @@ public class BoardSolver {
 				try {
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBasicConstraints(pbSolver);
+					genAllConstraints(pbSolver);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -729,7 +796,7 @@ public class BoardSolver {
 				try {
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBasicConstraints(pbSolver);
+					genAllConstraints(pbSolver);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -765,7 +832,7 @@ public class BoardSolver {
 		return results;
 	}
 
-	private Map<Cell, Boolean> testShallowSolveMines() {
+	private Map<Cell, Boolean> binaryShallowSolveMines() {
 		cells = game.getCells();
 
 		Map<Cell, Boolean> results = new HashMap<>();
@@ -781,7 +848,7 @@ public class BoardSolver {
 				try {
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					testSATSovle(pbSolver);
+					genBinaryConstraints(pbSolver);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -828,7 +895,7 @@ public class BoardSolver {
 				try {
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					testSATSovle(pbSolver);
+					genBinaryConstraints(pbSolver);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -864,7 +931,7 @@ public class BoardSolver {
 		return results;
 	}
 
-	public void testSATSovle(IPBSolver pbSolver) {
+	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
 		cells = game.getCells();
 		List<Cell> shore = getAdjacentOpenCells();
 
@@ -900,11 +967,7 @@ public class BoardSolver {
 			}
 		}
 
-		try {
-			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
-		} catch (ContradictionException e) {
-			e.printStackTrace();
-		}
+		pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
 
 		lits.clear();
 		coeffs.clear();
@@ -913,21 +976,17 @@ public class BoardSolver {
 				if (c.isOpen()) {
 					lits.push(encodeCellId(c));
 					coeffs.push(BigInteger.ONE);
-					try {
-						pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
-						// System.out.println(c + "=0");
-					} catch (ContradictionException e) {
-						e.printStackTrace();
-					}
+					pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
+					// System.out.println(c + "=0");
 					lits.clear();
 					coeffs.clear();
 				}
 			}
 		}
-		
+
 		lits.clear();
 		coeffs.clear();
-		
+
 		for (int i = 0; i < shore.size() && running.get() && !Thread.interrupted(); i++) {
 			lits.clear();
 			coeffs.clear();
@@ -942,47 +1001,12 @@ public class BoardSolver {
 			}
 			pbCon = pbCon.substring(0, pbCon.length() - 1);
 			pbCon += "=" + current.getNumber();
-			try {
-				// System.out.println(pbCon);
-				pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
-			} catch (ContradictionException e) {
-				e.printStackTrace();
-			}
+			// System.out.println(pbCon);
+			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 
 			lits.clear();
 			coeffs.clear();
 		}
-
-		// try {
-		// 	while (pbSolver.isSatisfiable()) {
-		// 		System.out.println("SAT!");
-		// 		String cellStr = "";
-		// 		for (int i : pbSolver.model()) {
-		// 			String sign = i < 0 ? "-" : "+";
-		// 			Cell ccc = decodeCellId(i);
-		// 			if (ccc != null) {
-		// 				// if (ccc.isOpen()) {
-		// 				// cellStr = "";
-		// 				// break;
-		// 				// } else {
-		// 				cellStr += sign + ccc + ", ";
-		// 				// }
-		// 			}
-		// 		}
-		// 		System.out.println(cellStr);
-		// 		int[] model = pbSolver.model();
-		// 		for (int m = 0; m < model.length; m++) {
-		// 			model[m] = model[m] * -1;
-		// 		}
-		// 		System.out.println();
-		// 		IVecInt block = new VecInt(model);
-		// 		pbSolver.addBlockingClause(block);
-		// 	}
-		// 	System.out.println("UNSAT!");
-		// } catch (TimeoutException | ContradictionException e) {
-		// 	e.printStackTrace();
-		// }
-
 	}
 
 	public Map<Cell, Double> calcAllCellsProb() {
@@ -1002,7 +1026,7 @@ public class BoardSolver {
 		pbSolver = SolverFactory.newDefault();
 
 		try {
-			genBasicConstraints(pbSolver);
+			genAllConstraints(pbSolver);
 		} catch (ContradictionException e3) {
 			e3.printStackTrace();
 		}

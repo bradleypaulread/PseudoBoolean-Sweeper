@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import com.google.gson.Gson;
 
-public class GameSimulation {
+public class GameSimulator {
 
     // File locations for storing simulation results
     private final String PATTERN_PATH = "resources/PatternMatching-Results.csv";
@@ -29,7 +29,7 @@ public class GameSimulation {
 
     private Difficulty[] diffs = { Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD };
 
-    public GameSimulation(int noOfSims) {
+    public GameSimulator(int noOfSims) {
         this.noOfSims = noOfSims;
         int noOfThreads = Runtime.getRuntime().availableProcessors();
         pool = Executors.newFixedThreadPool(noOfThreads);
@@ -151,7 +151,7 @@ public class GameSimulation {
             sb.append(',');
             sb.append("win/loss (%)");
             sb.append(',');
-            sb.append("avg. time (s)");
+            sb.append("avg. time (m/s)");
             sb.append(',');
             sb.append('\n');
 
@@ -180,7 +180,7 @@ public class GameSimulation {
                     totalTime += times.get(i).get(j);
                 }
                 long avgTime = times.get(i).size() > 0 ? totalTime / times.get(i).size() : 0;
-                sb.append(avgTime / (long) 1000000);
+                sb.append(avgTime / (long) 1e6); // Convert from nano to miliseconds
                 sb.append('\n');
             }
 

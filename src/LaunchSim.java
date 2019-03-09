@@ -14,13 +14,13 @@ import java.util.concurrent.TimeUnit;
 public class LaunchSim {
 	public static void main(String[] args) {
 		int consoleNum = 0;
-		int noOfSims = 10;
+		int noOfSims = 30;
 		if (args.length > 0) {
 			if (Integer.valueOf(args[0]) > 0) {
 				noOfSims = Integer.valueOf(args[0]);
 			}
 		}
-		GameSimulation sim = new GameSimulation(noOfSims);
+		GameSimulator sim = new GameSimulator(noOfSims);
 		ExecutorService pool = sim.getPool();
 		sim.startGenericSim();
 		pool.shutdown();
