@@ -283,7 +283,7 @@ public class Minesweeper extends JFrame {
 		resetBtn.addActionListener(e -> reset());
 
 		randCellBtn.addActionListener(e -> {
-			solver.testSATSovle();
+			// solver.testSATSovle();
 			// solver.selectRandomCell();
 			// refresh();
 		});
