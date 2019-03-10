@@ -154,12 +154,12 @@ public class SolverThreadWrapper implements Runnable {
     }
 
     private void stratSovle() {
-        BoardSolver solver = new BoardSolver(game, running);
-        while (running.get() && !game.isGameOver() && solver.fullSolve()) {
-            if (Thread.interrupted()) {
-                break;
-            }
-        }
+        // BoardSolver solver = new BoardSolver(game, running);
+        // while (running.get() && !game.isGameOver() && solver.fullSolve()) {
+        //     if (Thread.interrupted()) {
+        //         break;
+        //     }
+        // }
     }
 
 }

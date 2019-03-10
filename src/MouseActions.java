@@ -45,14 +45,18 @@ public class MouseActions implements MouseListener {
 			int y = e.getY() / board.getCellWidth();
 
 			if (game.is_good(x, y) && game.getCell(x, y).isClosed()) {
-				if (!game.getCell(x, y).isFlagged()) {
-					game.decrementMines();
+				if (e.isControlDown()) {
+					game.getCell(x, y).mark();
 				} else {
-					game.incrementMines();
+					if (!game.getCell(x, y).isFlagged()) {
+						game.decrementMines();
+					} else {
+						game.incrementMines();
+					}
+					game.getCell(x, y).invertFlag();
+					game.resetHints();
+					game.resetProbs();
 				}
-				game.getCell(x, y).invertFlag();
-				game.resetHints();
-				game.resetProbs();
 				game.refresh();
 			}
 		}

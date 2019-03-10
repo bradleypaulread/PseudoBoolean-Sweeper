@@ -1,13 +1,6 @@
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.swing.JFrame;
-import javax.swing.JProgressBar;
-
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;

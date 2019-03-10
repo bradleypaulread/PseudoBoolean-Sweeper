@@ -22,6 +22,7 @@ public class Cell
 	private boolean safeHint;
 	private boolean mineHint;
 	private boolean fail;
+	private boolean marked;
 	private Double prob; // Percentage of cell being a mine
 
 	public Cell(int x, int y) {
@@ -161,6 +162,14 @@ public class Cell
 	 */
 	public void invertFlag() {
 		flagged = !flagged;
+	}
+
+	public boolean isMarked() {
+		return marked;
+	}
+
+	public void mark() {
+		marked = !marked;
 	}
 
 	@Override

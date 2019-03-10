@@ -72,6 +72,10 @@ public class Board extends JPanel {
 					}
 					// If cell is marked as a hint
 					// set colour to Pink
+				} else if (current.isMarked()) {
+					g.setColor(new Color(142, 185, 255));
+					drawCell(g, posX, posY);
+					g.setColor(Color.BLACK);
 				} else if (current.isSafeHint()) {
 					g.setColor(new Color(130, 217, 130));
 					drawCell(g, posX, posY);
