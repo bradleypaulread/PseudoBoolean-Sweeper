@@ -65,9 +65,9 @@ public class Minesweeper extends JFrame {
 	private JLabel minesLbl = new JLabel();
 	private JCheckBoxMenuItem debugCb = new JCheckBoxMenuItem("Debug Mode");
 	private JCheckBoxMenuItem strategyCb = new JCheckBoxMenuItem("Use Strategy");
-	private JRadioButtonMenuItem diffEasyRb = new JRadioButtonMenuItem("Easy");
-	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Medium");
-	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Hard");
+	private JRadioButtonMenuItem diffEasyRb = new JRadioButtonMenuItem("Beginner");
+	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Intermediate");
+	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Expert");
 	private JMenuItem customGameItem = new JMenuItem("Custom Game");
 	private JMenuItem startSimItem = new JMenuItem("Start Simulation");
 	private JMenuBar menuBar = new JMenuBar();
@@ -105,17 +105,17 @@ public class Minesweeper extends JFrame {
 	public Minesweeper(Difficulty diff) {
 		int x, y, d;
 		switch (diff) {
-		case EASY:
+		case BEGINNER:
 			x = 9;
 			y = 9;
 			d = 10;
 			break;
-		case MEDIUM:
+		case INTERMEDIATE:
 			x = 16;
 			y = 16;
 			d = 40;
 			break;
-		case HARD:
+		case EXPERT:
 			x = 30;
 			y = 16;
 			d = 99;
@@ -130,25 +130,25 @@ public class Minesweeper extends JFrame {
 	}
 
 	public Minesweeper() {
-		this(Difficulty.EASY);
+		this(Difficulty.BEGINNER);
 	}
 
 	// For use when no GUI is wanted
 	public Minesweeper(Difficulty d, MineField mf) {
 		switch (d) {
-		case EASY:
+		case BEGINNER:
 			width = 9;
 			height = 9;
 			noOfMines = 10;
 			minesLeft = 10;
 			break;
-		case MEDIUM:
+		case INTERMEDIATE:
 			width = 16;
 			height = 16;
 			noOfMines = 40;
 			minesLeft = 40;
 			break;
-		case HARD:
+		case EXPERT:
 			width = 30;
 			height = 16;
 			noOfMines = 99;
@@ -375,7 +375,7 @@ public class Minesweeper extends JFrame {
 		diffEasyRb.setSelected(true);
 		diffEasyRb.setEnabled(false);
 		diffEasyRb.addActionListener(e -> {
-			Minesweeper newGame = new Minesweeper(Difficulty.EASY);
+			Minesweeper newGame = new Minesweeper(Difficulty.BEGINNER);
 			newGame.getDiffEasyRb().setSelected(true);
 			newGame.getDiffEasyRb().setEnabled(false);
 			newGame.getDiffMediumRb().setEnabled(true);
@@ -389,7 +389,7 @@ public class Minesweeper extends JFrame {
 		menu.add(diffEasyRb);
 
 		diffMediumRb.addActionListener(e -> {
-			Minesweeper newGame = new Minesweeper(Difficulty.MEDIUM);
+			Minesweeper newGame = new Minesweeper(Difficulty.INTERMEDIATE);
 			newGame.getDiffMediumRb().setSelected(true);
 			newGame.getDiffEasyRb().setEnabled(true);
 			newGame.getDiffMediumRb().setEnabled(false);
@@ -403,7 +403,7 @@ public class Minesweeper extends JFrame {
 		menu.add(diffMediumRb);
 
 		diffHardRb.addActionListener(e -> {
-			Minesweeper newGame = new Minesweeper(Difficulty.HARD);
+			Minesweeper newGame = new Minesweeper(Difficulty.EXPERT);
 			newGame.getDiffHardRb().setSelected(true);
 			newGame.getDiffEasyRb().setEnabled(true);
 			newGame.getDiffMediumRb().setEnabled(true);

@@ -1,4 +1,4 @@
-difficulty,no. of games,wins,loss,win/loss (%),avg. time (s),
-EASY,50,43,7,0.86,4049
-MEDIUM,50,33,17,0.66,3990
-HARD,50,25,25,0.5,4404
+difficulty,no. of games,wins,loss,win/loss (%),avg. time (m/s),
+EASY,5000,3189,1811,0.6378,63951
+MEDIUM,5000,1857,3143,0.3714,61643
+HARD,5000,89,4911,0.0178,61301

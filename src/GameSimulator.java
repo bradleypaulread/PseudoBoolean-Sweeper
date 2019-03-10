@@ -27,7 +27,7 @@ public class GameSimulator {
     private List<List<Minesweeper>> gamesSAT;
     private List<List<Minesweeper>> gamesJoint;
 
-    private Difficulty[] diffs = { Difficulty.EASY, Difficulty.MEDIUM, Difficulty.HARD };
+    private Difficulty[] diffs = { Difficulty.BEGINNER, Difficulty.INTERMEDIATE, Difficulty.EXPERT };
 
     public GameSimulator(int noOfSims) {
         this.noOfSims = noOfSims;
@@ -45,7 +45,7 @@ public class GameSimulator {
         int limit = noOfSims;
         System.out.println("WARMING UP...");
         for (int init = 0; init < limit; init++) {
-            Minesweeper newGame = new Minesweeper(Difficulty.HARD, new MineField(16, 30, 99));
+            Minesweeper newGame = new Minesweeper(Difficulty.EXPERT, new MineField(16, 30, 99));
             BoardSolver solver = new BoardSolver(newGame);
             solver.setQuiet();
             while (!newGame.isGameOver()) {
