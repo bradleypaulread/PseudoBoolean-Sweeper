@@ -2,11 +2,9 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -592,11 +590,10 @@ public class BoardSolver {
 		lits.clear();
 		coeffs.clear();
 
-		List<Cell> shore = getShoreOpenCells();
-		for (int i = 0; i < shore.size(); i++) {
-			Cell current = shore.get(i);
+		List<Cell> landCells = getLandCells();
+		for (int i = 0; i < landCells.size(); i++) {
+			Cell current = landCells.get(i);
 
-			List<Cell> neighbours = getNeighbours(current);
 			lits.clear();
 			coeffs.clear();
 
@@ -607,12 +604,12 @@ public class BoardSolver {
 			lits.clear();
 			coeffs.clear();
 
+			List<Cell> neighbours = getNeighbours(current);
+			neighbours.removeIf(c -> !c.isClosed());
 			// Normal constraint
 			for (Cell c : neighbours) {
-				if (c.isClosed()) {
-					lits.push(encodeCellId(c));
-					coeffs.push(BigInteger.ONE);
-				}
+				lits.push(encodeCellId(c));
+				coeffs.push(BigInteger.ONE);
 			}
 			solver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 			lits.clear();
@@ -677,10 +674,10 @@ public class BoardSolver {
 
 	private Map<Cell, Boolean> shallowSolveMines() {
 		cells = game.getCells();
-
 		Map<Cell, Boolean> results = new HashMap<>();
-		List<Cell> shore = getShoreClosedCells();
+		List<Cell> closedShore = getShoreClosedCells();
 		List<Cell> sea = getSeaCells();
+		
 		if (!sea.isEmpty()) {
 			Cell current = sea.get(0);
 			for (int weight = 0; weight <= 1; weight++) {
@@ -724,8 +721,8 @@ public class BoardSolver {
 				}
 			}
 		}
-		for (int i = 0; i < shore.size() && running.get() && !Thread.interrupted(); i++) {
-			Cell current = shore.get(i);
+		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
+			Cell current = closedShore.get(i);
 			if (current.isFlagged()) {
 				continue;
 			}
@@ -872,7 +869,7 @@ public class BoardSolver {
 	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
-		
+
 		int noOfMines = game.getNoOfMines();
 		int noOfLits = Integer.toBinaryString(noOfMines).length();
 		IVecInt lits = new VecInt();
@@ -882,7 +879,7 @@ public class BoardSolver {
 			lits.push(encodeLit(i));
 			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		}
-		
+
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
 			// Dont add flagged cells as they count as already found mines.
@@ -898,7 +895,7 @@ public class BoardSolver {
 			lits.push(encodeCellId(seaCell));
 			coeffs.push(BigInteger.ONE);
 		}
-		
+
 		int knownMines = 0;
 		for (Cell[] col : cells) {
 			for (Cell c : col) {
@@ -908,22 +905,24 @@ public class BoardSolver {
 			}
 		}
 		pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
-		
+
 		lits.clear();
 		coeffs.clear();
 		// Every open cell is guarenteed to not be a mine (cell=0)
 		List<Cell> landCells = getLandCells();
-		for (Cell c : landCells) {
-			lits.push(encodeCellId(c));
+		for (Cell current : landCells) {
+			lits.push(encodeCellId(current));
 			coeffs.push(BigInteger.ONE);
 			pbSolver.addExactly(lits, coeffs, BigInteger.ZERO);
 			lits.clear();
 			coeffs.clear();
-			for (Cell neighbour : getNeighbours(c)) {
-				lits.push(encodeCellId(neighbour));
+			List<Cell> neighbours = getNeighbours(current);
+			neighbours.removeIf(c -> !c.isClosed());
+			for (Cell c : neighbours) {
+				lits.push(encodeCellId(c));
 				coeffs.push(BigInteger.ONE);
 			}
-			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(c.getNumber()));
+			pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 			lits.clear();
 			coeffs.clear();
 		}
@@ -931,19 +930,20 @@ public class BoardSolver {
 		lits.clear();
 		coeffs.clear();
 
-		// for (int i = 0; i < openShore.size() && running.get() && !Thread.interrupted(); i++) {
-		// 	lits.clear();
-		// 	coeffs.clear();
-		// 	Cell current = openShore.get(i);
+		// for (int i = 0; i < openShore.size() && running.get() &&
+		// !Thread.interrupted(); i++) {
+		// lits.clear();
+		// coeffs.clear();
+		// Cell current = openShore.get(i);
 
-		// 	for (Cell c : getNeighbours(current)) {
-		// 		lits.push(encodeCellId(c));
-		// 		coeffs.push(BigInteger.ONE);
-		// 	}
-		// 	pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+		// for (Cell c : getNeighbours(current)) {
+		// lits.push(encodeCellId(c));
+		// coeffs.push(BigInteger.ONE);
+		// }
+		// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
 
-		// 	lits.clear();
-		// 	coeffs.clear();
+		// lits.clear();
+		// coeffs.clear();
 		// }
 	}
 

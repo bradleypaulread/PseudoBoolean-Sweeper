@@ -283,7 +283,7 @@ public class Minesweeper extends JFrame {
 		this.setIconImages(icons);
 
 		resetBtn.addActionListener(e -> reset());
-		
+
 		KeyboardFocusManager keyManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		keyManager.addKeyEventDispatcher(new KeyEventDispatcher() {
 			@Override
@@ -299,36 +299,38 @@ public class Minesweeper extends JFrame {
 
 		// To Remove
 		// randCellBtn.setEnabled(false);
-		
+
 		randCellBtn.addActionListener(e -> {
-			solver.oldSATHint();
-			// solver.selectRandomCell();
-			refresh();
+			// Perform the assist action until no more safe moves exist
+			disableAllBtns();
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, false, true, true, false);
+			thead[0] = t1;
+			stopBtn.setEnabled(true);
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
 
 		SATHintBtn.addActionListener(e -> {
+			disableAllBtns();
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this, true, true);
 			thead[0] = t1;
 			stopBtn.setEnabled(true);
-			disableAllBtns();
 		});
 
 		ptAssistBtn.addActionListener(e -> solver.patternMatch());
 
 		SATAssistBtn.addActionListener(e -> {
+			disableAllBtns();
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, false, false, true, false);
 			thead[0] = t1;
 			stopBtn.setEnabled(true);
-			disableAllBtns();
 		});
 
 		SATProbBtn.addActionListener(e -> {
+			disableAllBtns();
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
 			thead[0] = t1;
 			stopBtn.setEnabled(true);
-			disableAllBtns();
 		});
 
 		ptSolveBtn.addActionListener(e -> {

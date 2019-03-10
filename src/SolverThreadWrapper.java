@@ -7,9 +7,9 @@ public class SolverThreadWrapper implements Runnable {
     private final AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
     boolean sim = false;
+    boolean old = false;
     boolean quiet, hint, loop, patternMatch, SAT, strat, prob;
     Thread thread;
-
 
     public SolverThreadWrapper(Minesweeper g) {
         thread = new Thread(this, Integer.toString(threadID++));
@@ -32,6 +32,19 @@ public class SolverThreadWrapper implements Runnable {
         this.patternMatch = patternMatch;
         this.SAT = SAT;
         this.strat = strat;
+        thread.start();
+    }
+
+    public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT,
+            boolean old, boolean strat) {
+        thread = new Thread(this, Integer.toString(threadID++));
+        game = g;
+        this.quiet = quiet;
+        this.loop = loop;
+        this.patternMatch = patternMatch;
+        this.SAT = SAT;
+        this.strat = strat;
+        this.old = old;
         thread.start();
     }
 
@@ -105,7 +118,11 @@ public class SolverThreadWrapper implements Runnable {
             } else if (patternMatch) {
                 patternMatchSolve();
             } else if (SAT) {
-                SATSolve();
+                if (old) {
+                    oldSATSolve();
+                } else {
+                    SATSolve();
+                }
             }
         } else { // Just Assist
             if (patternMatch && SAT) {
@@ -144,6 +161,15 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
+    private void oldSATSolve() {
+        BoardSolver solver = new BoardSolver(game, running);
+        while (running.get() && !game.isGameOver() && solver.oldSATSolve()) {
+            if (Thread.interrupted()) {
+                break;
+            }
+        }
+    }
+
     private void jointSolve() {
         BoardSolver solver = new BoardSolver(game, running);
         while (running.get() && !game.isGameOver() && solver.jointSolve()) {
@@ -156,9 +182,9 @@ public class SolverThreadWrapper implements Runnable {
     private void stratSovle() {
         // BoardSolver solver = new BoardSolver(game, running);
         // while (running.get() && !game.isGameOver() && solver.fullSolve()) {
-        //     if (Thread.interrupted()) {
-        //         break;
-        //     }
+        // if (Thread.interrupted()) {
+        // break;
+        // }
         // }
     }
 
