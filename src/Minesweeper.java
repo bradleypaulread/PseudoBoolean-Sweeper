@@ -15,6 +15,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -263,7 +265,7 @@ public class Minesweeper extends JFrame {
 		controlBtns.add(stopBtn);
 		controlBtns.add(fullAutoBtn);
 
-		JButton randCellBtn = new JButton("Rand. Cell");
+		JButton randCellBtn = new JButton("Old SAT Solve");
 
 		controlBtns.add(randCellBtn);
 		controlBtns.add(SATBtns);
@@ -281,13 +283,27 @@ public class Minesweeper extends JFrame {
 		this.setIconImages(icons);
 
 		resetBtn.addActionListener(e -> reset());
+		
+		KeyboardFocusManager keyManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+		keyManager.addKeyEventDispatcher(new KeyEventDispatcher() {
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent e) {
+				if (e.getID() == KeyEvent.KEY_PRESSED && e.isControlDown() && e.getKeyCode() == 82) {
+					reset();
+					refresh();
+					return true;
+				}
+				return false;
+			}
+		});
 
 		// To Remove
-		randCellBtn.setEnabled(false);
-
+		// randCellBtn.setEnabled(false);
+		
 		randCellBtn.addActionListener(e -> {
+			solver.oldSATHint();
 			// solver.selectRandomCell();
-			// refresh();
+			refresh();
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
