@@ -137,10 +137,12 @@ public class SolverThreadWrapper implements Runnable {
         if (!game.isGameOver()) {
             game.enableAllBtns();
         }
+        thread.interrupt();
     }
 
     public void end() {
         running.set(false);
+        thread.interrupt();
     }
 
     private void patternMatchSolve() {

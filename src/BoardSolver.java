@@ -1,4 +1,9 @@
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
+
+import com.google.common.math.BigIntegerMath;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -355,7 +360,7 @@ public class BoardSolver {
 
 	public void SATHint() {
 		cells = game.getCells();
-		Map<Cell, Boolean> known = binaryShallowSolveMines();
+		Map<Cell, Boolean> known = binaryShallowSolve();
 		if (known == null || !running.get()) {
 			return;
 		}
@@ -386,7 +391,7 @@ public class BoardSolver {
 
 	public void oldSATHint() {
 		cells = game.getCells();
-		Map<Cell, Boolean> known = shallowSolveMines();
+		Map<Cell, Boolean> known = shallowSolve();
 		if (known == null || !running.get()) {
 			return;
 		}
@@ -492,7 +497,7 @@ public class BoardSolver {
 
 	public boolean oldSATSolve() {
 		boolean change = false;
-		Map<Cell, Boolean> known = shallowSolveMines();
+		Map<Cell, Boolean> known = shallowSolve();
 		if (known == null || !running.get()) {
 			return false;
 		}
@@ -529,7 +534,7 @@ public class BoardSolver {
 	// new sat solve that uses binary lits
 	public boolean SATSolve() {
 		boolean change = false;
-		Map<Cell, Boolean> known = binaryShallowSolveMines();
+		Map<Cell, Boolean> known = binaryShallowSolve();
 		if (known == null || !running.get()) {
 			return false;
 		}
@@ -672,12 +677,12 @@ public class BoardSolver {
 		return results;
 	}
 
-	private Map<Cell, Boolean> shallowSolveMines() {
+	private Map<Cell, Boolean> shallowSolve() {
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> closedShore = getShoreClosedCells();
 		List<Cell> sea = getSeaCells();
-		
+
 		if (!sea.isEmpty()) {
 			Cell current = sea.get(0);
 			for (int weight = 0; weight <= 1; weight++) {
@@ -770,7 +775,7 @@ public class BoardSolver {
 		return results;
 	}
 
-	private Map<Cell, Boolean> binaryShallowSolveMines() {
+	private Map<Cell, Boolean> binaryShallowSolve() {
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> closedShore = getShoreClosedCells();
@@ -786,7 +791,7 @@ public class BoardSolver {
 
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver);
+					genBinaryConstraints(pbSolver, true);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -834,7 +839,7 @@ public class BoardSolver {
 				try {
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver);
+					genBinaryConstraints(pbSolver, true);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -866,7 +871,7 @@ public class BoardSolver {
 		return results;
 	}
 
-	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
+	public void genBinaryConstraints(IPBSolver pbSolver, boolean checkSea) throws ContradictionException {
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
 
@@ -890,7 +895,7 @@ public class BoardSolver {
 		}
 		// Add a singular sea cell (if there is any sea) to represent the entire sea
 		List<Cell> sea = getSeaCells();
-		if (!sea.isEmpty()) {
+		if (checkSea && !sea.isEmpty()) {
 			Cell seaCell = sea.get(0);
 			lits.push(encodeCellId(seaCell));
 			coeffs.push(BigInteger.ONE);
@@ -947,19 +952,12 @@ public class BoardSolver {
 		// }
 	}
 
-	public Map<Cell, Double> calcAllCellsProb() {
+	public Map<Cell, Double> oldCalcAllCellsProb() {
 		cells = game.getCells();
 
 		Map<Cell, Double> results = new HashMap<>();
 
 		List<Cell> adjacentCells = getShoreClosedCells();
-
-		int knownMines = 0;
-		for (boolean isMine : shallowSolveMines().values()) {
-			if (isMine) {
-				++knownMines;
-			}
-		}
 
 		pbSolver = SolverFactory.newDefault();
 
@@ -1027,6 +1025,129 @@ public class BoardSolver {
 		game.refresh();
 		System.out.println();
 		return sortedByCount;
+	}
+
+	public void calcAllCellsProb() {
+		cells = game.getCells();
+		// Key = number of mines in solution(s)
+		// Valie = list of solutions containing key mines
+		Map<Integer, List<List<Cell>>> solutions = new HashMap<>();
+
+		pbSolver = SolverFactory.newDefault();
+
+		try {
+			genBinaryConstraints(pbSolver, false);
+		} catch (ContradictionException e3) {
+			e3.printStackTrace();
+		}
+
+		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+		int noOfSolutions = 0;
+		try {
+			while (optimiser.isSatisfiable() && running.get()) {
+				++noOfSolutions;
+				List<Cell> currentSol = new ArrayList<>();
+				int[] model = pbSolver.model();
+				int noOfMines = 0;
+				for (int i : model) {
+					boolean mine = i < 0 ? false : true;
+					Cell testForCell = decodeCellId(i);
+					if (testForCell != null && mine) {
+						// System.out.print("" + testForCell + ", ");
+						currentSol.add(testForCell);
+						noOfMines++;
+					}
+				}
+				List<List<Cell>> testForNull = solutions.get(noOfMines);
+				if (testForNull == null) {
+					List<List<Cell>> temp = new ArrayList<>();
+					temp.add(currentSol);
+					solutions.put(noOfMines, temp);
+				} else {
+					testForNull.add(currentSol);
+				}
+
+				// Find another solution
+				for (int i = 0; i < model.length; i++) {
+					model[i] = model[i] * -1;
+				}
+				IVecInt block = new VecInt(model);
+
+				optimiser.addBlockingClause(block);
+			}
+		} catch (TimeoutException e) {
+			e.printStackTrace();
+		} catch (ContradictionException e) {
+			e.printStackTrace();
+		}
+		if (!running.get()) {
+			return;
+		}
+		BigInteger T = new BigInteger("0");
+		BigDecimal seaT = new BigDecimal("0");
+		int totalMines = game.getNoOfMines();
+		int seaSize = getSeaCells().size();
+		// Iterate over map
+		for (Map.Entry<Integer, List<List<Cell>>> pair : solutions.entrySet()) {
+			Integer noOfMines = pair.getKey();
+			Integer noOfConfigs = pair.getValue().size();
+
+			int remainingMines = totalMines - noOfMines;
+
+			BigInteger bioExpan = BigIntegerMath.binomial(seaSize, remainingMines);
+			BigInteger toAdd = bioExpan.multiply(BigInteger.valueOf(noOfConfigs));
+
+			T = T.add(toAdd);
+			if (seaSize > 0) {
+				BigDecimal temp1 = new BigDecimal(remainingMines);
+				BigDecimal temp2 = new BigDecimal(seaSize);
+				BigDecimal temp = temp1.divide(temp2, MathContext.DECIMAL128);
+
+				seaT = seaT.add(temp.multiply(new BigDecimal(toAdd)));
+			}
+		}
+		// System.out.println("No. of solutions: " + noOfSolutions);
+		// System.out.print("Solutions Map: ");
+		// for (Integer i : solutions.keySet()) {
+		// System.out.println("{" + i + "=" + solutions.get(i).size() + "}");
+		// }
+		// System.out.println("Solutions List: " + solutions);
+		// System.out.println("T: " + T);
+		if (seaSize > 0) {
+			BigDecimal seaProb = seaT;
+			seaProb = seaProb.divide(new BigDecimal(T), MathContext.DECIMAL128);
+			for (Cell c : getSeaCells()) {
+				c.setProb(seaProb.doubleValue());
+			}
+		}
+
+		List<Cell> shore = getShoreClosedCells();
+		for (Cell current : shore) {
+			if (current.isFlagged()) {
+				continue;
+			}
+			BigInteger top = new BigInteger("0");
+			for (Map.Entry<Integer, List<List<Cell>>> pair : solutions.entrySet()) {
+				int count = 0;
+				Integer noOfMines = pair.getKey();
+				int remainingMines = totalMines - noOfMines;
+				List<List<Cell>> configs = pair.getValue();
+				// Count the number of times the cell occurs in solutions
+				for (List<Cell> list : configs) {
+					for (Cell c : list) {
+						if (current == c) {
+							count++;
+							break;
+						}
+					}
+				}
+				top = top.add(BigIntegerMath.binomial(seaSize, remainingMines).multiply(BigInteger.valueOf(count)));
+			}
+			BigDecimal prob = new BigDecimal(top);
+			prob = prob.divide(new BigDecimal(T), MathContext.DECIMAL128);
+			current.setProb(prob.doubleValue());
+		}
+		game.refresh();
 	}
 
 	/**
