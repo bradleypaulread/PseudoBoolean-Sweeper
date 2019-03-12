@@ -610,7 +610,7 @@ public class BoardSolver {
 			coeffs.clear();
 
 			List<Cell> neighbours = getNeighbours(current);
-			neighbours.removeIf(c -> !c.isClosed());
+			//neighbours.removeIf(c -> !c.isClosed());
 			// Normal constraint
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
@@ -781,9 +781,53 @@ public class BoardSolver {
 		List<Cell> closedShore = getShoreClosedCells();
 		List<Cell> sea = getSeaCells();
 
+		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
+			Cell current = closedShore.get(i);
+			if (current.isFlagged()) {
+				continue;
+			}
+			// Find if cell safe (weight=0) or mine (weight=1)
+			for (int weight = 0; weight <= 1 && running.get() && !Thread.interrupted(); weight++) {
+				IVecInt lit = new VecInt();
+				IVec<BigInteger> coeff = new Vec<BigInteger>();
+				BigInteger cellWeight = BigInteger.valueOf(weight);
+				try {
+					pbSolver = SolverFactory.newDefault();
+					// Generate the known constraints on the board
+					genBinaryConstraints(pbSolver, false);
+
+					// Create literal for current cell
+					lit.push(encodeCellId(current));
+					coeff.push(BigInteger.ONE);
+					// Safe/Mine
+					pbSolver.addExactly(lit, coeff, cellWeight);
+
+					// Optimise wrapper
+					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+
+					// Find if cell is safe or mine
+					if (!optimiser.isSatisfiable()) {
+						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+						results.put(current, isMine);
+						break; // Break as no need to check if cell is also a mine
+					}
+				} catch (ContradictionException ce) {
+					// Contradiction Exception is thrown when the tested cell is already known to be
+					// safe/a mine.
+					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+					results.put(current, isMine);
+				} catch (TimeoutException te) {
+				}
+			}
+		}
+
+		if (Thread.interrupted() || !running.get()) {
+			return null;
+		}
+
 		if (!sea.isEmpty()) {
 			Cell current = sea.get(0);
-			for (int weight = 0; weight <= 1; weight++) {
+			for (int weight = 0; weight <= 1 && running.get() && !Thread.interrupted(); weight++) {
 				IVecInt lit = new VecInt();
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
@@ -826,48 +870,10 @@ public class BoardSolver {
 			}
 		}
 
-		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
-			Cell current = closedShore.get(i);
-			if (current.isFlagged()) {
-				continue;
-			}
-			// Find if cell safe (weight=0) or mine (weight=1)
-			for (int weight = 0; weight <= 1; weight++) {
-				IVecInt lit = new VecInt();
-				IVec<BigInteger> coeff = new Vec<BigInteger>();
-				BigInteger cellWeight = BigInteger.valueOf(weight);
-				try {
-					pbSolver = SolverFactory.newDefault();
-					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver, true);
-
-					// Create literal for current cell
-					lit.push(encodeCellId(current));
-					coeff.push(BigInteger.ONE);
-					// Safe/Mine
-					pbSolver.addExactly(lit, coeff, cellWeight);
-
-					// Optimise wrapper
-					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
-					// Find if cell is safe or mine
-					if (!optimiser.isSatisfiable()) {
-						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-						results.put(current, isMine);
-						break; // Break as no need to check if cell is also a mine
-					}
-				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is already known to be
-					// safe/a mine.
-					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-					results.put(current, isMine);
-				} catch (TimeoutException te) {
-				}
-			}
-		}
 		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
+
 		return results;
 	}
 
@@ -922,7 +928,7 @@ public class BoardSolver {
 			lits.clear();
 			coeffs.clear();
 			List<Cell> neighbours = getNeighbours(current);
-			neighbours.removeIf(c -> !c.isClosed());
+			//neighbours.removeIf(c -> !c.isClosed());
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
 				coeffs.push(BigInteger.ONE);
@@ -1027,10 +1033,34 @@ public class BoardSolver {
 		return sortedByCount;
 	}
 
+	public void printModel(int[] model) {
+		String str = "";
+		for (int i = 0; i < model.length; i++) {
+			int pos;
+			boolean isMine;
+			if (model[i] < 0) {
+				pos = model[i] * -1;
+				isMine = false;
+			} else {
+				pos = model[i];
+				isMine = true;
+			}
+			Cell testForNull = decodeCellId(pos);
+			if (testForNull == null) {
+				String mine = isMine ? "" : "-";
+				str += "" + mine + testForNull + ", ";
+			}
+		}
+		System.out.println(str);
+		if (!str.equals("")) {
+			System.out.println();
+		}
+	}
+
 	public void calcAllCellsProb() {
 		cells = game.getCells();
 		// Key = number of mines in solution(s)
-		// Valie = list of solutions containing key mines
+		// Value = list of the solutions containing key number of mines
 		Map<Integer, List<List<Cell>>> solutions = new HashMap<>();
 
 		pbSolver = SolverFactory.newDefault();
@@ -1091,7 +1121,7 @@ public class BoardSolver {
 			Integer noOfConfigs = pair.getValue().size();
 
 			int remainingMines = totalMines - noOfMines;
-
+			// System.out.println(pair.getValue());
 			BigInteger bioExpan = BigIntegerMath.binomial(seaSize, remainingMines);
 			BigInteger toAdd = bioExpan.multiply(BigInteger.valueOf(noOfConfigs));
 
