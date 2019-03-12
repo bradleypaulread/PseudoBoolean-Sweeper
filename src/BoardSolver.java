@@ -1042,10 +1042,8 @@ public class BoardSolver {
 		}
 
 		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-		int noOfSolutions = 0;
 		try {
 			while (optimiser.isSatisfiable() && running.get()) {
-				++noOfSolutions;
 				List<Cell> currentSol = new ArrayList<>();
 				int[] model = pbSolver.model();
 				int noOfMines = 0;
