@@ -1,17 +1,16 @@
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.math.RoundingMode;
-
-import com.google.common.math.BigIntegerMath;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import com.google.common.math.BigIntegerMath;
 
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
@@ -29,6 +28,8 @@ public class BoardSolver {
 	private IPBSolver pbSolver;
 
 	private boolean quiet;
+
+	private List<Cell> knownMines = new ArrayList<>();
 
 	private Minesweeper game;
 	private Cell[][] cells;
@@ -533,6 +534,7 @@ public class BoardSolver {
 
 	// new sat solve that uses binary lits
 	public boolean SATSolve() {
+		cells = game.getCells();
 		boolean change = false;
 		Map<Cell, Boolean> known = binaryShallowSolve();
 		if (known == null || !running.get()) {
@@ -543,6 +545,9 @@ public class BoardSolver {
 			Cell current = pair.getKey();
 			boolean mine = pair.getValue();
 			if (mine) {
+				if (!knownMines.contains(current)) {
+					knownMines.add(current);
+				}
 				if (current.isClosed() && !current.isFlagged()) {
 					current.flag();
 					game.decrementMines();
@@ -561,9 +566,6 @@ public class BoardSolver {
 		}
 		if (!quiet) {
 			game.refresh();
-		}
-		if (!game.isGameOver() && game.getProb()) {
-			calcAllCellsProb();
 		}
 		return change;
 	}
@@ -610,7 +612,7 @@ public class BoardSolver {
 			coeffs.clear();
 
 			List<Cell> neighbours = getNeighbours(current);
-			//neighbours.removeIf(c -> !c.isClosed());
+			// neighbours.removeIf(c -> !c.isClosed());
 			// Normal constraint
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
@@ -890,11 +892,9 @@ public class BoardSolver {
 			lits.push(encodeLit(i));
 			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		}
-
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
-			// Dont add flagged cells as they count as already found mines.
-			if (current.isBlank()) {
+			if (!knownMines.contains(current)) {
 				lits.push(encodeCellId(current));
 				coeffs.push(BigInteger.ONE);
 			}
@@ -906,16 +906,8 @@ public class BoardSolver {
 			lits.push(encodeCellId(seaCell));
 			coeffs.push(BigInteger.ONE);
 		}
-
-		int knownMines = 0;
-		for (Cell[] col : cells) {
-			for (Cell c : col) {
-				if (c.isFlagged()) {
-					knownMines++;
-				}
-			}
-		}
-		pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - knownMines));
+		int lastRunKnownMines = knownMines.size();
+		pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - lastRunKnownMines));
 
 		lits.clear();
 		coeffs.clear();
@@ -928,7 +920,7 @@ public class BoardSolver {
 			lits.clear();
 			coeffs.clear();
 			List<Cell> neighbours = getNeighbours(current);
-			//neighbours.removeIf(c -> !c.isClosed());
+			// neighbours.removeIf(c -> !c.isClosed());
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
 				coeffs.push(BigInteger.ONE);

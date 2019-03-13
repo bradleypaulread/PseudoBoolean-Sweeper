@@ -2,6 +2,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - BigRational",
+            "request": "launch",
+            "mainClass": "BigRational",
+            "projectName": "SATMinesweeper"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Test",
+            "request": "launch",
+            "mainClass": "Test",
+            "projectName": "SATMinesweeper"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - LaunchSim",
             "request": "launch",
             "mainClass": "LaunchSim",
