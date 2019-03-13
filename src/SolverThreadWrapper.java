@@ -119,7 +119,7 @@ public class SolverThreadWrapper implements Runnable {
                 patternMatchSolve();
             } else if (SAT) {
                 if (old) {
-                    oldSATSolve();
+                    new BoardSolver(game, running).oldSATHint();
                 } else {
                     SATSolve();
                 }
@@ -133,6 +133,7 @@ public class SolverThreadWrapper implements Runnable {
                 new BoardSolver(game, running).SATSolve();
             }
         }
+        end();
         game.getStopBtn().setEnabled(false);
         if (!game.isGameOver()) {
             game.enableAllBtns();

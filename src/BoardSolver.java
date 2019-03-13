@@ -457,6 +457,9 @@ public class BoardSolver {
 								if (c.isBlank()) {
 									c.flag();
 									game.decrementMines();
+									if (!knownMines.contains(c)) {
+										knownMines.add(c);
+									}
 									if (!quiet) {
 										game.refresh();
 									}
@@ -469,6 +472,9 @@ public class BoardSolver {
 								if (c.isBlank()) {
 									c.flag();
 									game.decrementMines();
+									if (!knownMines.contains(c)) {
+										knownMines.add(c);
+									}
 									if (!quiet) {
 										game.refresh();
 									}
@@ -810,6 +816,15 @@ public class BoardSolver {
 					// Find if cell is safe or mine
 					if (!optimiser.isSatisfiable()) {
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+						// if (!isMine) {
+						// 	IVecInt t = new VecInt();
+						// 	IPBSolver pb = SolverFactory.newDefault();
+						// 	t.push(encodeCellId(current)*-1);
+						// 	genBinaryConstraints(pb, false);
+						// 	pb.addExactly(t, 1);
+						// 	int[] model = pb.findModel(t);
+						// 	printLits(model);
+						// }
 						results.put(current, isMine);
 						break; // Break as no need to check if cell is also a mine
 					}
@@ -827,23 +842,26 @@ public class BoardSolver {
 			return null;
 		}
 
-		if (!sea.isEmpty()) {
-			Cell current = sea.get(0);
+		/*if (!sea.isEmpty()) {
 			for (int weight = 0; weight <= 1 && running.get() && !Thread.interrupted(); weight++) {
-				IVecInt lit = new VecInt();
-				IVec<BigInteger> coeff = new Vec<BigInteger>();
+				IVecInt lits = new VecInt();
+				IVec<BigInteger> coeffs = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
 				try {
 
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver, true);
+					genBinaryConstraints(pbSolver, false);
 
 					// Create literal for current cell
-					lit.push(encodeCellId(current));
-					coeff.push(BigInteger.ONE);
+					int noOfLits = Integer.toBinaryString(getSeaCells().size()).length();
+
+					for (int i = 0; i < noOfLits; i++) {
+						lits.push(encodeLit(i));
+						coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+					}
 					// Safe/Mine
-					pbSolver.addExactly(lit, coeff, cellWeight);
+					pbSolver.addExactly(lits, coeffs, cellWeight);
 
 					// Optimise wrapper
 					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
@@ -870,7 +888,7 @@ public class BoardSolver {
 				} catch (TimeoutException te) {
 				}
 			}
-		}
+		}*/
 
 		if (Thread.interrupted() || !running.get()) {
 			return null;
@@ -884,7 +902,9 @@ public class BoardSolver {
 		List<Cell> closedShore = getShoreClosedCells();
 
 		int noOfMines = game.getNoOfMines();
-		int noOfLits = Integer.toBinaryString(noOfMines).length();
+		int noOfKnownMines = knownMines.size();
+		int noOfUnknownShore = closedShore.size() - noOfKnownMines;
+		int noOfLits = Integer.toBinaryString(getSeaCells().size()).length();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
 
@@ -892,22 +912,14 @@ public class BoardSolver {
 			lits.push(encodeLit(i));
 			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 		}
+
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
-			if (!knownMines.contains(current)) {
-				lits.push(encodeCellId(current));
-				coeffs.push(BigInteger.ONE);
-			}
-		}
-		// Add a singular sea cell (if there is any sea) to represent the entire sea
-		List<Cell> sea = getSeaCells();
-		if (checkSea && !sea.isEmpty()) {
-			Cell seaCell = sea.get(0);
-			lits.push(encodeCellId(seaCell));
+			lits.push(encodeCellId(current));
 			coeffs.push(BigInteger.ONE);
 		}
-		int lastRunKnownMines = knownMines.size();
-		pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines - lastRunKnownMines));
+
+		pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(noOfMines));
 
 		lits.clear();
 		coeffs.clear();
@@ -1025,23 +1037,10 @@ public class BoardSolver {
 		return sortedByCount;
 	}
 
-	public void printModel(int[] model) {
+	public void printLits(int[] model) {
 		String str = "";
 		for (int i = 0; i < model.length; i++) {
-			int pos;
-			boolean isMine;
-			if (model[i] < 0) {
-				pos = model[i] * -1;
-				isMine = false;
-			} else {
-				pos = model[i];
-				isMine = true;
-			}
-			Cell testForNull = decodeCellId(pos);
-			if (testForNull == null) {
-				String mine = isMine ? "" : "-";
-				str += "" + mine + testForNull + ", ";
-			}
+				str += "" + model[i] + ", ";
 		}
 		System.out.println(str);
 		if (!str.equals("")) {
@@ -1207,6 +1206,9 @@ public class BoardSolver {
 
 	private Cell decodeLit(int lit) {
 		int posLit = lit < 0 ? lit * -1 : lit;
+		if (posLit > (cells[0].length - 1) * cells.length + (cells.length - 1) + 2) {
+			return null;
+		}
 		int x = (posLit - 1) % cells.length;
 		int y = ((posLit - 1) - x) / cells.length;
 		return cells[x][y];
