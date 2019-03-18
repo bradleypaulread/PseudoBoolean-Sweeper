@@ -41,6 +41,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.border.TitledBorder;
 
+import com.google.gson.Gson;
+
 public class Minesweeper extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -102,6 +104,12 @@ public class Minesweeper extends JFrame {
 
 	public Minesweeper(int x, int y, int d) {
 		setup(x, y, d);
+	}
+	
+	public Minesweeper(int x, int y, int d, String m) {
+		Gson gson = new Gson();
+		MineField mf = gson.fromJson(m, MineField.class);
+		setup(x, y, d, mf);
 	}
 
 	public Minesweeper(Difficulty diff) {
@@ -185,6 +193,8 @@ public class Minesweeper extends JFrame {
 		board = new Board(this, x, y);
 		loadUI();
 		loadFileMenu();
+		
+		// Centres minefield
 		Container fl = new Container();
 		fl.add(board);
 		fl.setLayout(new FlowLayout());
@@ -193,6 +203,37 @@ public class Minesweeper extends JFrame {
 		// Reset board to a fresh setting
 		reset();
 
+		setTitle("Minesweeper");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setResizable(false);
+		pack();
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
+		setVisible(true);
+		startTime = System.nanoTime();
+		solver = new BoardSolver(this);
+	}
+	
+	private void setup(int x, int y, int d, MineField m) {
+		width = x;
+		height = y;
+		noOfMines = d;
+		minesLeft = d;
+
+		// Load interface components
+		board = new Board(this, x, y);
+		loadUI();
+		loadFileMenu();
+		
+		// Centres minefield
+		Container fl = new Container();
+		fl.add(board);
+		fl.setLayout(new FlowLayout());
+		add(fl, BorderLayout.CENTER);
+
+		// Reset board to a fresh setting
+		reset();
+		this.mineField = m;
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
@@ -663,6 +704,9 @@ public class Minesweeper extends JFrame {
 		gameTimer.start();
 		refresh();
 		solver = new BoardSolver(this);
+		// To remove
+//		Gson gson = new Gson();
+//		System.out.println(gson.toJson(this.mineField));
 	}
 
 	/**

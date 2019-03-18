@@ -8,8 +8,7 @@
  * Last modified: @date
  */
  
-public class Cell
-{
+public class Cell {
 	// ID of cell (cell coordinates)
 	private int x, y;
 

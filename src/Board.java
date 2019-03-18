@@ -13,13 +13,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+
 import javax.swing.JPanel;
 
 public class Board extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private Minesweeper game;
 	private Cell[][] cells;
-
 	// Width of a cell
 	private final int CELL_WIDTH = 40;
 
@@ -37,7 +42,8 @@ public class Board extends JPanel {
 	public void paintComponent(Graphics g) {
 		// Update cell array
 		cells = game.getCells();
-
+		// Clear canvas
+		super.paintComponent(g);
 		for (int i = 0; i < game.getx(); ++i) {
 			for (int j = 0; j < game.gety(); ++j) {
 				Cell current = cells[i][j];
@@ -49,7 +55,8 @@ public class Board extends JPanel {
 				// For flagged cells
 				if (current.isFlagged()) {
 					if (game.isFinished()) {
-						// If the game has finished and a mine has been correctly flagged
+						// If the game has finished and a mine has been
+						// correctly flagged
 						// set colour to Orange with a 'X' pattern
 						if (current.isMine()) {
 							g.setColor(new Color(233, 237, 149));

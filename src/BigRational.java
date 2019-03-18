@@ -1,6 +1,7 @@
 import java.math.*;
 import org.apache.commons.math3.*;
 import org.apache.commons.math3.fraction.BigFraction;
+import org.apache.commons.math3.util.CombinatoricsUtils;
 
 public class BigRational {
 
@@ -13,6 +14,7 @@ public class BigRational {
         
         BigFraction bf1 = new BigFraction(num1, den1);
         BigFraction bf2 = new BigFraction(num2, den2);
+        
         
         System.out.println(bf1);
         System.out.println(bf2);

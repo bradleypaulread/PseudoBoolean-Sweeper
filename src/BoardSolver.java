@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.math.BigIntegerMath;
 
+import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.IPBSolver;
@@ -298,11 +299,11 @@ public class BoardSolver {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine. When such a cell is found set
-	 * its hint value to true. Results in its colour turning pink.
+	 * Search the board for a cell that is not a mine. When such a cell is found
+	 * set its hint value to true. Results in its colour turning pink.
 	 * 
-	 * @return if a non-mine cell was found. Will only return false if there are no
-	 *         cells left on the board that are considered "safe".
+	 * @return if a non-mine cell was found. Will only return false if there are
+	 *         no cells left on the board that are considered "safe".
 	 */
 	public void patternMatchHint() {
 		cells = game.getCells();
@@ -422,14 +423,14 @@ public class BoardSolver {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine and cells that are guaranteed
-	 * to be a mine. When "safe" cell found, selected it and return true; When a
-	 * guaranteed mine found, set its flag value to true. Results in its colour
-	 * turning yellow.
+	 * Search the board for a cell that is not a mine and cells that are
+	 * guaranteed to be a mine. When "safe" cell found, selected it and return
+	 * true; When a guaranteed mine found, set its flag value to true. Results
+	 * in its colour turning yellow.
 	 * 
-	 * @return if either pattern was found. Will only return false if there are no
-	 *         cells left on the board that are considered "safe" and no cells that
-	 *         are guaranteed mines.
+	 * @return if either pattern was found. Will only return false if there are
+	 *         no cells left on the board that are considered "safe" and no
+	 *         cells that are guaranteed mines.
 	 */
 	public boolean patternMatch() {
 		cells = game.getCells();
@@ -635,7 +636,8 @@ public class BoardSolver {
 		for (int i = 0; i < cells.length && running.get() && !Thread.interrupted(); i++) {
 			for (int j = 0; j < cells[i].length && running.get() && !Thread.interrupted(); j++) {
 				Cell current = cells[i][j];
-				// Skip looking at cells open cell and cells that have already been checked
+				// Skip looking at cells open cell and cells that have already
+				// been checked
 				if (current.isOpen()) {
 					continue;
 				}
@@ -665,12 +667,14 @@ public class BoardSolver {
 							results.put(current, isMine);
 							pbSolver.reset();
 							optimiser.reset();
-							break; // Break as no need to check if cell is also a mine
+							break; // Break as no need to check if cell is also
+									// a mine
 						}
 						pbSolver.reset();
 						optimiser.reset();
 					} catch (ContradictionException ce) {
-						// Contradiction Exception is thrown when the tested cell is already known to be
+						// Contradiction Exception is thrown when the tested
+						// cell is already known to be
 						// safe/a mine.
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 						results.put(current, isMine);
@@ -719,12 +723,14 @@ public class BoardSolver {
 						}
 						pbSolver.reset();
 						optimiser.reset();
-						break; // Break as no need to check if cell is also a mine
+						break; // Break as no need to check if cell is also a
+								// mine
 					}
 					pbSolver.reset();
 					optimiser.reset();
 				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is already known to be
+					// Contradiction Exception is thrown when the tested cell is
+					// already known to be
 					// safe/a mine.
 					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 					for (Cell c : sea) {
@@ -764,12 +770,14 @@ public class BoardSolver {
 						results.put(current, isMine);
 						pbSolver.reset();
 						optimiser.reset();
-						break; // Break as no need to check if cell is also a mine
+						break; // Break as no need to check if cell is also a
+								// mine
 					}
 					pbSolver.reset();
 					optimiser.reset();
 				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is already known to be
+					// Contradiction Exception is thrown when the tested cell is
+					// already known to be
 					// safe/a mine.
 					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 					results.put(current, isMine);
@@ -802,7 +810,7 @@ public class BoardSolver {
 				try {
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver, false);
+					genBinaryConstraints(pbSolver);
 
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
@@ -817,19 +825,21 @@ public class BoardSolver {
 					if (!optimiser.isSatisfiable()) {
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 						// if (!isMine) {
-						// 	IVecInt t = new VecInt();
-						// 	IPBSolver pb = SolverFactory.newDefault();
-						// 	t.push(encodeCellId(current)*-1);
-						// 	genBinaryConstraints(pb, false);
-						// 	pb.addExactly(t, 1);
-						// 	int[] model = pb.findModel(t);
-						// 	printLits(model);
+						// IVecInt t = new VecInt();
+						// IPBSolver pb = SolverFactory.newDefault();
+						// t.push(encodeCellId(current)*-1);
+						// genBinaryConstraints(pb, false);
+						// pb.addExactly(t, 1);
+						// int[] model = pb.findModel(t);
+						// printLits(model);
 						// }
 						results.put(current, isMine);
-						break; // Break as no need to check if cell is also a mine
+						break; // Break as no need to check if cell is also a
+								// mine
 					}
 				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is already known to be
+					// Contradiction Exception is thrown when the tested cell is
+					// already known to be
 					// safe/a mine.
 					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 					results.put(current, isMine);
@@ -851,15 +861,10 @@ public class BoardSolver {
 
 					pbSolver = SolverFactory.newDefault();
 					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver, false);
+					genBinaryConstraints(pbSolver);
 
-					// Create literal for current cell
-					int noOfLits = Integer.toBinaryString(getSeaCells().size()).length();
-
-					for (int i = 0; i < noOfLits; i++) {
-						lits.push(encodeLit(i));
-						coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
-					}
+					lits.push(encodeCellId(sea.get(0)));
+					coeffs.push(BigInteger.ONE);
 					// Safe/Mine
 					pbSolver.addExactly(lits, coeffs, cellWeight);
 
@@ -874,12 +879,14 @@ public class BoardSolver {
 						}
 						pbSolver.reset();
 						optimiser.reset();
-						break; // Break as no need to check if cell is also a mine
+						break; // Break as no need to check if cell is also a
+								// mine
 					}
 					pbSolver.reset();
 					optimiser.reset();
 				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is already known to be
+					// Contradiction Exception is thrown when the tested cell is
+					// already known to be
 					// safe/a mine.
 					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 					for (Cell c : sea) {
@@ -897,7 +904,7 @@ public class BoardSolver {
 		return results;
 	}
 
-	public void genBinaryConstraints(IPBSolver pbSolver, boolean checkSea) throws ContradictionException {
+	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
 
@@ -945,21 +952,6 @@ public class BoardSolver {
 		lits.clear();
 		coeffs.clear();
 
-		// for (int i = 0; i < openShore.size() && running.get() &&
-		// !Thread.interrupted(); i++) {
-		// lits.clear();
-		// coeffs.clear();
-		// Cell current = openShore.get(i);
-
-		// for (Cell c : getNeighbours(current)) {
-		// lits.push(encodeCellId(c));
-		// coeffs.push(BigInteger.ONE);
-		// }
-		// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
-
-		// lits.clear();
-		// coeffs.clear();
-		// }
 	}
 
 	public Map<Cell, Double> oldCalcAllCellsProb() {
@@ -1037,17 +1029,6 @@ public class BoardSolver {
 		return sortedByCount;
 	}
 
-	public void printLits(int[] model) {
-		String str = "";
-		for (int i = 0; i < model.length; i++) {
-				str += "" + model[i] + ", ";
-		}
-		System.out.println(str);
-		if (!str.equals("")) {
-			System.out.println();
-		}
-	}
-
 	public void calcAllCellsProb() {
 		cells = game.getCells();
 		// Key = number of mines in solution(s)
@@ -1057,7 +1038,7 @@ public class BoardSolver {
 		pbSolver = SolverFactory.newDefault();
 
 		try {
-			genBinaryConstraints(pbSolver, false);
+			genBinaryConstraints(pbSolver);
 		} catch (ContradictionException e3) {
 			e3.printStackTrace();
 		}
@@ -1162,20 +1143,32 @@ public class BoardSolver {
 				}
 				top = top.add(BigIntegerMath.binomial(seaSize, remainingMines).multiply(BigInteger.valueOf(count)));
 			}
-			BigDecimal prob = new BigDecimal(top);
-			prob = prob.divide(new BigDecimal(T), MathContext.DECIMAL128);
+			BigFraction prob = new BigFraction(top, T);
 			current.setProb(prob.doubleValue());
 		}
 		game.refresh();
 	}
 
+	public void printLits(int[] model) {
+		String str = "";
+		for (int i = 0; i < model.length; i++) {
+			str += "" + model[i] + ", ";
+		}
+		System.out.println(str);
+		if (!str.equals("")) {
+			System.out.println();
+		}
+	}
+
 	/**
-	 * When passed a cell and a board, create a unique identifier (a single integer)
-	 * for that cell. To be used for creating litrals
+	 * When passed a cell and a board, create a unique identifier (a single
+	 * integer) for that cell. To be used for creating litrals
 	 * 
-	 * @param c     Cell to encode.
-	 * @param board Board the cell is present in, used to get the width of the
-	 *              board.
+	 * @param c
+	 *            Cell to encode.
+	 * @param board
+	 *            Board the cell is present in, used to get the width of the
+	 *            board.
 	 * @return Unique integer identifier for given cell.
 	 */
 	private int encodeCellId(Cell c) {
@@ -1185,9 +1178,11 @@ public class BoardSolver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id    Unique encoded identity id.
-	 * @param board Board the cell would be present in, used to get the width of the
-	 *              board.
+	 * @param id
+	 *            Unique encoded identity id.
+	 * @param board
+	 *            Board the cell would be present in, used to get the width of
+	 *            the board.
 	 * @return Cell that the id refers to.
 	 */
 	private Cell decodeCellId(int id) {
@@ -1296,8 +1291,10 @@ public class BoardSolver {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	private int calcFlaggedNeighbours(int x, int y) {
@@ -1315,8 +1312,10 @@ public class BoardSolver {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x X-axis coordinate of cell.
-	 * @param y Y-axis coordinate of cell.
+	 * @param x
+	 *            X-axis coordinate of cell.
+	 * @param y
+	 *            Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	private int calcClosedNeighbours(int x, int y) {
