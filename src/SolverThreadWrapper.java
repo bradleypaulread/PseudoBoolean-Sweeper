@@ -85,7 +85,7 @@ public class SolverThreadWrapper implements Runnable {
                 solver.SATHint();
             }
         } else if (prob) {
-            new BoardSolver(game, running).calcAllCellsProb();
+            new BoardSolver(game, running).displayProb();
         } else if (sim) {
             if (patternMatch && SAT) {
                 BoardSolver solver = new BoardSolver(game, running);
