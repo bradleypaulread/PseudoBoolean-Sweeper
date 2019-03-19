@@ -1033,7 +1033,12 @@ public class BoardSolver {
 		cells = game.getCells();
 		// Key = number of mines in solution(s)
 		// Value = list of the solutions containing key number of mines
-		Map<Integer, List<List<Cell>>> solutions = new HashMap<>();
+		Map<Cell, Map<Integer, Integer>> solutions = new HashMap<>();
+
+		BigInteger T = new BigInteger("0");
+		BigFraction seaT = new BigFraction(0);
+		int totalMines = game.getNoOfMines();
+		int seaSize = getSeaCells().size();
 
 		pbSolver = SolverFactory.newDefault();
 
@@ -1050,6 +1055,7 @@ public class BoardSolver {
 				int[] model = pbSolver.model();
 				int noOfMines = 0;
 				for (int i : model) {
+					// Test if lit is for a cell and if cell is
 					boolean mine = i < 0 ? false : true;
 					Cell testForCell = decodeCellId(i);
 					if (testForCell != null && mine) {
@@ -1058,14 +1064,37 @@ public class BoardSolver {
 						noOfMines++;
 					}
 				}
-				List<List<Cell>> testForNull = solutions.get(noOfMines);
-				if (testForNull == null) {
-					List<List<Cell>> temp = new ArrayList<>();
-					temp.add(currentSol);
-					solutions.put(noOfMines, temp);
-				} else {
-					testForNull.add(currentSol);
+
+				// Increment cell config count 
+				//    (number of times a cell has appeared in a certain config)
+				for (Cell c : currentSol) {
+					Map<Integer, Integer> testForNull = solutions.get(c);
+					if (testForNull == null) {
+						Map<Integer, Integer> temp = new HashMap<>();
+						temp.put(noOfMines, 1);
+						solutions.put(c, temp);
+					} else {
+						Integer testForSol = testForNull.get(noOfMines);
+						if (testForSol == null) {
+							testForNull.put(noOfMines, 1);
+						} else {
+							testForNull.put(noOfMines, testForSol + 1);
+						}
+					}	
 				}
+
+				// Increment T
+				int remainingMines = totalMines - currentSol.size();
+				System.out.println(remainingMines);
+				BigInteger toAdd = BigIntegerMath.binomial(seaSize, remainingMines);
+				T = T.add(toAdd);
+				BigFraction s;
+				if (remainingMines == 0) {
+					s = new BigFraction(0);
+				} else {
+					s = new BigFraction(seaSize, remainingMines);
+				}
+				seaT = seaT.add(s.multiply(toAdd));
 
 				// Find another solution
 				for (int i = 0; i < model.length; i++) {
@@ -1083,29 +1112,6 @@ public class BoardSolver {
 		if (!running.get()) {
 			return;
 		}
-		BigInteger T = new BigInteger("0");
-		BigDecimal seaT = new BigDecimal("0");
-		int totalMines = game.getNoOfMines();
-		int seaSize = getSeaCells().size();
-		// Iterate over map
-		for (Map.Entry<Integer, List<List<Cell>>> pair : solutions.entrySet()) {
-			Integer noOfMines = pair.getKey();
-			Integer noOfConfigs = pair.getValue().size();
-
-			int remainingMines = totalMines - noOfMines;
-			// System.out.println(pair.getValue());
-			BigInteger bioExpan = BigIntegerMath.binomial(seaSize, remainingMines);
-			BigInteger toAdd = bioExpan.multiply(BigInteger.valueOf(noOfConfigs));
-
-			T = T.add(toAdd);
-			if (seaSize > 0) {
-				BigDecimal temp1 = new BigDecimal(remainingMines);
-				BigDecimal temp2 = new BigDecimal(seaSize);
-				BigDecimal temp = temp1.divide(temp2, MathContext.DECIMAL128);
-
-				seaT = seaT.add(temp.multiply(new BigDecimal(toAdd)));
-			}
-		}
 		// System.out.println("No. of solutions: " + noOfSolutions);
 		// System.out.print("Solutions Map: ");
 		// for (Integer i : solutions.keySet()) {
@@ -1113,11 +1119,13 @@ public class BoardSolver {
 		// }
 		// System.out.println("Solutions List: " + solutions);
 		// System.out.println("T: " + T);
+		System.out.println(seaT);
 		if (seaSize > 0) {
-			BigDecimal seaProb = seaT;
-			seaProb = seaProb.divide(new BigDecimal(T), MathContext.DECIMAL128);
+			BigFraction seaProb = seaT.divide(T);
+			Double seaProbDouble = seaProb.doubleValue();
 			for (Cell c : getSeaCells()) {
-				c.setProb(seaProb.doubleValue());
+				//c.setProb(seaProbDouble);
+				// System.out.println("" + c + " - " + seaProbDouble);
 			}
 		}
 
@@ -1126,27 +1134,28 @@ public class BoardSolver {
 			if (current.isFlagged()) {
 				continue;
 			}
-			BigInteger top = new BigInteger("0");
-			for (Map.Entry<Integer, List<List<Cell>>> pair : solutions.entrySet()) {
-				int count = 0;
-				Integer noOfMines = pair.getKey();
-				int remainingMines = totalMines - noOfMines;
-				List<List<Cell>> configs = pair.getValue();
-				// Count the number of times the cell occurs in solutions
-				for (List<Cell> list : configs) {
-					for (Cell c : list) {
-						if (current == c) {
-							count++;
-							break;
-						}
-					}
+
+			Map<Integer, Integer> configs = solutions.get(current);
+			BigInteger top = BigInteger.ZERO;
+			if (configs != null) {
+				for (Map.Entry<Integer, Integer> pair : configs.entrySet()) {
+					int n = seaSize;
+					int k = totalMines - pair.getKey();
+					BigInteger bio = BigIntegerMath.binomial(n, k);
+
+					top = top.add(bio.multiply(BigInteger.valueOf(pair.getValue())));
 				}
-				top = top.add(BigIntegerMath.binomial(seaSize, remainingMines).multiply(BigInteger.valueOf(count)));
 			}
-			BigFraction prob = new BigFraction(top, T);
-			current.setProb(prob.doubleValue());
+			BigFraction cellProb = new BigFraction(top, T);
+			Double cellProbDouble = cellProb.doubleValue();
+			System.out.println("" + current + " - " + cellProbDouble);
+			current.setProb(cellProbDouble);
 		}
 		game.refresh();
+	}
+
+	public void displayProb() {
+
 	}
 
 	public void printLits(int[] model) {
