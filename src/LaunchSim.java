@@ -1,5 +1,10 @@
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import com.google.gson.Gson;
 
 /*
  * Main.java
@@ -13,6 +18,30 @@ import java.util.concurrent.TimeUnit;
 
 public class LaunchSim {
 	public static void main(String[] args) {
+
+		// Gson gson = new Gson();
+
+		// PrintWriter writer;
+		// try {
+		// 	writer = new PrintWriter("resources/easyFields.txt", "UTF-8");
+		// 	for (int i = 0; i < 10000; i++) {
+		// 		writer.println(gson.toJson(new MineField(9, 9, 10)));
+		// 	}
+		// 	writer.close();
+		// 	writer = new PrintWriter("resources/mediumFields.txt", "UTF-8");
+		// 	for (int i = 0; i < 10000; i++) {
+		// 		writer.println(gson.toJson(new MineField(16, 16, 40)));
+		// 	}
+		// 	writer.close();
+		// 	writer = new PrintWriter("resources/hardFields.txt", "UTF-8");
+		// 	for (int i = 0; i < 10000; i++) {
+		// 		writer.println(gson.toJson(new MineField(16, 30, 99)));
+		// 	}
+		// 	writer.close();
+		// } catch (FileNotFoundException | UnsupportedEncodingException e) {
+		// 	e.printStackTrace();
+		// }
+
 		int consoleNum = 0;
 		int noOfSims = 5000;
 		System.out.println("Started");

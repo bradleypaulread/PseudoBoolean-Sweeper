@@ -151,7 +151,11 @@ public class Board extends JPanel {
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 				g.setColor(Color.BLACK);
 				g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 4)));
-				g.drawString(String.format("%.2f", cellProb * 100.00) + "%", x + 2, y + ((int) (CELL_WIDTH / 3)));
+				String strProb = Double.toString(cellProb*100);
+				if (strProb.length() > 4) {
+					strProb = strProb.substring(0, 5);
+				}
+				g.drawString(strProb + "%", x + 2, y + ((int) (CELL_WIDTH / 3)));
 			} else {
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 			}

@@ -301,11 +301,11 @@ public class BoardSolver {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine. When such a cell is found
-	 * set its hint value to true. Results in its colour turning pink.
+	 * Search the board for a cell that is not a mine. When such a cell is found set
+	 * its hint value to true. Results in its colour turning pink.
 	 * 
-	 * @return if a non-mine cell was found. Will only return false if there are
-	 *         no cells left on the board that are considered "safe".
+	 * @return if a non-mine cell was found. Will only return false if there are no
+	 *         cells left on the board that are considered "safe".
 	 */
 	public void patternMatchHint() {
 		cells = game.getCells();
@@ -425,14 +425,14 @@ public class BoardSolver {
 	}
 
 	/**
-	 * Search the board for a cell that is not a mine and cells that are
-	 * guaranteed to be a mine. When "safe" cell found, selected it and return
-	 * true; When a guaranteed mine found, set its flag value to true. Results
-	 * in its colour turning yellow.
+	 * Search the board for a cell that is not a mine and cells that are guaranteed
+	 * to be a mine. When "safe" cell found, selected it and return true; When a
+	 * guaranteed mine found, set its flag value to true. Results in its colour
+	 * turning yellow.
 	 * 
-	 * @return if either pattern was found. Will only return false if there are
-	 *         no cells left on the board that are considered "safe" and no
-	 *         cells that are guaranteed mines.
+	 * @return if either pattern was found. Will only return false if there are no
+	 *         cells left on the board that are considered "safe" and no cells that
+	 *         are guaranteed mines.
 	 */
 	public boolean patternMatch() {
 		cells = game.getCells();
@@ -597,7 +597,10 @@ public class BoardSolver {
 				if (cells.size() > 1) {
 					idx = new Random().nextInt(cells.size());
 				}
-				Cell bestCell = cells.get(idx);	
+				if (cells.isEmpty()) {
+					return;
+				}
+				Cell bestCell = cells.get(idx);
 				System.out.println("Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
 				game.select(bestCell.getX(), bestCell.getY());
 			}
@@ -871,47 +874,51 @@ public class BoardSolver {
 		}
 
 		/*if (!sea.isEmpty()) {
-			for (int weight = 0; weight <= 1 && running.get() && !Thread.interrupted(); weight++) {
-				IVecInt lits = new VecInt();
-				IVec<BigInteger> coeffs = new Vec<BigInteger>();
-				BigInteger cellWeight = BigInteger.valueOf(weight);
-				try {
+			IVecInt lits = new VecInt();
+			IVec<BigInteger> coeffs = new Vec<BigInteger>();
+			BigInteger cellWeight = BigInteger.valueOf(1);
+			try {
 
-					pbSolver = SolverFactory.newDefault();
-					// Generate the known constraints on the board
-					genBinaryConstraints(pbSolver);
-
-					lits.push(encodeCellId(sea.get(0)));
-					coeffs.push(BigInteger.ONE);
-					// Safe/Mine
-					pbSolver.addExactly(lits, coeffs, cellWeight);
-
-					// Optimise wrapper
-					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
-					// Find if cell is safe or mine
-					if (!optimiser.isSatisfiable()) {
-						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-						for (Cell c : sea) {
-							results.put(c, isMine);
-						}
-						pbSolver.reset();
-						optimiser.reset();
-						break; // Break as no need to check if cell is also a
-								// mine
-					}
-					pbSolver.reset();
-					optimiser.reset();
-				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is
-					// already known to be
-					// safe/a mine.
-					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
+				pbSolver = SolverFactory.newDefault();
+				// Generate the known constraints on the board
+				genBinaryConstraints(pbSolver);
+				int count = 0;
+				int noOfLits = Integer.toBinaryString(sea.size()).length();
+				for (int i = 0; i < noOfLits; i++) {
+					lits.push(encodeLit(i));
+					coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+					count += Math.pow(2, i);
+				}
+				pbSolver.addExactly(lits, coeffs, cellWeight);
+				// Optimise wrapper
+				OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+				// Find if cell is safe or mine
+				if (!optimiser.isSatisfiable()) {
+					// for (int i : optimiser.model()) {
+					// 	System.out.print("" + i + ", ");
+					// }
+					boolean isMine = false;
 					for (Cell c : sea) {
 						results.put(c, isMine);
 					}
-				} catch (TimeoutException te) {
 				}
+				pbSolver.reset();
+				optimiser.reset();
+				// genBinaryConstraints(pbSolver);
+				// int remainingMines = game.getMinesLeft();
+				// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(remainingMines));
+				// optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+				// if (!optimiser.isSatisfiable()) {
+				// 	boolean isMine = true;
+				// 	for (Cell c : sea) {
+				// 		results.put(c, isMine);
+				// 	}
+				// }
+			} catch (ContradictionException ce) {
+				// Contradiction Exception is thrown when the tested cell is
+				// already known to be
+				// safe/a mine.
+			} catch (TimeoutException te) {
 			}
 		}*/
 
@@ -934,7 +941,7 @@ public class BoardSolver {
 		int noOfLits = Integer.toBinaryString(seaCells.size()).length();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
-		
+
 		if (!seaCells.isEmpty()) {
 			for (int i = 0; i < noOfLits; i++) {
 				lits.push(encodeLit(i));
@@ -969,7 +976,7 @@ public class BoardSolver {
 			lits.clear();
 			coeffs.clear();
 		}
-
+		pbSolver.setDBSimplificationAllowed(true);
 		lits.clear();
 		coeffs.clear();
 
@@ -1053,9 +1060,9 @@ public class BoardSolver {
 		cells = game.getCells();
 		// Key = Cell
 		// Value = Map of Integer to Integer
-		//		   Key = Number of mines in solution
-		//         Value = Coefficient 
-		//				   (number of times the cell appears in Key number of mine solutions)
+		// Key = Number of mines in solution
+		// Value = Coefficient
+		// (number of times the cell appears in Key number of mine solutions)
 		Map<Cell, Map<Integer, Integer>> solutions = new HashMap<>();
 
 		Map<Cell, Double> probs = new HashMap<>();
@@ -1089,9 +1096,9 @@ public class BoardSolver {
 						noOfMines++;
 					}
 				}
-
-				// Increment cell config count 
-				//    (number of times a cell has appeared in a certain config)
+				// System.out.println("\n");
+				// Increment cell config count
+				// (number of times a cell has appeared in a certain config)
 				for (Cell c : currentSol) {
 					Map<Integer, Integer> testForNull = solutions.get(c);
 					if (testForNull == null) {
@@ -1105,7 +1112,7 @@ public class BoardSolver {
 						} else {
 							testForNull.put(noOfMines, testForSol + 1);
 						}
-					}	
+					}
 				}
 
 				// Increment T
@@ -1124,7 +1131,7 @@ public class BoardSolver {
 				}
 				BigFraction toAddFraction = new BigFraction(toAdd, BigInteger.ONE);
 				BigFraction both = seaFrac.multiply(toAddFraction);
-				
+
 				seaT = seaT.add(both);
 
 				// Find another solution
@@ -1169,7 +1176,8 @@ public class BoardSolver {
 
 			Map<Integer, Integer> configs = solutions.get(current);
 			BigInteger top = BigInteger.ZERO;
-			// If a shore cell does not appear in any config then that cell has 0.0 probabilty of being a mine (is 100% safe)
+			// If a shore cell does not appear in any config then that cell has 0.0
+			// probabilty of being a mine (is 100% safe)
 			if (configs != null) {
 				for (Map.Entry<Integer, Integer> pair : configs.entrySet()) {
 					// Bionomal format, combination of n choose k
@@ -1192,13 +1200,16 @@ public class BoardSolver {
 
 	public void displayProb() {
 		Map<Cell, Double> probs = calcAllCellsProb();
+		if (probs == null) {
+			return;
+		}
 		for (Map.Entry<Cell, Double> pair : probs.entrySet()) {
 			Cell current = pair.getKey();
 			Double prob = pair.getValue();
-			
+
 			current.setProb(prob);
 		}
-		
+
 		List<Cell> probss = getBestCellProb(probs);
 		for (Cell c : probss) {
 			c.setBestCell();
@@ -1209,10 +1220,14 @@ public class BoardSolver {
 	public List<Cell> getBestCellProb(Map<Cell, Double> probs) {
 		List<Cell> cellsWithBestProb = new ArrayList<>();
 
+		if (probs == null) {
+			return cellsWithBestProb;
+		}
+
 		for (Map.Entry<Cell, Double> pair : probs.entrySet()) {
 			Cell current = pair.getKey();
 			Double prob = pair.getValue();
-			if(cellsWithBestProb.isEmpty()) {
+			if (cellsWithBestProb.isEmpty()) {
 				cellsWithBestProb.add(current);
 				continue;
 			}
@@ -1241,14 +1256,12 @@ public class BoardSolver {
 	}
 
 	/**
-	 * When passed a cell and a board, create a unique identifier (a single
-	 * integer) for that cell. To be used for creating litrals
+	 * When passed a cell and a board, create a unique identifier (a single integer)
+	 * for that cell. To be used for creating litrals
 	 * 
-	 * @param c
-	 *            Cell to encode.
-	 * @param board
-	 *            Board the cell is present in, used to get the width of the
-	 *            board.
+	 * @param c     Cell to encode.
+	 * @param board Board the cell is present in, used to get the width of the
+	 *              board.
 	 * @return Unique integer identifier for given cell.
 	 */
 	private int encodeCellId(Cell c) {
@@ -1258,11 +1271,9 @@ public class BoardSolver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id
-	 *            Unique encoded identity id.
-	 * @param board
-	 *            Board the cell would be present in, used to get the width of
-	 *            the board.
+	 * @param id    Unique encoded identity id.
+	 * @param board Board the cell would be present in, used to get the width of the
+	 *              board.
 	 * @return Cell that the id refers to.
 	 */
 	private Cell decodeCellId(int id) {
@@ -1371,10 +1382,8 @@ public class BoardSolver {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	private int calcFlaggedNeighbours(int x, int y) {
@@ -1392,10 +1401,8 @@ public class BoardSolver {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	private int calcClosedNeighbours(int x, int y) {

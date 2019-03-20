@@ -77,6 +77,8 @@ public class Minesweeper extends JFrame {
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menu = new JMenu("File");
 
+	SolverThreadWrapper thread = new SolverThreadWrapper(this);
+
 	private MineField mineField; // Blackbox minefield
 	private int width, height; // Width and Height of board (number of cells =
 								// width*height)
@@ -249,7 +251,6 @@ public class Minesweeper extends JFrame {
 	 * Load buttons to the JFrame and assign their action listeners.
 	 */
 	private void loadUI() {
-		SolverThreadWrapper[] thead = new SolverThreadWrapper[1];
 		Container controlBtns = new Container();
 		JPanel ptBtns = new JPanel();
 		JPanel SATBtns = new JPanel();
@@ -344,12 +345,11 @@ public class Minesweeper extends JFrame {
 		randCellBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
-			t1.setLoop();
-			t1.setOld();
-			t1.setSATSolve();			
-			thead[0] = t1;
-			t1.start();
+			thread = new SolverThreadWrapper(this);
+			thread.setLoop();
+			thread.setOld();
+			thread.setSATSolve();			
+			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
@@ -357,10 +357,9 @@ public class Minesweeper extends JFrame {
 
 		SATHintBtn.addActionListener(e -> {
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
-			t1.setSATHint();
-			thead[0] = t1;
-			t1.start();
+			thread = new SolverThreadWrapper(this);
+			thread.setSATHint();
+			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
@@ -368,19 +367,17 @@ public class Minesweeper extends JFrame {
 
 		SATAssistBtn.addActionListener(e -> {
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
-			t1.setSATSolve();
-			thead[0] = t1;
-			t1.start();
+			thread = new SolverThreadWrapper(this);
+			thread.setSATSolve();
+			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
 		SATProbBtn.addActionListener(e -> {
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
-			t1.setProbSolve();
-			thead[0] = t1;
-			t1.start();
+			thread = new SolverThreadWrapper(this);
+			thread.setProbSolve();
+			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
@@ -397,30 +394,27 @@ public class Minesweeper extends JFrame {
 		SATSolveBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
-			t1.setLoop();
-			t1.setSATSolve();
-			thead[0] = t1;
-			t1.start();
+			thread = new SolverThreadWrapper(this);
+			thread.setLoop();
+			thread.setSATSolve();
+			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
 		fullAutoBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
-			t1.setLoop();
-			t1.setPatternMatchSolve();
-			t1.setSATSolve();
-			t1.setProbSolve();
-			thead[0] = t1;
-			t1.start();
+			thread = new SolverThreadWrapper(this);
+			thread.setLoop();
+			thread.setPatternMatchSolve();
+			thread.setSATSolve();
+			thread.setProbSolve();
+			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
 		stopBtn.addActionListener(e -> {
-			thead[0].end();
-			System.out.println(thead);
+			thread.end();
 			stopBtn.setEnabled(false);
 			enableAllBtns();
 		});
@@ -703,6 +697,7 @@ public class Minesweeper extends JFrame {
 	 * Generate a fresh board and a new minefield.
 	 */
 	public void reset() {
+		thread.end();
 		isGameOver = false;
 		endTime = 0;
 		currentGameTime = 0;
