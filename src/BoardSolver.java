@@ -2,6 +2,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.google.common.math.BigIntegerMath;
+import com.google.gson.Gson;
 
 import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.Vec;
@@ -907,17 +909,21 @@ public class BoardSolver {
 	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
+		List<Cell> seaCells = getSeaCells();
+		List<Cell> landCells = getLandCells();
 
 		int noOfMines = game.getNoOfMines();
 		int noOfKnownMines = knownMines.size();
 		int noOfUnknownShore = closedShore.size() - noOfKnownMines;
-		int noOfLits = Integer.toBinaryString(getSeaCells().size()).length();
+		int noOfLits = Integer.toBinaryString(seaCells.size()).length();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
-
-		for (int i = 0; i < noOfLits; i++) {
-			lits.push(encodeLit(i));
-			coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+		
+		if (!seaCells.isEmpty()) {
+			for (int i = 0; i < noOfLits; i++) {
+				lits.push(encodeLit(i));
+				coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+			}
 		}
 
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
@@ -931,7 +937,6 @@ public class BoardSolver {
 		lits.clear();
 		coeffs.clear();
 		// Every open cell is guarenteed to not be a mine (cell=0)
-		List<Cell> landCells = getLandCells();
 		for (Cell current : landCells) {
 			lits.push(encodeCellId(current));
 			coeffs.push(BigInteger.ONE);
@@ -1060,15 +1065,16 @@ public class BoardSolver {
 				int[] model = pbSolver.model();
 				int noOfMines = 0;
 				for (int i : model) {
+					// System.out.print("" + i + ", ");
 					// Test if lit is for a cell and if cell is
 					boolean mine = i < 0 ? false : true;
 					Cell testForCell = decodeCellId(i);
 					if (testForCell != null && mine) {
-						// System.out.print("" + testForCell + ", ");
 						currentSol.add(testForCell);
 						noOfMines++;
 					}
 				}
+				System.out.println();
 
 				// Increment cell config count 
 				//    (number of times a cell has appeared in a certain config)
@@ -1090,7 +1096,12 @@ public class BoardSolver {
 
 				// Increment T
 				int remainingMines = totalMines - currentSol.size();
-				BigInteger toAdd = BigIntegerMath.binomial(seaSize, remainingMines);
+				BigInteger toAdd;
+				if (seaSize > 0) {
+					toAdd = BigIntegerMath.binomial(seaSize, remainingMines);
+				} else {
+					toAdd = BigInteger.ONE;
+				}
 				T = T.add(toAdd);
 
 				BigFraction seaFrac = BigFraction.ZERO;
@@ -1150,7 +1161,10 @@ public class BoardSolver {
 					// Bionomal format, combination of n choose k
 					int n = seaSize;
 					int k = totalMines - pair.getKey();
-					BigInteger bio = BigIntegerMath.binomial(n, k);
+					BigInteger bio = BigInteger.ONE;
+					if (n > 0) {
+						bio = BigIntegerMath.binomial(n, k);
+					}
 
 					top = top.add(bio.multiply(BigInteger.valueOf(pair.getValue())));
 				}
@@ -1167,10 +1181,38 @@ public class BoardSolver {
 		for (Map.Entry<Cell, Double> pair : probs.entrySet()) {
 			Cell current = pair.getKey();
 			Double prob = pair.getValue();
-
+			
 			current.setProb(prob);
 		}
+		
+		List<Cell> probss = getBestCellProb(probs);
+		for (Cell c : probss) {
+			c.setBestCell();
+		}
 		game.refresh();
+	}
+
+	public List<Cell> getBestCellProb(Map<Cell, Double> probs) {
+		List<Cell> cellsWithBestProb = new ArrayList<>();
+
+		for (Map.Entry<Cell, Double> pair : probs.entrySet()) {
+			Cell current = pair.getKey();
+			Double prob = pair.getValue();
+			if(cellsWithBestProb.isEmpty()) {
+				cellsWithBestProb.add(current);
+				continue;
+			}
+			Double currentBestProb = probs.get(cellsWithBestProb.get(0));
+			int val = prob.compareTo(currentBestProb);
+			if (val == 0) {
+				cellsWithBestProb.add(current);
+			} else if (val < 0) {
+				cellsWithBestProb.clear();
+				cellsWithBestProb.add(current);
+			}
+		}
+		// System.out.println(cellsWithBestProb);
+		return cellsWithBestProb;
 	}
 
 	public void printLits(int[] model) {

@@ -130,11 +130,24 @@ public class Board extends JPanel {
 	}
 
 	private void drawCell(Graphics g, int x, int y) {
-		if (cells[x / CELL_WIDTH][y / CELL_WIDTH].getProb() != null) {
-			double cellProb = cells[x / CELL_WIDTH][y / CELL_WIDTH].getProb();
-			if (!(cellProb == 1.0 && cells[x / CELL_WIDTH][y / CELL_WIDTH].isFlagged())) {
-				int redness = (int) (255 * cellProb);
-				g.setColor(new Color(255, 255 - redness, 255 - redness));
+		Cell cell = cells[x / CELL_WIDTH][y / CELL_WIDTH];
+		Double cellProb = cell.getProb();
+		if (cellProb != null) {
+			if (!cell.isFlagged()) {
+				Color cellColor;
+				if (cell.isBestCell()) {
+					cellColor = Color.WHITE;
+				} else if (cellProb <= 0.33) {
+					int density = (int) (255 - ((double) 255 * cellProb));
+					cellColor = new Color(130, density, 130);
+				} else if (cellProb > 0.33 && cellProb <= 0.66) {
+					int density = (int) (175 - ((double) 255 * cellProb));
+					cellColor = new Color(255, 248, density);
+				} else {
+					int density = (int) (255 * cellProb);
+					cellColor = new Color(255, 255 - density, 255 - density);
+				}
+				g.setColor(cellColor);
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 				g.setColor(Color.BLACK);
 				g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 4)));

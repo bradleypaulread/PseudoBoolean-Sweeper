@@ -923,6 +923,7 @@ public class Minesweeper extends JFrame {
 		for (Cell[] col : cells) {
 			for (Cell c : col) {
 				c.resetProb();
+				c.resetBestCell();
 			}
 		}
 	}

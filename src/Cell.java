@@ -23,6 +23,7 @@ public class Cell {
 	private boolean fail;
 	private boolean marked;
 	private Double prob; // Percentage of cell being a mine
+	private boolean bestCell; // If cell has the lowest prob of being a mine
 
 	public Cell(int x, int y) {
 		this.x = x;
@@ -33,6 +34,24 @@ public class Cell {
 		mineHint = false;
 		fail = false;
 		prob = null;
+	}
+
+	/**
+	 * @return the bestCell
+	 */
+	public boolean isBestCell() {
+		return bestCell;
+	}
+
+	/**
+	 * @param bestCell the bestCell to set
+	 */
+	public void setBestCell() {
+		this.bestCell = true;
+	}
+
+	public void resetBestCell() {
+		this.bestCell = false;
 	}
 
 	/**
