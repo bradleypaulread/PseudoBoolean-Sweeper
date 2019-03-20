@@ -395,7 +395,7 @@ public class Minesweeper extends JFrame {
 		fullAutoBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, true, true, true, true, false);
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, true, true, true);
 			thead[0] = t1;
 			stopBtn.setEnabled(true);
 		});

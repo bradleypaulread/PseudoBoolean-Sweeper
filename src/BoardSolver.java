@@ -579,13 +579,29 @@ public class BoardSolver {
 		return change;
 	}
 
-	public boolean jointSolve() {
+	public boolean patternAndSATSolve() {
 		if (!patternMatch()) {
 			if (!SATSolve()) {
 				return false;
 			}
 		}
 		return true;
+	}
+
+	public void fullSolve() {
+		if (!patternMatch()) {
+			if (!SATSolve()) {
+				Map<Cell, Double> probs = calcAllCellsProb();
+				List<Cell> cells = getBestCellProb(probs);
+				int idx = 0;
+				if (cells.size() > 1) {
+					idx = new Random().nextInt(cells.size());
+				}
+				Cell bestCell = cells.get(idx);
+				System.out.println("Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
+				game.select(bestCell.getX(), bestCell.getY());
+			}
+		}
 	}
 
 	private void genAllConstraints(IPBSolver solver) throws ContradictionException {
@@ -1030,7 +1046,6 @@ public class BoardSolver {
 			}
 		}
 		game.refresh();
-		System.out.println();
 		return sortedByCount;
 	}
 
@@ -1074,7 +1089,6 @@ public class BoardSolver {
 						noOfMines++;
 					}
 				}
-				System.out.println();
 
 				// Increment cell config count 
 				//    (number of times a cell has appeared in a certain config)
