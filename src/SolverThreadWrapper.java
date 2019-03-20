@@ -6,71 +6,77 @@ public class SolverThreadWrapper implements Runnable {
 
     private final AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
-    boolean sim = false;
-    boolean old = false;
-    boolean quiet, hint, loop, patternMatch, SAT, prob;
+    boolean quiet, hint, loop, patternMatch, SAT, prob, sim, old;
     Thread thread;
 
     public SolverThreadWrapper(Minesweeper g) {
-        thread = new Thread(this, Integer.toString(threadID++));
         game = g;
-        this.quiet = false;
-        this.loop = false;
-        this.patternMatch = false;
-        this.SAT = false;
-        this.prob = false;
-        this.prob = true;
-        thread.start();
-    }
 
-    public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT,
-            boolean prob) {
-        thread = new Thread(this, Integer.toString(threadID++));
-        game = g;
-        this.quiet = quiet;
-        this.loop = loop;
-        this.patternMatch = patternMatch;
-        this.SAT = SAT;
-        this.prob = prob;
-        thread.start();
-    }
+        reset();
 
-    public SolverThreadWrapper(Minesweeper g, boolean quiet, boolean loop, boolean patternMatch, boolean SAT,
-            boolean old, boolean prob) {
         thread = new Thread(this, Integer.toString(threadID++));
-        game = g;
-        this.quiet = quiet;
-        this.loop = loop;
-        this.patternMatch = patternMatch;
-        this.SAT = SAT;
-        this.prob = prob;
-        this.old = old;
-        thread.start();
-    }
-
-    public SolverThreadWrapper(Minesweeper g, boolean hint, boolean SAT) {
-        thread = new Thread(this, Integer.toString(threadID++));
-        game = g;
-        this.hint = hint;
-        this.quiet = false;
-        this.loop = false;
-        this.patternMatch = false;
-        this.SAT = SAT;
-        this.prob = false;
-        thread.start();
     }
 
     /**
      * For use by simulators only.
      */
     public SolverThreadWrapper(Minesweeper g, boolean sim, boolean patternMatch, boolean SAT, boolean prob) {
-        thread = new Thread(this, Integer.toString(threadID++));
         game = g;
         this.patternMatch = patternMatch;
         this.SAT = SAT;
         this.prob = prob;
         this.sim = sim;
-        thread.start();
+        thread = new Thread(this, Integer.toString(threadID++));
+    }
+
+    public void start() {
+        this.thread.start();
+    }
+    
+    public void end() {
+        running.set(false);
+        thread.interrupt();
+    }
+
+    public void reset() {
+        this.sim = false;
+        this.old = false;
+        this.quiet = false;
+        this.loop = false;
+        this.hint = false;
+        this.patternMatch = false;
+        this.SAT = false;
+        this.prob = false;
+    }
+
+    public void setPatternMatchHint() {
+        this.hint = true;
+        this.patternMatch = true;
+    }
+
+    public void setSATHint() {
+        this.hint = true;
+        this.SAT = true;
+    }
+
+    public void setLoop() {
+        this.loop = true;
+    }
+
+    public void setPatternMatchSolve() {
+        this.patternMatch = true;
+    }
+    
+    public void setSATSolve() {
+        this.SAT = true;
+    }
+    
+    public void setProbSolve() {
+        this.prob = true;
+    }
+
+    public void setOld() {
+        this.old = true;
     }
 
     @Override
@@ -142,11 +148,6 @@ public class SolverThreadWrapper implements Runnable {
         if (!game.isGameOver()) {
             game.enableAllBtns();
         }
-        thread.interrupt();
-    }
-
-    public void end() {
-        running.set(false);
         thread.interrupt();
     }
 

@@ -597,7 +597,7 @@ public class BoardSolver {
 				if (cells.size() > 1) {
 					idx = new Random().nextInt(cells.size());
 				}
-				Cell bestCell = cells.get(idx);
+				Cell bestCell = cells.get(idx);	
 				System.out.println("Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
 				game.select(bestCell.getX(), bestCell.getY());
 			}

@@ -344,8 +344,12 @@ public class Minesweeper extends JFrame {
 		randCellBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, false, true, true, false);
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			t1.setLoop();
+			t1.setOld();
+			t1.setSATSolve();			
 			thead[0] = t1;
+			t1.start();
 			stopBtn.setEnabled(true);
 		});
 
@@ -353,8 +357,10 @@ public class Minesweeper extends JFrame {
 
 		SATHintBtn.addActionListener(e -> {
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, true, true);
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			t1.setSATHint();
 			thead[0] = t1;
+			t1.start();
 			stopBtn.setEnabled(true);
 		});
 
@@ -362,15 +368,19 @@ public class Minesweeper extends JFrame {
 
 		SATAssistBtn.addActionListener(e -> {
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, false, false, true, false);
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			t1.setSATSolve();
 			thead[0] = t1;
+			t1.start();
 			stopBtn.setEnabled(true);
 		});
 
 		SATProbBtn.addActionListener(e -> {
 			disableAllBtns();
 			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			t1.setProbSolve();
 			thead[0] = t1;
+			t1.start();
 			stopBtn.setEnabled(true);
 		});
 
@@ -387,21 +397,30 @@ public class Minesweeper extends JFrame {
 		SATSolveBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, false, true, false);
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			t1.setLoop();
+			t1.setSATSolve();
 			thead[0] = t1;
+			t1.start();
 			stopBtn.setEnabled(true);
 		});
 
 		fullAutoBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
-			SolverThreadWrapper t1 = new SolverThreadWrapper(this, false, true, true, true, true);
+			SolverThreadWrapper t1 = new SolverThreadWrapper(this);
+			t1.setLoop();
+			t1.setPatternMatchSolve();
+			t1.setSATSolve();
+			t1.setProbSolve();
 			thead[0] = t1;
+			t1.start();
 			stopBtn.setEnabled(true);
 		});
 
 		stopBtn.addActionListener(e -> {
 			thead[0].end();
+			System.out.println(thead);
 			stopBtn.setEnabled(false);
 			enableAllBtns();
 		});
