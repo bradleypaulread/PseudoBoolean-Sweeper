@@ -873,23 +873,19 @@ public class BoardSolver {
 			return null;
 		}
 
-		/*if (!sea.isEmpty()) {
+		if (!sea.isEmpty()) {
 			IVecInt lits = new VecInt();
 			IVec<BigInteger> coeffs = new Vec<BigInteger>();
-			BigInteger cellWeight = BigInteger.valueOf(1);
 			try {
-
 				pbSolver = SolverFactory.newDefault();
 				// Generate the known constraints on the board
 				genBinaryConstraints(pbSolver);
-				int count = 0;
 				int noOfLits = Integer.toBinaryString(sea.size()).length();
 				for (int i = 0; i < noOfLits; i++) {
 					lits.push(encodeLit(i));
-					coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
-					count += Math.pow(2, i);
+					coeffs.push(BigInteger.ONE);
 				}
-				pbSolver.addExactly(lits, coeffs, cellWeight);
+				pbSolver.addAtLeast(lits, coeffs, BigInteger.ONE);
 				// Optimise wrapper
 				OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 				// Find if cell is safe or mine
@@ -904,23 +900,13 @@ public class BoardSolver {
 				}
 				pbSolver.reset();
 				optimiser.reset();
-				// genBinaryConstraints(pbSolver);
-				// int remainingMines = game.getMinesLeft();
-				// pbSolver.addExactly(lits, coeffs, BigInteger.valueOf(remainingMines));
-				// optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-				// if (!optimiser.isSatisfiable()) {
-				// 	boolean isMine = true;
-				// 	for (Cell c : sea) {
-				// 		results.put(c, isMine);
-				// 	}
-				// }
 			} catch (ContradictionException ce) {
 				// Contradiction Exception is thrown when the tested cell is
 				// already known to be
 				// safe/a mine.
 			} catch (TimeoutException te) {
 			}
-		}*/
+		}
 
 		if (Thread.interrupted() || !running.get()) {
 			return null;
