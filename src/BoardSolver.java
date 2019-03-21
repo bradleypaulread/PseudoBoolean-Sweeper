@@ -535,9 +535,6 @@ public class BoardSolver {
 		if (!quiet) {
 			game.refresh();
 		}
-		if (!game.isGameOver() && game.getProb()) {
-			calcAllCellsProb();
-		}
 		return change;
 	}
 
@@ -883,7 +880,9 @@ public class BoardSolver {
 				int noOfLits = Integer.toBinaryString(sea.size()).length();
 				for (int i = 0; i < noOfLits; i++) {
 					lits.push(encodeLit(i));
-					coeffs.push(BigInteger.ONE);
+					// coeffs.push(BigInteger.ONE);
+					coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+
 				}
 				pbSolver.addAtLeast(lits, coeffs, BigInteger.ONE);
 				// Optimise wrapper
@@ -900,6 +899,36 @@ public class BoardSolver {
 				}
 				pbSolver.reset();
 				optimiser.reset();
+				lits.clear();
+				coeffs.clear();
+				genBinaryConstraints(pbSolver);
+				for (int i = 0; i < noOfLits; i++) {
+					lits.push(encodeLit(i));
+					coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
+					// coeffs.push(BigInteger.ONE);
+				}
+				pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(sea.size()-1));
+				// Optimise wrapper
+				optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+				// Find if cell is safe or mine
+				if (!optimiser.isSatisfiable()) {
+					// int[] model = optimiser.model();
+					// for (int i : model) {
+					// 	System.out.print("" + i + ", ");
+					// }
+					// System.out.println();
+					// System.out.println();
+					// for (int i = 0; i < model.length; i++) {
+					// 	model[i] = model[i] * -1;
+					// }
+					// IVecInt block = new VecInt(model);
+	
+					// optimiser.addBlockingClause(block);
+					boolean isMine = true;
+					for (Cell c : sea) {
+						results.put(c, isMine);
+					}
+				}
 			} catch (ContradictionException ce) {
 				// Contradiction Exception is thrown when the tested cell is
 				// already known to be
@@ -931,9 +960,11 @@ public class BoardSolver {
 		if (!seaCells.isEmpty()) {
 			for (int i = 0; i < noOfLits; i++) {
 				lits.push(encodeLit(i));
+				// System.out.println(encodeLit(i));
 				coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 			}
 		}
+		pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(seaCells.size()));
 
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
@@ -1103,6 +1134,7 @@ public class BoardSolver {
 
 				// Increment T
 				int remainingMines = totalMines - currentSol.size();
+
 				BigInteger toAdd;
 				if (seaSize > 0) {
 					toAdd = BigIntegerMath.binomial(seaSize, remainingMines);
