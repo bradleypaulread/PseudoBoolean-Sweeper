@@ -4,17 +4,17 @@ public class SolverThreadWrapper implements Runnable {
 
     private static int threadID = 0;
 
-    private final AtomicBoolean running = new AtomicBoolean(true);
+    private volatile AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
     boolean quiet, hint, loop, patternMatch, SAT, prob, sim, old;
-    Thread thread;
+
+    private volatile Thread thread;
+    private BoardSolver solver;
 
     public SolverThreadWrapper(Minesweeper g) {
         game = g;
 
         reset();
-
-        thread = new Thread(this, Integer.toString(threadID++));
     }
 
     /**
@@ -28,14 +28,18 @@ public class SolverThreadWrapper implements Runnable {
         this.sim = sim;
         thread = new Thread(this, Integer.toString(threadID++));
     }
-
+    
     public void start() {
+        this.solver = new BoardSolver(game, running);
+        this.thread = new Thread(this);
         this.thread.start();
     }
     
     public void end() {
+        if (solver != null) solver.reset();
         running.set(false);
-        thread.interrupt();
+        if (thread != null) thread.interrupt();
+        thread = null;
     }
 
     public void reset() {
@@ -82,7 +86,6 @@ public class SolverThreadWrapper implements Runnable {
     @Override
     public void run() {
         if (hint) {
-            BoardSolver solver = new BoardSolver(game, running);
             if (patternMatch && !SAT) {
                 solver.patternMatchHint();
             } else if (!patternMatch && SAT) {
@@ -94,11 +97,10 @@ public class SolverThreadWrapper implements Runnable {
             if (patternMatch && SAT) {
                 fullSolve();
             } else {
-                new BoardSolver(game, running).displayProb();
+                solver.displayProb();
             }
         } else if (sim) {
             if (patternMatch && SAT) {
-                BoardSolver solver = new BoardSolver(game, running);
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.patternAndSATSolve()) {
@@ -106,7 +108,6 @@ public class SolverThreadWrapper implements Runnable {
                     }
                 }
             } else if (patternMatch) {
-                BoardSolver solver = new BoardSolver(game, running);
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.patternMatch()) {
@@ -114,7 +115,6 @@ public class SolverThreadWrapper implements Runnable {
                     }
                 }
             } else if (SAT) {
-                BoardSolver solver = new BoardSolver(game, running);
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.SATSolve()) {
@@ -129,70 +129,56 @@ public class SolverThreadWrapper implements Runnable {
                 patternMatchSolve();
             } else if (SAT) {
                 if (old) {
-                    new BoardSolver(game, running).oldSATHint();
+                    solver.oldSATHint();
                 } else {
                     SATSolve();
                 }
             }
         } else { // Just Assist
             if (patternMatch && SAT) {
-                new BoardSolver(game, running).patternAndSATSolve();
+                solver.patternAndSATSolve();
             } else if (patternMatch) {
-                new BoardSolver(game, running).patternMatch();
+                solver.patternMatch();
             } else if (SAT) {
-                new BoardSolver(game, running).SATSolve();
+                solver.SATSolve();
             }
         }
-        end();
+        // end();
         game.getStopBtn().setEnabled(false);
         if (!game.isGameOver()) {
             game.enableAllBtns();
         }
-        thread.interrupt();
+        solver.reset();
+        // if (thread != null) thread.interrupt();
     }
 
     private void patternMatchSolve() {
-        BoardSolver solver = new BoardSolver(game, running);
-        while (running.get() && !game.isGameOver() && solver.patternMatch()) {
-            if (Thread.interrupted()) {
-                break;
-            }
+        Thread thisThread = Thread.currentThread();
+        while (thisThread == thread && running.get() && !game.isGameOver() && solver.patternMatch()) {
         }
     }
 
     private void SATSolve() {
-        BoardSolver solver = new BoardSolver(game, running);
-        while (running.get() && !game.isGameOver() && solver.SATSolve()) {
-            if (Thread.interrupted()) {
-                break;
-            }
+        Thread thisThread = Thread.currentThread();
+        while (thisThread == thread && running.get() && !game.isGameOver() && solver.SATSolve()) {
         }
     }
 
     private void oldSATSolve() {
-        BoardSolver solver = new BoardSolver(game, running);
-        while (running.get() && !game.isGameOver() && solver.oldSATSolve()) {
-            if (Thread.interrupted()) {
-                break;
-            }
+        Thread thisThread = Thread.currentThread();
+        while (thisThread == thread && running.get() && !game.isGameOver() && solver.oldSATSolve()) {
         }
     }
 
     private void jointSolve() {
-        BoardSolver solver = new BoardSolver(game, running);
-        while (running.get() && !game.isGameOver() && solver.patternAndSATSolve()) {
-            if (Thread.interrupted()) {
-                break;
-            }
+        Thread thisThread = Thread.currentThread();
+        while (thisThread == thread && running.get() && !game.isGameOver() && solver.patternAndSATSolve()) {
         }
     }
 
     private void fullSolve() {
-        BoardSolver solver = new BoardSolver(game, running);
-        while (running.get() && !game.isGameOver()) {
-            if (Thread.interrupted()) {
-                break;
-            }
+        Thread thisThread = Thread.currentThread();
+        while (thisThread == thread && running.get() && !game.isGameOver()) {
             solver.fullSolve();
         }
     }

@@ -365,6 +365,7 @@ public class BoardSolver {
 	public void SATHint() {
 		cells = game.getCells();
 		Map<Cell, Boolean> known = binaryShallowSolve();
+		reset();
 		if (known == null || !running.get()) {
 			return;
 		}
@@ -396,6 +397,7 @@ public class BoardSolver {
 	public void oldSATHint() {
 		cells = game.getCells();
 		Map<Cell, Boolean> known = shallowSolve();
+		reset();
 		if (known == null || !running.get()) {
 			return;
 		}
@@ -543,6 +545,7 @@ public class BoardSolver {
 		cells = game.getCells();
 		boolean change = false;
 		Map<Cell, Boolean> known = binaryShallowSolve();
+		reset();
 		if (known == null || !running.get()) {
 			return false;
 		}
@@ -666,7 +669,7 @@ public class BoardSolver {
 					IVec<BigInteger> coeff = new Vec<BigInteger>();
 					BigInteger cellWeight = BigInteger.valueOf(weight);
 					try {
-						pbSolver = SolverFactory.newDefault();
+						reset();
 						// Generate the known constraints on the board
 						genAllConstraints(pbSolver);
 
@@ -676,20 +679,15 @@ public class BoardSolver {
 						// Safe/Mine
 						pbSolver.addExactly(lit, coeff, cellWeight);
 
-						// Optimise wrapper
-						OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
 						// Find if cell is safe or mine
-						if (!optimiser.isSatisfiable()) {
+						if (!pbSolver.isSatisfiable()) {
 							boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 							results.put(current, isMine);
 							pbSolver.reset();
-							optimiser.reset();
 							break; // Break as no need to check if cell is also
 									// a mine
 						}
 						pbSolver.reset();
-						optimiser.reset();
 					} catch (ContradictionException ce) {
 						// Contradiction Exception is thrown when the tested
 						// cell is already known to be
@@ -720,7 +718,7 @@ public class BoardSolver {
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
 				try {
-					pbSolver = SolverFactory.newDefault();
+					reset();
 					// Generate the known constraints on the board
 					genAllConstraints(pbSolver);
 
@@ -730,22 +728,17 @@ public class BoardSolver {
 					// Safe/Mine
 					pbSolver.addExactly(lit, coeff, cellWeight);
 
-					// Optimise wrapper
-					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
 					// Find if cell is safe or mine
-					if (!optimiser.isSatisfiable()) {
+					if (!pbSolver.isSatisfiable()) {
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 						for (Cell c : sea) {
 							results.put(c, isMine);
 						}
 						pbSolver.reset();
-						optimiser.reset();
 						break; // Break as no need to check if cell is also a
 								// mine
 					}
 					pbSolver.reset();
-					optimiser.reset();
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
 					// already known to be
@@ -769,7 +762,7 @@ public class BoardSolver {
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
 				try {
-					pbSolver = SolverFactory.newDefault();
+					reset();
 					// Generate the known constraints on the board
 					genAllConstraints(pbSolver);
 
@@ -779,20 +772,15 @@ public class BoardSolver {
 					// Safe/Mine
 					pbSolver.addExactly(lit, coeff, cellWeight);
 
-					// Optimise wrapper
-					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
 					// Find if cell is safe or mine
-					if (!optimiser.isSatisfiable()) {
+					if (!pbSolver.isSatisfiable()) {
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 						results.put(current, isMine);
 						pbSolver.reset();
-						optimiser.reset();
 						break; // Break as no need to check if cell is also a
 								// mine
 					}
 					pbSolver.reset();
-					optimiser.reset();
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
 					// already known to be
@@ -806,6 +794,7 @@ public class BoardSolver {
 		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
+		reset();
 		return results;
 	}
 
@@ -825,8 +814,9 @@ public class BoardSolver {
 				IVecInt lit = new VecInt();
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
+				reset();
 				try {
-					pbSolver = SolverFactory.newDefault();
+					reset();
 					// Generate the known constraints on the board
 					genBinaryConstraints(pbSolver);
 
@@ -836,11 +826,8 @@ public class BoardSolver {
 					// Safe/Mine
 					pbSolver.addExactly(lit, coeff, cellWeight);
 
-					// Optimise wrapper
-					OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
-
 					// Find if cell is safe or mine
-					if (!optimiser.isSatisfiable()) {
+					if (!pbSolver.isSatisfiable()) {
 						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 						// if (!isMine) {
 						// IVecInt t = new VecInt();
@@ -852,21 +839,25 @@ public class BoardSolver {
 						// printLits(model);
 						// }
 						results.put(current, isMine);
+						pbSolver.reset();
 						break; // Break as no need to check if cell is also a
 								// mine
 					}
+					pbSolver.reset();
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
 					// already known to be
 					// safe/a mine.
 					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
 					results.put(current, isMine);
+					pbSolver.reset();
 				} catch (TimeoutException te) {
 				}
 			}
 		}
 
 		if (Thread.interrupted() || !running.get()) {
+			reset();
 			return null;
 		}
 
@@ -874,7 +865,7 @@ public class BoardSolver {
 			IVecInt lits = new VecInt();
 			IVec<BigInteger> coeffs = new Vec<BigInteger>();
 			try {
-				pbSolver = SolverFactory.newDefault();
+				reset();
 				// Generate the known constraints on the board
 				genBinaryConstraints(pbSolver);
 				int noOfLits = Integer.toBinaryString(sea.size()).length();
@@ -885,10 +876,9 @@ public class BoardSolver {
 
 				}
 				pbSolver.addAtLeast(lits, coeffs, BigInteger.ONE);
-				// Optimise wrapper
-				OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+
 				// Find if cell is safe or mine
-				if (!optimiser.isSatisfiable()) {
+				if (!pbSolver.isSatisfiable()) {
 					// for (int i : optimiser.model()) {
 					// 	System.out.print("" + i + ", ");
 					// }
@@ -898,7 +888,6 @@ public class BoardSolver {
 					}
 				}
 				pbSolver.reset();
-				optimiser.reset();
 				lits.clear();
 				coeffs.clear();
 				genBinaryConstraints(pbSolver);
@@ -908,10 +897,9 @@ public class BoardSolver {
 					// coeffs.push(BigInteger.ONE);
 				}
 				pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(sea.size()-1));
-				// Optimise wrapper
-				optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
+
 				// Find if cell is safe or mine
-				if (!optimiser.isSatisfiable()) {
+				if (!pbSolver.isSatisfiable()) {
 					// int[] model = optimiser.model();
 					// for (int i : model) {
 					// 	System.out.print("" + i + ", ");
@@ -929,22 +917,26 @@ public class BoardSolver {
 						results.put(c, isMine);
 					}
 				}
+				pbSolver.reset();
 			} catch (ContradictionException ce) {
 				// Contradiction Exception is thrown when the tested cell is
 				// already known to be
 				// safe/a mine.
+
 			} catch (TimeoutException te) {
 			}
 		}
 
 		if (Thread.interrupted() || !running.get()) {
+			reset();
 			return null;
 		}
-
+		reset();
 		return results;
 	}
 
 	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
+		reset();
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
 		List<Cell> seaCells = getSeaCells();
@@ -993,7 +985,6 @@ public class BoardSolver {
 			lits.clear();
 			coeffs.clear();
 		}
-		pbSolver.setDBSimplificationAllowed(true);
 		lits.clear();
 		coeffs.clear();
 
@@ -1006,7 +997,7 @@ public class BoardSolver {
 
 		List<Cell> adjacentCells = getShoreClosedCells();
 
-		pbSolver = SolverFactory.newDefault();
+		reset();
 
 		try {
 			genAllConstraints(pbSolver);
@@ -1020,10 +1011,9 @@ public class BoardSolver {
 			}
 		}
 
-		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 		int noOfSolutions = 0;
 		try {
-			while (optimiser.isSatisfiable() && running.get()) {
+			while (pbSolver.isSatisfiable() && running.get()) {
 				++noOfSolutions;
 				int[] model = pbSolver.model();
 				for (int i : model) {
@@ -1038,7 +1028,7 @@ public class BoardSolver {
 				}
 				IVecInt block = new VecInt(model);
 
-				optimiser.addBlockingClause(block);
+				pbSolver.addBlockingClause(block);
 			}
 		} catch (TimeoutException e) {
 			e.printStackTrace();
@@ -1089,7 +1079,7 @@ public class BoardSolver {
 		int totalMines = game.getNoOfMines();
 		int seaSize = getSeaCells().size();
 
-		pbSolver = SolverFactory.newDefault();
+		reset();
 
 		try {
 			genBinaryConstraints(pbSolver);
@@ -1097,9 +1087,8 @@ public class BoardSolver {
 			e3.printStackTrace();
 		}
 
-		OptToPBSATAdapter optimiser = new OptToPBSATAdapter(new PseudoOptDecorator(pbSolver));
 		try {
-			while (optimiser.isSatisfiable() && running.get()) {
+			while (pbSolver.isSatisfiable() && running.get()) {
 				List<Cell> currentSol = new ArrayList<>();
 				int[] model = pbSolver.model();
 				int noOfMines = 0;
@@ -1158,14 +1147,18 @@ public class BoardSolver {
 				}
 				IVecInt block = new VecInt(model);
 
-				optimiser.addBlockingClause(block);
+				pbSolver.addBlockingClause(block);
 			}
 		} catch (TimeoutException e) {
+			pbSolver.reset();
 			e.printStackTrace();
 		} catch (ContradictionException e) {
+			pbSolver.reset();
 			e.printStackTrace();
 		}
+		pbSolver.reset();
 		if (!running.get()) {
+			reset();
 			return null;
 		}
 		// System.out.println("No. of solutions: " + noOfSolutions);
@@ -1213,6 +1206,7 @@ public class BoardSolver {
 			Double cellProbDouble = cellProb.doubleValue();
 			probs.put(current, cellProbDouble);
 		}
+		reset();
 		return probs;
 	}
 
@@ -1233,6 +1227,10 @@ public class BoardSolver {
 			c.setBestCell();
 		}
 		game.refresh();
+	}
+
+	public void reset() {
+		pbSolver.reset();
 	}
 
 	public List<Cell> getBestCellProb(Map<Cell, Double> probs) {

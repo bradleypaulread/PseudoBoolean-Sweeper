@@ -87,7 +87,6 @@ public class Minesweeper extends JFrame {
 	private int noOfMines; // Number of mines
 	private Board board; // Board instance, where cells appearance is processed
 	private boolean debug; // If debug information should be printed to console
-	private boolean prob = false;
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves = 0; // Number if moves made by the player.
 	private int currentGameTime;
@@ -438,7 +437,6 @@ public class Minesweeper extends JFrame {
 		});
 
 		strategyCb.addActionListener(e -> {
-			prob = !prob;
 		});
 
 		menu.add(debugCb);
@@ -796,10 +794,6 @@ public class Minesweeper extends JFrame {
 		return neighbours;
 	}
 
-	private void showNoMoreMovesDialog() {
-		JOptionPane.showMessageDialog(null, "No known safe moves.");
-	}
-
 	private void disableAllBtns() {
 		ptHintBtn.setEnabled(false);
 		ptAssistBtn.setEnabled(false);
@@ -911,10 +905,6 @@ public class Minesweeper extends JFrame {
 
 	public void setDebug(boolean value) {
 		debug = value;
-	}
-
-	public boolean getProb() {
-		return prob;
 	}
 
 	public boolean isGameWon() {
