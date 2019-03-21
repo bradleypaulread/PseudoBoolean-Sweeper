@@ -592,7 +592,7 @@ public class BoardSolver {
 		if (!patternMatch()) {
 			if (!SATSolve()) {
 				Map<Cell, Double> probs = calcAllCellsProb();
-				List<Cell> cells = getBestCellProb(probs);
+				List<Cell> cells = getBestProbCell(probs);
 				int idx = 0;
 				if (cells.size() > 1) {
 					idx = new Random().nextInt(cells.size());
@@ -880,7 +880,7 @@ public class BoardSolver {
 				// Find if cell is safe or mine
 				if (!pbSolver.isSatisfiable()) {
 					// for (int i : optimiser.model()) {
-					// 	System.out.print("" + i + ", ");
+					// System.out.print("" + i + ", ");
 					// }
 					boolean isMine = false;
 					for (Cell c : sea) {
@@ -896,21 +896,21 @@ public class BoardSolver {
 					coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 					// coeffs.push(BigInteger.ONE);
 				}
-				pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(sea.size()-1));
+				pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(sea.size() - 1));
 
 				// Find if cell is safe or mine
 				if (!pbSolver.isSatisfiable()) {
 					// int[] model = optimiser.model();
 					// for (int i : model) {
-					// 	System.out.print("" + i + ", ");
+					// System.out.print("" + i + ", ");
 					// }
 					// System.out.println();
 					// System.out.println();
 					// for (int i = 0; i < model.length; i++) {
-					// 	model[i] = model[i] * -1;
+					// model[i] = model[i] * -1;
 					// }
 					// IVecInt block = new VecInt(model);
-	
+
 					// optimiser.addBlockingClause(block);
 					boolean isMine = true;
 					for (Cell c : sea) {
@@ -1222,7 +1222,7 @@ public class BoardSolver {
 			current.setProb(prob);
 		}
 
-		List<Cell> probss = getBestCellProb(probs);
+		List<Cell> probss = getBestProbCell(probs);
 		for (Cell c : probss) {
 			c.setBestCell();
 		}
@@ -1233,7 +1233,7 @@ public class BoardSolver {
 		pbSolver.reset();
 	}
 
-	public List<Cell> getBestCellProb(Map<Cell, Double> probs) {
+	public List<Cell> getBestProbCell(Map<Cell, Double> probs) {
 		List<Cell> cellsWithBestProb = new ArrayList<>();
 
 		if (probs == null) {
@@ -1258,6 +1258,85 @@ public class BoardSolver {
 		}
 		// System.out.println(cellsWithBestProb);
 		return cellsWithBestProb;
+	}
+
+	public void temp() {
+		Cell c = getBestStratCell(getBestProbCell(calcAllCellsProb()));
+		System.out.println(c);
+	}
+
+	public Cell getBestStratCell(List<Cell> bestProbCells) {
+		if (bestProbCells.isEmpty()) {
+			return null;
+		}
+
+		List<Cell> closedShoreCells = getShoreClosedCells();
+		Cell bestCell = null;
+
+		// Select the cell that touches the most land cells
+		int mostNumbers = 0;
+		for (Cell current : bestProbCells) {
+			List<Cell> neighbours = getNeighbours(current);
+			neighbours.removeIf(c -> c.isClosed());
+			int numberCount = neighbours.size();
+			if (numberCount > mostNumbers) {
+				mostNumbers = numberCount;
+				bestCell = current;
+			}
+		}
+
+		if (mostNumbers > 0 && bestCell != null) {
+			System.out.println("here1");
+			return bestCell;
+		}
+
+		// Choose the cell that touches the most closedShoreCells
+		int mostShore = 0;
+		for (Cell current : bestProbCells) {
+			List<Cell> neighbours = getNeighbours(current);
+			neighbours.removeIf(c -> !closedShoreCells.contains(current));
+			int shoreCount = neighbours.size();
+			if (shoreCount > mostShore) {
+				mostShore = shoreCount;
+				bestCell = current;
+			}
+		}
+
+		if (mostShore > 0 && bestCell != null) {
+			System.out.println("here2");
+			return bestCell;
+		}
+
+		// if no favourable cell can be found then just select a random cell
+		bestCell = getRandomCell(bestProbCells);
+
+		return bestCell;
+	}
+
+	public Cell getBestDensityCell(Map<Cell, Double> probs) {
+		List<Cell> bestProbs = getBestProbCell(probs);
+		Cell bestCell = null;
+		Double bestProb = 1.1;
+
+		for (Cell current : bestProbs) {
+			Double currentProb = 0.0;
+			List<Cell> neighbours = getNeighbours(current);
+			neighbours.removeIf(c -> c.isOpen() || c.isFlagged());
+			int closedCount = neighbours.size();
+			if (closedCount == 0) {
+				continue;
+			}
+			for (Cell c : neighbours) {
+				currentProb += probs.get(c);
+			}
+			currentProb = currentProb / closedCount;
+
+			if (currentProb.compareTo(bestProb) < 0) {
+				bestProb = currentProb;
+				bestCell = current;
+			}
+		}
+		return bestCell;
 	}
 
 	public void printLits(int[] model) {
@@ -1450,5 +1529,13 @@ public class BoardSolver {
 		} else {
 			game.setGameOver(true);
 		}
+	}
+
+	public Cell getRandomCell(List<Cell> cellList) {
+		if (!cellList.isEmpty()) {
+			Cell selectedCell = cellList.get(new Random().nextInt(cellList.size()));
+			return selectedCell;
+		}
+		return null;
 	}
 }

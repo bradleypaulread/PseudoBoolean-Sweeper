@@ -36,7 +36,6 @@ public class SolverThreadWrapper implements Runnable {
     }
     
     public void end() {
-        if (solver != null) solver.reset();
         running.set(false);
         if (thread != null) thread.interrupt();
         thread = null;

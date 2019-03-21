@@ -343,13 +343,14 @@ public class Minesweeper extends JFrame {
 
 		randCellBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
-			disableAllBtns();
-			thread = new SolverThreadWrapper(this);
-			thread.setLoop();
-			thread.setOld();
-			thread.setSATSolve();			
-			thread.start();
-			stopBtn.setEnabled(true);
+			// disableAllBtns();
+			// thread = new SolverThreadWrapper(this);
+			// thread.setLoop();
+			// thread.setOld();
+			// thread.setSATSolve();			
+			// thread.start();
+			// stopBtn.setEnabled(true);
+			solver.temp();
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
