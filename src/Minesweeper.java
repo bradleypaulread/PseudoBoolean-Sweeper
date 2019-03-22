@@ -368,6 +368,7 @@ public class Minesweeper extends JFrame {
 		SATAssistBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
+			if (strategyCb.isSelected()) thread.setStrat();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
@@ -405,6 +406,7 @@ public class Minesweeper extends JFrame {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
+			if (strategyCb.isSelected()) thread.setStrat();
 			thread.setLoop();
 			thread.setPatternMatchSolve();
 			thread.setSATSolve();
@@ -680,6 +682,7 @@ public class Minesweeper extends JFrame {
 	 * Called when the game has been won or lost.
 	 */
 	private void endGame() {
+		thread.end();
 		endTime = System.nanoTime();
 		isGameOver = true;
 		gameTimer.stop();
@@ -716,10 +719,12 @@ public class Minesweeper extends JFrame {
 		enableAllBtns();
 		gameTimer.start();
 		refresh();
+		boolean strat = strategyCb.isSelected();
 		solver = new BoardSolver(this);
+		solver.setStrat(strat);
 		// To remove
-//		Gson gson = new Gson();
-//		System.out.println(gson.toJson(this.mineField));
+		// Gson gson = new Gson();
+		// System.out.println(gson.toJson(this.mineField));
 	}
 
 	/**
@@ -935,6 +940,10 @@ public class Minesweeper extends JFrame {
 
 	public void setGameOver(boolean isGameOver) {
 		this.isGameOver = isGameOver;
+	}
+
+	public int getNoOfMoves() {
+		return moves;
 	}
 }
 // Sample for loop for copy and paste

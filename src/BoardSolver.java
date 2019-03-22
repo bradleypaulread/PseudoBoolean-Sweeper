@@ -15,6 +15,7 @@ import com.google.common.math.BigIntegerMath;
 import com.google.gson.Gson;
 
 import org.apache.commons.math3.fraction.BigFraction;
+import org.apache.commons.math3.fraction.Fraction;
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.IPBSolver;
@@ -31,8 +32,7 @@ public class BoardSolver {
 	private IPBSolver pbSolver;
 
 	private boolean quiet;
-
-	private List<Cell> knownMines = new ArrayList<>();
+	private boolean strat;
 
 	private Minesweeper game;
 	private Cell[][] cells;
@@ -41,6 +41,7 @@ public class BoardSolver {
 	public BoardSolver(Minesweeper game) {
 		running = new AtomicBoolean(true);
 		quiet = false;
+		strat = false;
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
@@ -49,6 +50,7 @@ public class BoardSolver {
 	public BoardSolver(Minesweeper game, AtomicBoolean running) {
 		this.running = running;
 		quiet = false;
+		strat = false;
 		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
@@ -462,9 +464,6 @@ public class BoardSolver {
 								if (c.isBlank()) {
 									c.flag();
 									game.decrementMines();
-									if (!knownMines.contains(c)) {
-										knownMines.add(c);
-									}
 									if (!quiet) {
 										game.refresh();
 									}
@@ -477,9 +476,6 @@ public class BoardSolver {
 								if (c.isBlank()) {
 									c.flag();
 									game.decrementMines();
-									if (!knownMines.contains(c)) {
-										knownMines.add(c);
-									}
 									if (!quiet) {
 										game.refresh();
 									}
@@ -503,6 +499,9 @@ public class BoardSolver {
 					}
 				}
 			}
+		}
+		if (game.getNoOfMoves() == 0 && strat) {
+
 		}
 		return false;
 	}
@@ -554,9 +553,6 @@ public class BoardSolver {
 			Cell current = pair.getKey();
 			boolean mine = pair.getValue();
 			if (mine) {
-				if (!knownMines.contains(current)) {
-					knownMines.add(current);
-				}
 				if (current.isClosed() && !current.isFlagged()) {
 					current.flag();
 					game.decrementMines();
@@ -593,16 +589,32 @@ public class BoardSolver {
 			if (!SATSolve()) {
 				Map<Cell, Double> probs = calcAllCellsProb();
 				List<Cell> cells = getBestProbCell(probs);
-				int idx = 0;
-				if (cells.size() > 1) {
-					idx = new Random().nextInt(cells.size());
-				}
-				if (cells.isEmpty()) {
+				if (cells == null) {
 					return;
 				}
-				Cell bestCell = cells.get(idx);
-				System.out.println("Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
-				game.select(bestCell.getX(), bestCell.getY());
+				if (strat) {
+					Cell bestCell = getBestStratCell(cells);
+					if (bestCell == null) {
+						return;
+					}
+					System.out.println(
+							"Strategically Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
+					game.select(bestCell.getX(), bestCell.getY());
+				} else {
+					int idx = 0;
+					if (cells.size() > 1) {
+						idx = new Random().nextInt(cells.size());
+					}
+					if (cells.isEmpty()) {
+						return;
+					}
+					Cell bestCell = cells.get(idx);
+					if (bestCell == null) {
+						return;
+					}
+					System.out.println("Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
+					game.select(bestCell.getX(), bestCell.getY());
+				}
 			}
 		}
 	}
@@ -943,8 +955,6 @@ public class BoardSolver {
 		List<Cell> landCells = getLandCells();
 
 		int noOfMines = game.getNoOfMines();
-		int noOfKnownMines = knownMines.size();
-		int noOfUnknownShore = closedShore.size() - noOfKnownMines;
 		int noOfLits = Integer.toBinaryString(seaCells.size()).length();
 		IVecInt lits = new VecInt();
 		IVec<BigInteger> coeffs = new Vec<BigInteger>();
@@ -1260,12 +1270,36 @@ public class BoardSolver {
 		return cellsWithBestProb;
 	}
 
-	public void temp() {
-		Cell c = getBestStratCell(getBestProbCell(calcAllCellsProb()));
-		System.out.println(c);
+	public List<Cell> checkCorners() {
+		cells = game.getCells();
+		List<Cell> corners = new ArrayList<>();
+		int width = cells.length;
+		int height = cells[0].length;
+		Cell current = cells[0][0];
+		if (current.isClosed()) {
+			corners.add(current);
+		}
+		current = cells[0][height - 1];
+		if (current.isClosed()) {
+			corners.add(current);
+		}
+		current = cells[width - 1][0];
+		if (current.isClosed()) {
+			corners.add(current);
+		}
+		current = cells[width - 1][height - 1];
+		if (current.isClosed()) {
+			corners.add(current);
+		}
+		return corners;
 	}
 
-	public Cell getBestStratCell(List<Cell> bestProbCells) {
+	public void temp() {
+		Cell c = getBestStratCell(getBestProbCell(calcAllCellsProb()));
+		game.select(c.getX(), c.getY());
+	}
+
+	public Cell getExpBestStratCell(List<Cell> bestProbCells) {
 		if (bestProbCells.isEmpty()) {
 			return null;
 		}
@@ -1313,6 +1347,49 @@ public class BoardSolver {
 		return bestCell;
 	}
 
+	public Cell getBestStratCell(List<Cell> bestProbCells) {
+		if (bestProbCells.isEmpty()) {
+			return null;
+		}
+		Cell bestCell = null;
+		List<Cell> bestCells = new ArrayList<>();
+		int lowestClosed = 9;
+		for (Cell c : bestProbCells) {
+			List<Cell> neighbours = getNeighbours(c);
+			neighbours.removeIf(c2 -> c2.isOpen() || c2.isFlagged());
+			int closedCount = neighbours.size();
+			if (closedCount < lowestClosed) {
+				lowestClosed = closedCount;
+				bestCells.clear();
+				bestCells.add(c);
+			} else if (closedCount == lowestClosed) {
+				bestCells.add(c);
+			}
+		}
+		if (bestCells.size() > 1) {
+			bestCell = getRandomCell(bestCells);
+		} else {
+			bestCell = bestCells.get(0);
+		}
+		return bestCell;
+	}
+
+	// To Remove
+	private boolean checkIfTouching(List<Cell> cells) {
+		boolean touching = true;
+		for (int i = 0; i < cells.size() - 1; i++) {
+			Cell leftCell = cells.get(i);
+			Cell rightCell = cells.get(i + 1);
+			boolean xTouch = Math.abs(leftCell.getX() - rightCell.getX()) == 1;
+			boolean yTouch = Math.abs(leftCell.getY() - rightCell.getY()) == 1;
+			if (!(xTouch || yTouch)) {
+				touching = false;
+				break;
+			}
+		}
+		return touching;
+	}
+
 	public Cell getBestDensityCell(Map<Cell, Double> probs) {
 		List<Cell> bestProbs = getBestProbCell(probs);
 		Cell bestCell = null;
@@ -1323,9 +1400,6 @@ public class BoardSolver {
 			List<Cell> neighbours = getNeighbours(current);
 			neighbours.removeIf(c -> c.isOpen() || c.isFlagged());
 			int closedCount = neighbours.size();
-			if (closedCount == 0) {
-				continue;
-			}
 			for (Cell c : neighbours) {
 				currentProb += probs.get(c);
 			}
@@ -1537,5 +1611,17 @@ public class BoardSolver {
 			return selectedCell;
 		}
 		return null;
+	}
+
+	public void flipStrat() {
+		this.strat = !this.strat;
+	}
+
+	public void setStrat(boolean strat) {
+		this.strat = strat;
+	}
+
+	public boolean getStrat() {
+		return strat;
 	}
 }

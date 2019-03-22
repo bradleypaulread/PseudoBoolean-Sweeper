@@ -6,7 +6,7 @@ public class SolverThreadWrapper implements Runnable {
 
     private volatile AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
-    boolean quiet, hint, loop, patternMatch, SAT, prob, sim, old;
+    boolean quiet, hint, loop, patternMatch, SAT, prob, sim, strat, old;
 
     private volatile Thread thread;
     private BoardSolver solver;
@@ -43,6 +43,7 @@ public class SolverThreadWrapper implements Runnable {
 
     public void reset() {
         this.sim = false;
+        this.strat = false;
         this.old = false;
         this.quiet = false;
         this.loop = false;
@@ -55,6 +56,10 @@ public class SolverThreadWrapper implements Runnable {
     public void setPatternMatchHint() {
         this.hint = true;
         this.patternMatch = true;
+    }
+
+    public void setStrat() {
+        this.strat = true;
     }
 
     public void setSATHint() {
@@ -84,6 +89,9 @@ public class SolverThreadWrapper implements Runnable {
 
     @Override
     public void run() {
+        if (strat && !hint) {
+            solver.setStrat(true);
+        }
         if (hint) {
             if (patternMatch && !SAT) {
                 solver.patternMatchHint();
@@ -139,7 +147,11 @@ public class SolverThreadWrapper implements Runnable {
             } else if (patternMatch) {
                 solver.patternMatch();
             } else if (SAT) {
-                solver.SATSolve();
+                if(!solver.SATSolve()) {
+                    if (strat) {
+                        solver.temp();
+                    }
+                }
             }
         }
         // end();
