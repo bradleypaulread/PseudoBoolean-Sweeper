@@ -556,10 +556,14 @@ public class BoardSolver {
 				if (current.isClosed() && !current.isFlagged()) {
 					current.flag();
 					game.decrementMines();
+					String detail = "Flagging " + current + " as Cell is a Guarenteed Mine";
+					game.addDetail(detail);
 					change = true;
 				}
 			} else {
 				if (current.isBlank()) {
+					String detail = "Selecting " + current + " as Cell is Safe";
+					game.addDetail(detail);
 					if (quiet) {
 						game.quietSelect(current.getX(), current.getY());
 					} else {
@@ -568,6 +572,10 @@ public class BoardSolver {
 					change = true;
 				}
 			}
+		}
+		if (!change && strat) {
+			change = true;
+			performStrat();
 		}
 		if (!quiet) {
 			game.refresh();
@@ -584,37 +592,25 @@ public class BoardSolver {
 		return true;
 	}
 
+	private void performStrat() {
+		Map<Cell, Double> probs = calcAllCellsProb();
+		List<Cell> cells = getBestProbCell(probs);
+		if (cells == null) {
+			return;
+		}
+		Cell bestCell = getBestStratCell(cells);
+		if (bestCell == null) {
+			return;
+		}
+		String detail = "Strategically Selecting Best Cell " + bestCell + " with prob. " + probs.get(bestCell);
+		game.addDetail(detail);
+		game.select(bestCell.getX(), bestCell.getY());
+	}
+
 	public void fullSolve() {
 		if (!patternMatch()) {
 			if (!SATSolve()) {
-				Map<Cell, Double> probs = calcAllCellsProb();
-				List<Cell> cells = getBestProbCell(probs);
-				if (cells == null) {
-					return;
-				}
-				if (strat) {
-					Cell bestCell = getBestStratCell(cells);
-					if (bestCell == null) {
-						return;
-					}
-					System.out.println(
-							"Strategically Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
-					game.select(bestCell.getX(), bestCell.getY());
-				} else {
-					int idx = 0;
-					if (cells.size() > 1) {
-						idx = new Random().nextInt(cells.size());
-					}
-					if (cells.isEmpty()) {
-						return;
-					}
-					Cell bestCell = cells.get(idx);
-					if (bestCell == null) {
-						return;
-					}
-					System.out.println("Selecting Best Cell " + bestCell + " with prob. of " + probs.get(bestCell));
-					game.select(bestCell.getX(), bestCell.getY());
-				}
+				if (strat) performStrat();
 			}
 		}
 	}

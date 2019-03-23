@@ -29,7 +29,9 @@ import javax.swing.Timer;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JEditorPane;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,7 +41,10 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.DefaultCaret;
 
 import com.google.gson.Gson;
 
@@ -76,6 +81,7 @@ public class Minesweeper extends JFrame {
 	private JMenuItem startSimItem = new JMenuItem("Start Simulation");
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menu = new JMenu("File");
+	private JTextArea details = new JTextArea();
 
 	SolverThreadWrapper thread = new SolverThreadWrapper(this);
 
@@ -106,7 +112,7 @@ public class Minesweeper extends JFrame {
 	public Minesweeper(int x, int y, int d) {
 		setup(x, y, d);
 	}
-	
+
 	public Minesweeper(int x, int y, int d, String m) {
 		Gson gson = new Gson();
 		MineField mf = gson.fromJson(m, MineField.class);
@@ -194,12 +200,6 @@ public class Minesweeper extends JFrame {
 		board = new Board(this, x, y);
 		loadUI();
 		loadFileMenu();
-		
-		// Centres minefield
-		Container fl = new Container();
-		fl.add(board);
-		fl.setLayout(new FlowLayout());
-		add(fl, BorderLayout.CENTER);
 
 		// Reset board to a fresh setting
 		reset();
@@ -214,7 +214,7 @@ public class Minesweeper extends JFrame {
 		startTime = System.nanoTime();
 		solver = new BoardSolver(this);
 	}
-	
+
 	private void setup(int x, int y, int d, MineField m) {
 		width = x;
 		height = y;
@@ -225,7 +225,7 @@ public class Minesweeper extends JFrame {
 		board = new Board(this, x, y);
 		loadUI();
 		loadFileMenu();
-		
+
 		// Centres minefield
 		Container fl = new Container();
 		fl.add(board);
@@ -257,6 +257,24 @@ public class Minesweeper extends JFrame {
 		Container topBar = new Container();
 		controlBtns.setLayout(new FlowLayout());
 		topBar.setLayout(new BorderLayout());
+
+		// Centres minefield
+		Container fl = new Container();
+		fl.setLayout(new FlowLayout());
+		fl.add(board);
+		details.setEditable(false);
+		details.append("Game Started.");
+		details.setWrapStyleWord(true);
+		details.setLineWrap(true);
+		DefaultCaret caret = (DefaultCaret) details.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		JScrollPane editorScrollPane = new JScrollPane(details);
+		editorScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		editorScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		editorScrollPane.setPreferredSize(new Dimension(250, board.getCellWidth() * height));
+		editorScrollPane.setMinimumSize(new Dimension(10, 10));
+		fl.add(editorScrollPane);
+		add(fl, BorderLayout.CENTER);
 
 		TitledBorder statsTitle = new TitledBorder("Stats");
 		statsTitle.setTitleJustification(TitledBorder.CENTER);
@@ -347,7 +365,7 @@ public class Minesweeper extends JFrame {
 			// thread = new SolverThreadWrapper(this);
 			// thread.setLoop();
 			// thread.setOld();
-			// thread.setSATSolve();			
+			// thread.setSATSolve();
 			// thread.start();
 			// stopBtn.setEnabled(true);
 			solver.temp();
@@ -368,7 +386,8 @@ public class Minesweeper extends JFrame {
 		SATAssistBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			if (strategyCb.isSelected()) thread.setStrat();
+			if (strategyCb.isSelected())
+				thread.setStrat();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
@@ -406,7 +425,8 @@ public class Minesweeper extends JFrame {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			if (strategyCb.isSelected()) thread.setStrat();
+			if (strategyCb.isSelected())
+				thread.setStrat();
 			thread.setLoop();
 			thread.setPatternMatchSolve();
 			thread.setSATSolve();
@@ -455,6 +475,7 @@ public class Minesweeper extends JFrame {
 			newGame.getDiffHardRb().setEnabled(true);
 			newGame.setDebug(debugCb.isSelected());
 			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			newGame.getStratCb().setSelected(strategyCb.isSelected());
 			setVisible(false);
 			dispose();
 		});
@@ -469,6 +490,7 @@ public class Minesweeper extends JFrame {
 			newGame.getDiffHardRb().setEnabled(true);
 			newGame.setDebug(debugCb.isSelected());
 			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			newGame.getStratCb().setSelected(strategyCb.isSelected());
 			setVisible(false);
 			dispose();
 		});
@@ -483,6 +505,7 @@ public class Minesweeper extends JFrame {
 			newGame.getDiffHardRb().setEnabled(false);
 			newGame.setDebug(debugCb.isSelected());
 			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			newGame.getStratCb().setSelected(strategyCb.isSelected());
 			setVisible(false);
 			dispose();
 		});
@@ -606,9 +629,8 @@ public class Minesweeper extends JFrame {
 			movesLbl.setText("Moves: " + Integer.toString(moves));
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
 			cells[x][y].setFail();
-			System.out.println("LOST ON CELL " + cells[x][y]);
 			endGame();
-			JOptionPane.showMessageDialog(null, "              BOOOOM!");
+			addDetail("Game Lost!!! :( . Lost on Cell " + cells[x][y]);
 			return;
 		}
 
@@ -624,7 +646,7 @@ public class Minesweeper extends JFrame {
 				}
 			}
 			endGame();
-			JOptionPane.showMessageDialog(null, "     Congratulations! You won!");
+			addDetail("Game Won!!! :)");
 		}
 		refresh();
 	}
@@ -700,6 +722,7 @@ public class Minesweeper extends JFrame {
 	 */
 	public void reset() {
 		thread.end();
+		details.setText("Game Started.");
 		isGameOver = false;
 		endTime = 0;
 		currentGameTime = 0;
@@ -905,6 +928,10 @@ public class Minesweeper extends JFrame {
 		return debug;
 	}
 
+	public JCheckBoxMenuItem getStratCb() {
+		return strategyCb;
+	}
+
 	public int getMinesLeft() {
 		return minesLeft;
 	}
@@ -944,6 +971,10 @@ public class Minesweeper extends JFrame {
 
 	public int getNoOfMoves() {
 		return moves;
+	}
+
+	public void addDetail(String str) {
+		details.append("\n" + str + "." + "\n");
 	}
 }
 // Sample for loop for copy and paste
