@@ -154,13 +154,10 @@ public class SolverThreadWrapper implements Runnable {
                 }
             }
         }
-        // end();
         game.getStopBtn().setEnabled(false);
         if (!game.isGameOver()) {
             game.enableAllBtns();
         }
-        solver.reset();
-        // if (thread != null) thread.interrupt();
     }
 
     private void patternMatchSolve() {

@@ -1,8 +1,5 @@
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,15 +9,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.google.common.math.BigIntegerMath;
-import com.google.gson.Gson;
 
 import org.apache.commons.math3.fraction.BigFraction;
-import org.apache.commons.math3.fraction.Fraction;
 import org.sat4j.core.Vec;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.IPBSolver;
-import org.sat4j.pb.OptToPBSATAdapter;
-import org.sat4j.pb.PseudoOptDecorator;
 import org.sat4j.pb.SolverFactory;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IVec;
@@ -28,8 +21,6 @@ import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
 public class BoardSolver {
-
-	private IPBSolver pbSolver;
 
 	private boolean quiet;
 	private boolean strat;
@@ -42,7 +33,6 @@ public class BoardSolver {
 		running = new AtomicBoolean(true);
 		quiet = false;
 		strat = false;
-		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
 	}
@@ -51,7 +41,6 @@ public class BoardSolver {
 		this.running = running;
 		quiet = false;
 		strat = false;
-		pbSolver = SolverFactory.newDefault();
 		this.game = game;
 		cells = game.getCells();
 	}
@@ -367,7 +356,6 @@ public class BoardSolver {
 	public void SATHint() {
 		cells = game.getCells();
 		Map<Cell, Boolean> known = binaryShallowSolve();
-		reset();
 		if (known == null || !running.get()) {
 			return;
 		}
@@ -399,7 +387,6 @@ public class BoardSolver {
 	public void oldSATHint() {
 		cells = game.getCells();
 		Map<Cell, Boolean> known = shallowSolve();
-		reset();
 		if (known == null || !running.get()) {
 			return;
 		}
@@ -544,7 +531,6 @@ public class BoardSolver {
 		cells = game.getCells();
 		boolean change = false;
 		Map<Cell, Boolean> known = binaryShallowSolve();
-		reset();
 		if (known == null || !running.get()) {
 			return false;
 		}
@@ -661,6 +647,8 @@ public class BoardSolver {
 	}
 
 	private Map<Cell, Boolean> deepSolveMines() {
+		IPBSolver pbSolver = SolverFactory.newDefault();
+
 		Map<Cell, Boolean> results = new HashMap<>();
 		for (int i = 0; i < cells.length && running.get() && !Thread.interrupted(); i++) {
 			for (int j = 0; j < cells[i].length && running.get() && !Thread.interrupted(); j++) {
@@ -677,7 +665,6 @@ public class BoardSolver {
 					IVec<BigInteger> coeff = new Vec<BigInteger>();
 					BigInteger cellWeight = BigInteger.valueOf(weight);
 					try {
-						reset();
 						// Generate the known constraints on the board
 						genAllConstraints(pbSolver);
 
@@ -707,6 +694,7 @@ public class BoardSolver {
 				}
 			}
 		}
+		pbSolver.reset();
 		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
@@ -714,6 +702,7 @@ public class BoardSolver {
 	}
 
 	private Map<Cell, Boolean> shallowSolve() {
+		IPBSolver pbSolver = SolverFactory.newDefault();
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> closedShore = getShoreClosedCells();
@@ -726,7 +715,6 @@ public class BoardSolver {
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
 				try {
-					reset();
 					// Generate the known constraints on the board
 					genAllConstraints(pbSolver);
 
@@ -759,6 +747,7 @@ public class BoardSolver {
 				}
 			}
 		}
+
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
 			if (current.isFlagged()) {
@@ -770,7 +759,6 @@ public class BoardSolver {
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
 				try {
-					reset();
 					// Generate the known constraints on the board
 					genAllConstraints(pbSolver);
 
@@ -799,14 +787,16 @@ public class BoardSolver {
 				}
 			}
 		}
+		pbSolver.reset();
 		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
-		reset();
 		return results;
 	}
 
 	private Map<Cell, Boolean> binaryShallowSolve() {
+		IPBSolver pbSolver = SolverFactory.newDefault();
+
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> closedShore = getShoreClosedCells();
@@ -822,9 +812,7 @@ public class BoardSolver {
 				IVecInt lit = new VecInt();
 				IVec<BigInteger> coeff = new Vec<BigInteger>();
 				BigInteger cellWeight = BigInteger.valueOf(weight);
-				reset();
 				try {
-					reset();
 					// Generate the known constraints on the board
 					genBinaryConstraints(pbSolver);
 
@@ -863,9 +851,9 @@ public class BoardSolver {
 				}
 			}
 		}
+		pbSolver.reset();
 
 		if (Thread.interrupted() || !running.get()) {
-			reset();
 			return null;
 		}
 
@@ -873,7 +861,6 @@ public class BoardSolver {
 			IVecInt lits = new VecInt();
 			IVec<BigInteger> coeffs = new Vec<BigInteger>();
 			try {
-				reset();
 				// Generate the known constraints on the board
 				genBinaryConstraints(pbSolver);
 				int noOfLits = Integer.toBinaryString(sea.size()).length();
@@ -934,17 +921,15 @@ public class BoardSolver {
 			} catch (TimeoutException te) {
 			}
 		}
+		pbSolver.reset();
 
 		if (Thread.interrupted() || !running.get()) {
-			reset();
 			return null;
 		}
-		reset();
 		return results;
 	}
 
 	public void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
-		reset();
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
 		List<Cell> seaCells = getSeaCells();
@@ -998,12 +983,12 @@ public class BoardSolver {
 
 	public Map<Cell, Double> oldCalcAllCellsProb() {
 		cells = game.getCells();
+		IPBSolver pbSolver = SolverFactory.newDefault();
 
 		Map<Cell, Double> results = new HashMap<>();
 
 		List<Cell> adjacentCells = getShoreClosedCells();
 
-		reset();
 
 		try {
 			genAllConstraints(pbSolver);
@@ -1070,6 +1055,7 @@ public class BoardSolver {
 	}
 
 	private Map<Cell, Double> calcAllCellsProb() {
+		IPBSolver pbSolver = SolverFactory.newDefault();
 		cells = game.getCells();
 		// Key = Cell
 		// Value = Map of Integer to Integer
@@ -1085,7 +1071,6 @@ public class BoardSolver {
 		int totalMines = game.getNoOfMines();
 		int seaSize = getSeaCells().size();
 
-		reset();
 
 		try {
 			genBinaryConstraints(pbSolver);
@@ -1164,7 +1149,6 @@ public class BoardSolver {
 		}
 		pbSolver.reset();
 		if (!running.get()) {
-			reset();
 			return null;
 		}
 		// System.out.println("No. of solutions: " + noOfSolutions);
@@ -1212,7 +1196,8 @@ public class BoardSolver {
 			Double cellProbDouble = cellProb.doubleValue();
 			probs.put(current, cellProbDouble);
 		}
-		reset();
+		pbSolver.reset();
+
 		return probs;
 	}
 
@@ -1233,10 +1218,6 @@ public class BoardSolver {
 			c.setBestCell();
 		}
 		game.refresh();
-	}
-
-	public void reset() {
-		pbSolver.reset();
 	}
 
 	public List<Cell> getBestProbCell(Map<Cell, Double> probs) {
