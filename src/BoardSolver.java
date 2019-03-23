@@ -1,12 +1,10 @@
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import com.google.common.math.BigIntegerMath;
 
@@ -384,37 +382,6 @@ public class BoardSolver {
 		}
 	}
 
-	public void oldSATHint() {
-		cells = game.getCells();
-		Map<Cell, Boolean> known = shallowSolve();
-		if (known == null || !running.get()) {
-			return;
-		}
-		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
-			Cell current = pair.getKey();
-			boolean mine = pair.getValue();
-			// Skip cells that are already marked as hints
-			if (current.isHint()) {
-				continue;
-			}
-			if (mine) {
-				if (current.isBlank()) {
-					current.setMineHint();
-					game.getHintCells().add(current);
-					game.refresh();
-					return;
-				}
-			} else {
-				if (current.isBlank()) {
-					current.setSafeHint();
-					game.getHintCells().add(current);
-					game.refresh();
-					return;
-				}
-			}
-		}
-	}
-
 	/**
 	 * Search the board for a cell that is not a mine and cells that are guaranteed
 	 * to be a mine. When "safe" cell found, selected it and return true; When a
@@ -493,39 +460,6 @@ public class BoardSolver {
 		return false;
 	}
 
-	public boolean oldSATSolve() {
-		boolean change = false;
-		Map<Cell, Boolean> known = shallowSolve();
-		if (known == null || !running.get()) {
-			return false;
-		}
-		// Iterate over map
-		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
-			Cell current = pair.getKey();
-			boolean mine = pair.getValue();
-			if (mine) {
-				if (current.isClosed() && !current.isFlagged()) {
-					current.flag();
-					game.decrementMines();
-					change = true;
-				}
-			} else {
-				if (current.isBlank()) {
-					if (quiet) {
-						game.quietSelect(current.getX(), current.getY());
-					} else {
-						game.select(current.getX(), current.getY());
-					}
-					change = true;
-				}
-			}
-		}
-		if (!quiet) {
-			game.refresh();
-		}
-		return change;
-	}
-
 	// new sat solve that uses binary lits
 	public boolean SATSolve() {
 		cells = game.getCells();
@@ -599,199 +533,6 @@ public class BoardSolver {
 				if (strat) performStrat();
 			}
 		}
-	}
-
-	private void genAllConstraints(IPBSolver solver) throws ContradictionException {
-
-		IVecInt lits = new VecInt();
-		IVec<BigInteger> coeffs = new Vec<BigInteger>();
-
-		// Constraint that sum of all cells must be the no.
-		// of mines present on the board
-		for (int i = 0; i < cells.length; i++) {
-			for (int j = 0; j < cells[i].length; j++) {
-				Cell current = cells[i][j];
-				lits.push(encodeCellId(current));
-				coeffs.push(BigInteger.ONE);
-			}
-		}
-		solver.addExactly(lits, coeffs, BigInteger.valueOf(game.getNoOfMines()));
-		lits.clear();
-		coeffs.clear();
-
-		List<Cell> landCells = getLandCells();
-		for (int i = 0; i < landCells.size(); i++) {
-			Cell current = landCells.get(i);
-
-			lits.clear();
-			coeffs.clear();
-
-			// Every open cell is guaranteed to not be a mine
-			lits.push(encodeCellId(current));
-			coeffs.push(BigInteger.ONE);
-			solver.addExactly(lits, coeffs, BigInteger.ZERO);
-			lits.clear();
-			coeffs.clear();
-
-			List<Cell> neighbours = getNeighbours(current);
-			// neighbours.removeIf(c -> !c.isClosed());
-			// Normal constraint
-			for (Cell c : neighbours) {
-				lits.push(encodeCellId(c));
-				coeffs.push(BigInteger.ONE);
-			}
-			solver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
-			lits.clear();
-			coeffs.clear();
-		}
-	}
-
-	private Map<Cell, Boolean> deepSolveMines() {
-		IPBSolver pbSolver = SolverFactory.newDefault();
-
-		Map<Cell, Boolean> results = new HashMap<>();
-		for (int i = 0; i < cells.length && running.get() && !Thread.interrupted(); i++) {
-			for (int j = 0; j < cells[i].length && running.get() && !Thread.interrupted(); j++) {
-				Cell current = cells[i][j];
-				// Skip looking at cells open cell and cells that have already
-				// been checked
-				if (current.isOpen()) {
-					continue;
-				}
-
-				// Find if cell safe (weight=0) or mine (weight=1)
-				for (int weight = 0; weight <= 1; weight++) {
-					IVecInt lit = new VecInt();
-					IVec<BigInteger> coeff = new Vec<BigInteger>();
-					BigInteger cellWeight = BigInteger.valueOf(weight);
-					try {
-						// Generate the known constraints on the board
-						genAllConstraints(pbSolver);
-
-						// Create literal for current cell
-						lit.push(encodeCellId(current));
-						coeff.push(BigInteger.ONE);
-						// Safe/Mine
-						pbSolver.addExactly(lit, coeff, cellWeight);
-
-						// Find if cell is safe or mine
-						if (!pbSolver.isSatisfiable()) {
-							boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-							results.put(current, isMine);
-							pbSolver.reset();
-							break; // Break as no need to check if cell is also
-									// a mine
-						}
-						pbSolver.reset();
-					} catch (ContradictionException ce) {
-						// Contradiction Exception is thrown when the tested
-						// cell is already known to be
-						// safe/a mine.
-						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-						results.put(current, isMine);
-					} catch (TimeoutException te) {
-					}
-				}
-			}
-		}
-		pbSolver.reset();
-		if (Thread.interrupted() || !running.get()) {
-			return null;
-		}
-		return results;
-	}
-
-	private Map<Cell, Boolean> shallowSolve() {
-		IPBSolver pbSolver = SolverFactory.newDefault();
-		cells = game.getCells();
-		Map<Cell, Boolean> results = new HashMap<>();
-		List<Cell> closedShore = getShoreClosedCells();
-		List<Cell> sea = getSeaCells();
-
-		if (!sea.isEmpty()) {
-			Cell current = sea.get(0);
-			for (int weight = 0; weight <= 1; weight++) {
-				IVecInt lit = new VecInt();
-				IVec<BigInteger> coeff = new Vec<BigInteger>();
-				BigInteger cellWeight = BigInteger.valueOf(weight);
-				try {
-					// Generate the known constraints on the board
-					genAllConstraints(pbSolver);
-
-					// Create literal for current cell
-					lit.push(encodeCellId(current));
-					coeff.push(BigInteger.ONE);
-					// Safe/Mine
-					pbSolver.addExactly(lit, coeff, cellWeight);
-
-					// Find if cell is safe or mine
-					if (!pbSolver.isSatisfiable()) {
-						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-						for (Cell c : sea) {
-							results.put(c, isMine);
-						}
-						pbSolver.reset();
-						break; // Break as no need to check if cell is also a
-								// mine
-					}
-					pbSolver.reset();
-				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is
-					// already known to be
-					// safe/a mine.
-					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-					for (Cell c : sea) {
-						results.put(c, isMine);
-					}
-				} catch (TimeoutException te) {
-				}
-			}
-		}
-
-		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
-			Cell current = closedShore.get(i);
-			if (current.isFlagged()) {
-				continue;
-			}
-			// Find if cell safe (weight=0) or mine (weight=1)
-			for (int weight = 0; weight <= 1; weight++) {
-				IVecInt lit = new VecInt();
-				IVec<BigInteger> coeff = new Vec<BigInteger>();
-				BigInteger cellWeight = BigInteger.valueOf(weight);
-				try {
-					// Generate the known constraints on the board
-					genAllConstraints(pbSolver);
-
-					// Create literal for current cell
-					lit.push(encodeCellId(current));
-					coeff.push(BigInteger.ONE);
-					// Safe/Mine
-					pbSolver.addExactly(lit, coeff, cellWeight);
-
-					// Find if cell is safe or mine
-					if (!pbSolver.isSatisfiable()) {
-						boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-						results.put(current, isMine);
-						pbSolver.reset();
-						break; // Break as no need to check if cell is also a
-								// mine
-					}
-					pbSolver.reset();
-				} catch (ContradictionException ce) {
-					// Contradiction Exception is thrown when the tested cell is
-					// already known to be
-					// safe/a mine.
-					boolean isMine = cellWeight.compareTo(BigInteger.valueOf(1)) == 0 ? false : true;
-					results.put(current, isMine);
-				} catch (TimeoutException te) {
-				}
-			}
-		}
-		pbSolver.reset();
-		if (Thread.interrupted() || !running.get()) {
-			return null;
-		}
-		return results;
 	}
 
 	private Map<Cell, Boolean> binaryShallowSolve() {
@@ -979,79 +720,6 @@ public class BoardSolver {
 		lits.clear();
 		coeffs.clear();
 
-	}
-
-	public Map<Cell, Double> oldCalcAllCellsProb() {
-		cells = game.getCells();
-		IPBSolver pbSolver = SolverFactory.newDefault();
-
-		Map<Cell, Double> results = new HashMap<>();
-
-		List<Cell> adjacentCells = getShoreClosedCells();
-
-
-		try {
-			genAllConstraints(pbSolver);
-		} catch (ContradictionException e3) {
-			e3.printStackTrace();
-		}
-
-		for (Cell[] col : cells) {
-			for (Cell c : col) {
-				results.put(c, 0.0);
-			}
-		}
-
-		int noOfSolutions = 0;
-		try {
-			while (pbSolver.isSatisfiable() && running.get()) {
-				++noOfSolutions;
-				int[] model = pbSolver.model();
-				for (int i : model) {
-					boolean mine = i < 0 ? false : true;
-					if (mine) {
-						results.put(decodeCellId(i), results.get(decodeCellId(i)) + 1.0);
-					}
-				}
-				// Find another solution
-				for (int i = 0; i < model.length; i++) {
-					model[i] = model[i] * -1;
-				}
-				IVecInt block = new VecInt(model);
-
-				pbSolver.addBlockingClause(block);
-			}
-		} catch (TimeoutException e) {
-			e.printStackTrace();
-		} catch (ContradictionException e) {
-			e.printStackTrace();
-		}
-
-		Double div = (double) noOfSolutions;
-		results.replaceAll((key, val) -> {
-			return val / div;
-		});
-		Map<Cell, Double> sortedByCount = results.entrySet().stream().sorted(Map.Entry.comparingByValue())
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-
-		if (!running.get()) {
-			return null;
-		}
-
-		// To Remove, debug
-		// Remove all cells that are 100% mines
-		// sortedByCount.values().removeAll(Collections.singleton(1.0));
-		// System.out.println(noOfSolutions);
-		// System.out.println(sortedByCount);
-		for (Map.Entry<Cell, Double> pair : sortedByCount.entrySet()) {
-			Cell current = pair.getKey();
-			Double prob = pair.getValue();
-			if (current.isBlank()) {
-				current.setProb(prob);
-			}
-		}
-		game.refresh();
-		return sortedByCount;
 	}
 
 	private Map<Cell, Double> calcAllCellsProb() {
@@ -1247,81 +915,9 @@ public class BoardSolver {
 		return cellsWithBestProb;
 	}
 
-	public List<Cell> checkCorners() {
-		cells = game.getCells();
-		List<Cell> corners = new ArrayList<>();
-		int width = cells.length;
-		int height = cells[0].length;
-		Cell current = cells[0][0];
-		if (current.isClosed()) {
-			corners.add(current);
-		}
-		current = cells[0][height - 1];
-		if (current.isClosed()) {
-			corners.add(current);
-		}
-		current = cells[width - 1][0];
-		if (current.isClosed()) {
-			corners.add(current);
-		}
-		current = cells[width - 1][height - 1];
-		if (current.isClosed()) {
-			corners.add(current);
-		}
-		return corners;
-	}
-
 	public void temp() {
 		Cell c = getBestStratCell(getBestProbCell(calcAllCellsProb()));
 		game.select(c.getX(), c.getY());
-	}
-
-	public Cell getExpBestStratCell(List<Cell> bestProbCells) {
-		if (bestProbCells.isEmpty()) {
-			return null;
-		}
-
-		List<Cell> closedShoreCells = getShoreClosedCells();
-		Cell bestCell = null;
-
-		// Select the cell that touches the most land cells
-		int mostNumbers = 0;
-		for (Cell current : bestProbCells) {
-			List<Cell> neighbours = getNeighbours(current);
-			neighbours.removeIf(c -> c.isClosed());
-			int numberCount = neighbours.size();
-			if (numberCount > mostNumbers) {
-				mostNumbers = numberCount;
-				bestCell = current;
-			}
-		}
-
-		if (mostNumbers > 0 && bestCell != null) {
-			System.out.println("here1");
-			return bestCell;
-		}
-
-		// Choose the cell that touches the most closedShoreCells
-		int mostShore = 0;
-		for (Cell current : bestProbCells) {
-			List<Cell> neighbours = getNeighbours(current);
-			neighbours.removeIf(c -> !closedShoreCells.contains(current));
-			int shoreCount = neighbours.size();
-			if (shoreCount > mostShore) {
-				mostShore = shoreCount;
-				bestCell = current;
-			}
-		}
-
-		if (mostShore > 0 && bestCell != null) {
-			System.out.println("here2");
-			return bestCell;
-		}
-
-		// if no favourable cell can be found then just select a random cell
-		bestCell = getRandomCell(bestProbCells);
-
-		return bestCell;
 	}
 
 	public Cell getBestStratCell(List<Cell> bestProbCells) {
@@ -1347,45 +943,6 @@ public class BoardSolver {
 			bestCell = getRandomCell(bestCells);
 		} else {
 			bestCell = bestCells.get(0);
-		}
-		return bestCell;
-	}
-
-	// To Remove
-	private boolean checkIfTouching(List<Cell> cells) {
-		boolean touching = true;
-		for (int i = 0; i < cells.size() - 1; i++) {
-			Cell leftCell = cells.get(i);
-			Cell rightCell = cells.get(i + 1);
-			boolean xTouch = Math.abs(leftCell.getX() - rightCell.getX()) == 1;
-			boolean yTouch = Math.abs(leftCell.getY() - rightCell.getY()) == 1;
-			if (!(xTouch || yTouch)) {
-				touching = false;
-				break;
-			}
-		}
-		return touching;
-	}
-
-	public Cell getBestDensityCell(Map<Cell, Double> probs) {
-		List<Cell> bestProbs = getBestProbCell(probs);
-		Cell bestCell = null;
-		Double bestProb = 1.1;
-
-		for (Cell current : bestProbs) {
-			Double currentProb = 0.0;
-			List<Cell> neighbours = getNeighbours(current);
-			neighbours.removeIf(c -> c.isOpen() || c.isFlagged());
-			int closedCount = neighbours.size();
-			for (Cell c : neighbours) {
-				currentProb += probs.get(c);
-			}
-			currentProb = currentProb / closedCount;
-
-			if (currentProb.compareTo(bestProb) < 0) {
-				bestProb = currentProb;
-				bestCell = current;
-			}
 		}
 		return bestCell;
 	}

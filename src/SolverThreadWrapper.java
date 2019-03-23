@@ -28,16 +28,17 @@ public class SolverThreadWrapper implements Runnable {
         this.sim = sim;
         thread = new Thread(this, Integer.toString(threadID++));
     }
-    
+
     public void start() {
         this.solver = new BoardSolver(game, running);
         this.thread = new Thread(this);
         this.thread.start();
     }
-    
+
     public void end() {
         running.set(false);
-        if (thread != null) thread.interrupt();
+        if (thread != null)
+            thread.interrupt();
         thread = null;
     }
 
@@ -74,11 +75,11 @@ public class SolverThreadWrapper implements Runnable {
     public void setPatternMatchSolve() {
         this.patternMatch = true;
     }
-    
+
     public void setSATSolve() {
         this.SAT = true;
     }
-    
+
     public void setProbSolve() {
         this.prob = true;
     }
@@ -135,11 +136,7 @@ public class SolverThreadWrapper implements Runnable {
             } else if (patternMatch) {
                 patternMatchSolve();
             } else if (SAT) {
-                if (old) {
-                    solver.oldSATHint();
-                } else {
-                    SATSolve();
-                }
+                SATSolve();
             }
         } else { // Just Assist
             if (patternMatch && SAT) {
@@ -147,7 +144,7 @@ public class SolverThreadWrapper implements Runnable {
             } else if (patternMatch) {
                 solver.patternMatch();
             } else if (SAT) {
-                if(!solver.SATSolve()) {
+                if (!solver.SATSolve()) {
                     if (strat) {
                         solver.temp();
                     }
@@ -169,12 +166,6 @@ public class SolverThreadWrapper implements Runnable {
     private void SATSolve() {
         Thread thisThread = Thread.currentThread();
         while (thisThread == thread && running.get() && !game.isGameOver() && solver.SATSolve()) {
-        }
-    }
-
-    private void oldSATSolve() {
-        Thread thisThread = Thread.currentThread();
-        while (thisThread == thread && running.get() && !game.isGameOver() && solver.oldSATSolve()) {
         }
     }
 
