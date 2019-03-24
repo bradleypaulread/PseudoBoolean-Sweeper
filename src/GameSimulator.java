@@ -97,7 +97,6 @@ public class GameSimulator {
             for (Minesweeper game : gamesPattern.get(i)) {
                 if (game.isGameWon()) {
                     wins[i]++;
-                    times.get(i).add(game.getElapsedTime());
                 }
             }
         }
@@ -110,7 +109,6 @@ public class GameSimulator {
             for (Minesweeper game : gamesSAT.get(i)) {
                 if (game.isGameWon()) {
                     wins[i]++;
-                    times.get(i).add(game.getElapsedTime());
                 }
             }
         }
@@ -123,7 +121,6 @@ public class GameSimulator {
             for (Minesweeper game : gamesJoint.get(i)) {
                 if (game.isGameWon()) {
                     wins[i]++;
-                    times.get(i).add(game.getElapsedTime());
                 }
             }
         }

@@ -94,8 +94,6 @@ public class Minesweeper extends JFrame {
 	private int moves = 0; // Number if moves made by the player.
 	private int currentGameTime;
 	private Timer gameTimer;
-	private long startTime;
-	private long endTime;
 	private int minesLeft;
 	private boolean gameWon;
 
@@ -184,7 +182,6 @@ public class Minesweeper extends JFrame {
 		gameWon = false;
 		// Reset board to a fresh setting
 		mineField = mf;
-		startTime = System.nanoTime();
 	}
 
 	private void setup(int x, int y, int d) {
@@ -208,7 +205,6 @@ public class Minesweeper extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
-		startTime = System.nanoTime();
 		solver = new BoardSolver(this);
 	}
 
@@ -239,7 +235,6 @@ public class Minesweeper extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
-		startTime = System.nanoTime();
 		solver = new BoardSolver(this);
 	}
 
@@ -680,7 +675,6 @@ public class Minesweeper extends JFrame {
 		}
 
 		if (won()) { // If the game has been beaten (number of closed cells = no of mines)
-			endTime = System.nanoTime();
 			gameWon = true;
 			isGameOver = true;
 		}
@@ -702,7 +696,6 @@ public class Minesweeper extends JFrame {
 	 */
 	private void endGame() {
 		thread.end();
-		endTime = System.nanoTime();
 		isGameOver = true;
 		gameTimer.stop();
 		try {
@@ -721,9 +714,7 @@ public class Minesweeper extends JFrame {
 		thread.end();
 		details.setText("Game Started.");
 		isGameOver = false;
-		endTime = 0;
 		currentGameTime = 0;
-		startTime = 0;
 		moves = 0;
 		movesLbl.setText("Moves: " + Integer.toString(moves));
 		minesLeft = noOfMines;
@@ -947,10 +938,6 @@ public class Minesweeper extends JFrame {
 
 	public JButton getStopBtn() {
 		return stopBtn;
-	}
-
-	public Long getElapsedTime() {
-		return endTime - startTime;
 	}
 
 	public void resetProbs() {

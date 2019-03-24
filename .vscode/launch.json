@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - PatternMatchSimulator",
+            "request": "launch",
+            "mainClass": "PatternMatchSimulator",
+            "projectName": "SATMinesweeper"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - BigRational",
             "request": "launch",
             "mainClass": "BigRational",
