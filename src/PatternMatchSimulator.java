@@ -125,7 +125,6 @@ public class PatternMatchSimulator {
         PatternMatchSimulator sim = new PatternMatchSimulator(10000,  "resources/test.csv");
         sim.startFullSim();
         sim.writeResults();
-        sim.writeResults();
         System.out.println("DONE!");
     }
 }
