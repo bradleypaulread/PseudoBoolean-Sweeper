@@ -248,8 +248,15 @@ public class BoardSolver {
 		}
 		return true;
 	}
+	
+	public void fullSolve() {
+		if (!patternAndSATSolve()) {
+			performStrat();
+		}
+	}
 
 	private void performStrat() {
+		// System.out.println("perform strat");
 		Map<Cell, Double> probs = calcAllCellsProb();
 		List<Cell> cells = getBestProbCell(probs);
 		if (cells == null) {
@@ -259,16 +266,12 @@ public class BoardSolver {
 		if (bestCell == null) {
 			return;
 		}
-		String detail = "Strategically Selecting Best Cell " + bestCell + " with prob. " + probs.get(bestCell);
-		game.addDetail(detail);
-		game.select(bestCell.getX(), bestCell.getY());
-	}
-
-	public void fullSolve() {
-		if (!patternMatch()) {
-			if (!SATSolve()) {
-				if (strat) performStrat();
-			}
+		if (quiet) {
+			game.quietSelect(bestCell.getX(), bestCell.getY());
+		} else {
+			String detail = "Strategically Selecting Best Cell " + bestCell + " with prob. " + probs.get(bestCell);
+			game.addDetail(detail);
+			game.select(bestCell.getX(), bestCell.getY());
 		}
 	}
 
@@ -293,7 +296,8 @@ public class BoardSolver {
 				try {
 					// Generate the known constraints on the board
 					genBinaryConstraints(pbSolver);
-
+					pbSolver.setDBSimplificationAllowed(true);
+					pbSolver.setTimeout(1);
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
 					coeff.push(BigInteger.ONE);
@@ -326,6 +330,7 @@ public class BoardSolver {
 					results.put(current, isMine);
 					pbSolver.reset();
 				} catch (TimeoutException te) {
+					System.out.println("time out");
 				}
 			}
 		}
@@ -445,7 +450,7 @@ public class BoardSolver {
 			lits.clear();
 			coeffs.clear();
 			List<Cell> neighbours = getNeighbours(current);
-			// neighbours.removeIf(c -> !c.isClosed());
+			neighbours.removeIf(c -> !c.isClosed());
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
 				coeffs.push(BigInteger.ONE);
@@ -461,6 +466,8 @@ public class BoardSolver {
 
 	private Map<Cell, Double> calcAllCellsProb() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
+		pbSolver.setKeepSolverHot(true);
+		pbSolver.setDBSimplificationAllowed(true);
 		cells = game.getCells();
 		// Key = Cell
 		// Value = Map of Integer to Integer
@@ -475,7 +482,6 @@ public class BoardSolver {
 		BigFraction seaT = BigFraction.ZERO;
 		int totalMines = game.getNoOfMines();
 		int seaSize = getSeaCells().size();
-
 
 		try {
 			genBinaryConstraints(pbSolver);
@@ -653,8 +659,7 @@ public class BoardSolver {
 	}
 
 	public void temp() {
-		Cell c = getBestStratCell(getBestProbCell(calcAllCellsProb()));
-		game.select(c.getX(), c.getY());
+		selectRandomCell();
 	}
 
 	public Cell getBestStratCell(List<Cell> bestProbCells) {

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
 import org.apache.commons.math3.fraction.BigFraction;
 import org.apache.commons.math3.fraction.Fraction;
@@ -26,29 +25,31 @@ public class PatternMatchSimulator {
         resultString = new StringBuilder();
     }
 
-    public void start() throws IOException {
+    public void startFullSim() throws IOException {
         writeTitle();
-        easySim();
-        medSim();
-        hardSim();
+        sim(Difficulty.BEGINNER, EASY_PATH);
+        sim(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+        sim(Difficulty.EXPERT, HARD_PATH);
     }
 
-    public void easySim() throws IOException {
+    public void sim(Difficulty diff, String path) throws IOException {
         Gson gson = new Gson();
-        try (BufferedReader br = new BufferedReader(new FileReader(EASY_PATH))) {
-            int count = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            int gameCount = 0;
             int winCount = 0;
+            int guessCount = 0;
             BigInteger winTimes = BigInteger.ZERO;
-            for (String mineFieldStr; (mineFieldStr = br.readLine()) != null && count < noOfGames;) {
-                count++;
-                MineField mf = gson.fromJson(mineFieldStr, MineField.class);
+            for (String strFieldJson; (strFieldJson = br.readLine()) != null && gameCount < noOfGames;) {
+                gameCount++;
+                MineField mf = gson.fromJson(strFieldJson, MineField.class);
                 long start = System.nanoTime();
-                Minesweeper game = new Minesweeper(Difficulty.BEGINNER, mf);
+                Minesweeper game = new Minesweeper(diff, mf);
                 BoardSolver solver = new BoardSolver(game);
                 solver.setQuiet();
                 while (!game.isGameOver()) {
                     if (!solver.patternMatch()) {
                         solver.selectRandomCell();
+                        guessCount++;
                     }
                 }
                 if (game.isGameWon()) {
@@ -58,65 +59,7 @@ public class PatternMatchSimulator {
                     winTimes = winTimes.add(BigInteger.valueOf(gameTime));
                 }
             }
-            writeLine("Beginner", winCount, winTimes);
-        }
-    }
-
-    public void medSim() throws IOException {
-        Gson gson = new Gson();
-        try (BufferedReader br = new BufferedReader(new FileReader(MEDIUM_PATH))) {
-            int count = 0;
-            int winCount = 0;
-            BigInteger winTimes = BigInteger.ZERO;
-            for (String mineFieldStr; (mineFieldStr = br.readLine()) != null && count < noOfGames;) {
-                count++;
-                MineField mf = gson.fromJson(mineFieldStr, MineField.class);
-                long start = System.nanoTime();
-                Minesweeper game = new Minesweeper(Difficulty.INTERMEDIATE, mf);
-                BoardSolver solver = new BoardSolver(game);
-                solver.setQuiet();
-                while (!game.isGameOver()) {
-                    if (!solver.patternMatch()) {
-                        solver.selectRandomCell();
-                    }
-                }
-                if (game.isGameWon()) {
-                    long end = System.nanoTime();
-                    long gameTime = end - start;
-                    winCount++;
-                    winTimes = winTimes.add(BigInteger.valueOf(gameTime));
-                }
-            }
-            writeLine("Medium", winCount, winTimes);
-        }
-    }
-
-    public void hardSim() throws IOException {
-        Gson gson = new Gson();
-        try (BufferedReader br = new BufferedReader(new FileReader(HARD_PATH))) {
-            int count = 0;
-            int winCount = 0;
-            BigInteger winTimes = BigInteger.ZERO;
-            for (String mineFieldStr; (mineFieldStr = br.readLine()) != null && count < noOfGames;) {
-                count++;
-                MineField mf = gson.fromJson(mineFieldStr, MineField.class);
-                long start = System.nanoTime();
-                Minesweeper game = new Minesweeper(Difficulty.EXPERT, mf);
-                BoardSolver solver = new BoardSolver(game);
-                solver.setQuiet();
-                while (!game.isGameOver()) {
-                    if (!solver.patternMatch()) {
-                        solver.selectRandomCell();
-                    }
-                }
-                if (game.isGameWon()) {
-                    long end = System.nanoTime();
-                    long gameTime = end - start;
-                    winCount++;
-                    winTimes = winTimes.add(BigInteger.valueOf(gameTime));
-                }
-            }
-            writeLine("Expert", winCount, winTimes);
+            writeLine(diff.toString(), winCount, winTimes, guessCount);
         }
     }
 
@@ -128,21 +71,25 @@ public class PatternMatchSimulator {
 
     public void writeTitle() {
         resultString.append("difficulty");
-        resultString.append(',');
+        resultString.append(",");
         resultString.append("no. of games");
-        resultString.append(',');
+        resultString.append(",");
         resultString.append("wins");
-        resultString.append(',');
+        resultString.append(",");
         resultString.append("loss");
-        resultString.append(',');
+        resultString.append(",");
         resultString.append("win/loss (%)");
-        resultString.append(',');
+        resultString.append(",");
         resultString.append("avg. time (m/s)");
-        resultString.append(',');
-        resultString.append('\n');
+        resultString.append(",");
+        resultString.append("no. of guesses");
+        resultString.append(",");
+        resultString.append("avg. no. of guesses");
+        resultString.append(",");
+        resultString.append("\n");
     }
 
-    public void writeLine(String diff, int winCount, BigInteger gameTime) {
+    public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount) {
         resultString.append(diff);
         resultString.append(",");
         resultString.append(noOfGames);
@@ -152,7 +99,7 @@ public class PatternMatchSimulator {
         resultString.append(noOfGames - winCount);
         resultString.append(",");
         Fraction winPercent = new Fraction(winCount, noOfGames);
-        resultString.append(winPercent.doubleValue() * 100);
+        resultString.append(winPercent.percentageValue());
         resultString.append(",");
         if (winCount == 0) {
             resultString.append("0");
@@ -162,15 +109,22 @@ public class PatternMatchSimulator {
             resultString.append(avgTime.doubleValue());
         }
         resultString.append(",");
+        resultString.append(guessCount);
+        resultString.append(",");
+        if (guessCount == 0) {
+            resultString.append("0");
+        } else {
+            Fraction guessAvg = new Fraction(guessCount, noOfGames);
+            resultString.append(guessAvg.doubleValue());
+        }
+        resultString.append(",");
         resultString.append("\n");
     }
 
     public static void main(String[] args) throws IOException {
-        PatternMatchSimulator sim = new PatternMatchSimulator(10000,  "resources/test2.csv");
-        sim.start();
+        PatternMatchSimulator sim = new PatternMatchSimulator(10000,  "resources/test.csv");
+        sim.startFullSim();
         sim.writeResults();
-        sim = new PatternMatchSimulator(10000,  "resources/test3.csv");
-        sim.start();
         sim.writeResults();
         System.out.println("DONE!");
     }

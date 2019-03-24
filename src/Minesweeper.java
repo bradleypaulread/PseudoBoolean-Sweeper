@@ -361,6 +361,7 @@ public class Minesweeper extends JFrame {
 			// thread.start();
 			// stopBtn.setEnabled(true);
 			solver.temp();
+			refresh();
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
