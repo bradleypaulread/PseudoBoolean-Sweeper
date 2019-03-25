@@ -577,7 +577,7 @@ public class Minesweeper extends JFrame {
 	 * Redraw the board, updating all cells appearance and behaviour.
 	 */
 	public void refresh() {
-		board.repaint(10);
+		board.repaint();
 	}
 
 	/**

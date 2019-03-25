@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.math.BigIntegerMath;
+import com.google.gson.Gson;
 
 import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.Vec;
@@ -296,8 +297,7 @@ public class BoardSolver {
 				try {
 					// Generate the known constraints on the board
 					genBinaryConstraints(pbSolver);
-					pbSolver.setDBSimplificationAllowed(true);
-					pbSolver.setTimeout(1);
+					// pbSolver.setTimeout(1);
 					// Create literal for current cell
 					lit.push(encodeCellId(current));
 					coeff.push(BigInteger.ONE);
@@ -429,8 +429,8 @@ public class BoardSolver {
 				// System.out.println(encodeLit(i));
 				coeffs.push(BigInteger.valueOf((long) Math.pow(2, i)));
 			}
+			pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(seaCells.size()));
 		}
-		pbSolver.addAtMost(lits, coeffs, BigInteger.valueOf(seaCells.size()));
 
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
@@ -467,7 +467,6 @@ public class BoardSolver {
 	private Map<Cell, Double> calcAllCellsProb() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
 		pbSolver.setKeepSolverHot(true);
-		pbSolver.setDBSimplificationAllowed(true);
 		cells = game.getCells();
 		// Key = Cell
 		// Value = Map of Integer to Integer
@@ -496,7 +495,7 @@ public class BoardSolver {
 				int noOfMines = 0;
 				for (int i : model) {
 					// System.out.print("" + i + ", ");
-					// Test if lit is for a cell and if cell is
+					// Test if lit is for a cell and if cell is also a mine
 					boolean mine = i < 0 ? false : true;
 					Cell testForCell = decodeCellId(i);
 					if (testForCell != null && mine) {
