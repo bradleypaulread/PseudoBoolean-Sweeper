@@ -473,7 +473,7 @@ public class BoardSolver {
 		// Key = Number of mines in solution
 		// Value = Coefficient
 		// (number of times the cell appears in Key number of mine solutions)
-		Map<Cell, Map<Integer, Integer>> solutions = new HashMap<>();
+		Map<Cell, BigInteger> cellT = new HashMap<>();
 
 		Map<Cell, Double> probs = new HashMap<>();
 
@@ -506,32 +506,25 @@ public class BoardSolver {
 				// System.out.println("\n");
 				// Increment cell config count
 				// (number of times a cell has appeared in a certain config)
-				for (Cell c : currentSol) {
-					Map<Integer, Integer> testForNull = solutions.get(c);
-					if (testForNull == null) {
-						Map<Integer, Integer> temp = new HashMap<>();
-						temp.put(noOfMines, 1);
-						solutions.put(c, temp);
-					} else {
-						Integer testForSol = testForNull.get(noOfMines);
-						if (testForSol == null) {
-							testForNull.put(noOfMines, 1);
-						} else {
-							testForNull.put(noOfMines, testForSol + 1);
-						}
-					}
-				}
 
-				// Increment T
-				int remainingMines = totalMines - currentSol.size();
-
-				BigInteger toAdd;
+				int remainingMines = totalMines - noOfMines;
+				
+				BigInteger toAdd = BigInteger.ONE;
 				if (seaSize > 0) {
 					toAdd = BigIntegerMath.binomial(seaSize, remainingMines);
-				} else {
-					toAdd = BigInteger.ONE;
 				}
+				// Increment T
 				T = T.add(toAdd);
+
+				for (Cell c : currentSol) {
+					BigInteger testForNull = cellT.get(c);
+					if (testForNull == null) {
+						cellT.put(c, toAdd);
+					} else {
+						testForNull = testForNull.add(toAdd);
+						cellT.put(c, testForNull);
+					}
+				}
 
 				BigFraction seaFrac = BigFraction.ZERO;
 				if (seaSize > 0) {
@@ -584,25 +577,13 @@ public class BoardSolver {
 			if (current.isFlagged()) {
 				continue;
 			}
-
-			Map<Integer, Integer> configs = solutions.get(current);
-			BigInteger top = BigInteger.ZERO;
-			// If a shore cell does not appear in any config then that cell has 0.0
-			// probabilty of being a mine (is 100% safe)
-			if (configs != null) {
-				for (Map.Entry<Integer, Integer> pair : configs.entrySet()) {
-					// Bionomal format, combination of n choose k
-					int n = seaSize;
-					int k = totalMines - pair.getKey();
-					BigInteger bio = BigInteger.ONE;
-					if (n > 0) {
-						bio = BigIntegerMath.binomial(n, k);
-					}
-
-					top = top.add(bio.multiply(BigInteger.valueOf(pair.getValue())));
-				}
+			BigInteger currentCellT = cellT.get(current);
+			// currentCellT is null when a cell does not appear in any solution
+			// and is therefore safe, meaning 0.0 prob of being a mine
+			if (currentCellT == null) {
+				currentCellT = BigInteger.ZERO;
 			}
-			BigFraction cellProb = new BigFraction(top, T);
+			BigFraction cellProb = new BigFraction(currentCellT, T);
 			Double cellProbDouble = cellProb.doubleValue();
 			probs.put(current, cellProbDouble);
 		}
