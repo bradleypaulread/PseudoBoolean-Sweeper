@@ -27,6 +27,7 @@ public class Board extends JPanel {
 		game = m;
 		cells = game.getCells();
 		addMouseListener(new MouseActions(game, this));
+		addMouseMotionListener(new MouseMove(game, this));
 		setPreferredSize(new Dimension(width * CELL_WIDTH, height * CELL_WIDTH));
 	}
 

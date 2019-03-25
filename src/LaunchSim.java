@@ -78,14 +78,10 @@ public class LaunchSim {
 	public void startFullSim() {
 		try {
 			writeTitle();
-			System.out.println("Full Easy");
-			playerFull(Difficulty.BEGINNER, EASY_PATH);
-			writeResults(FULL_NAME);
-			resetResults();
-			System.out.println("Full Medium");
-			playerFull(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-			writeResults(FULL_NAME);
-			resetResults();
+//			System.out.println("Full Easy");
+//			playerFull(Difficulty.BEGINNER, EASY_PATH);
+//			System.out.println("Full Medium");
+//			playerFull(Difficulty.INTERMEDIATE, MEDIUM_PATH);
 			System.out.println("Full Hard");
 			playerFull(Difficulty.EXPERT, HARD_PATH);
 			writeResults(FULL_NAME);
@@ -121,7 +117,7 @@ public class LaunchSim {
 		while (!pool.isTerminated()) {
 			System.out.println(pool);
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -167,7 +163,7 @@ public class LaunchSim {
 		while (!pool.isTerminated()) {
 			System.out.println(consoleNum++ + " - " + pool);
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -214,7 +210,7 @@ public class LaunchSim {
 		while (!pool.isTerminated()) {
 			System.out.println(consoleNum++ + " - " + pool);
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -302,7 +298,7 @@ public class LaunchSim {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startPTSim();
+		s.startFullSim();
 
 		System.out.println("\n\n\nDONE!!!!!");
 

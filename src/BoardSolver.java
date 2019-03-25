@@ -215,16 +215,16 @@ public class BoardSolver {
 					current.flag();
 					game.decrementMines();
 					String detail = "Flagging " + current + " as Cell is a Guarenteed Mine";
-					game.addDetail(detail);
+					game.setDetail(detail);
 					change = true;
 				}
 			} else {
 				if (current.isBlank()) {
-					String detail = "Selecting " + current + " as Cell is Safe";
-					game.addDetail(detail);
 					if (quiet) {
 						game.quietSelect(current.getX(), current.getY());
 					} else {
+						String detail = "Selecting " + current + " as Cell is Safe";
+						game.setDetail(detail);
 						game.select(current.getX(), current.getY());
 					}
 					change = true;
@@ -270,8 +270,8 @@ public class BoardSolver {
 		if (quiet) {
 			game.quietSelect(bestCell.getX(), bestCell.getY());
 		} else {
-			String detail = "Strategically Selecting Best Cell " + bestCell + " with prob. " + probs.get(bestCell);
-			game.addDetail(detail);
+			String detail = "Strategically Selecting Cell " + bestCell + " with prob. " + probs.get(bestCell);
+			game.setDetail(detail);
 			game.select(bestCell.getX(), bestCell.getY());
 		}
 	}
@@ -466,7 +466,6 @@ public class BoardSolver {
 
 	private Map<Cell, Double> calcAllCellsProb() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
-		pbSolver.setKeepSolverHot(true);
 		cells = game.getCells();
 		// Key = Cell
 		// Value = Map of Integer to Integer
