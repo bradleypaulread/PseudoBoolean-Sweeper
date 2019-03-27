@@ -93,7 +93,9 @@ public class SolverThreadWrapper implements Runnable {
         if (strat && !hint) {
             solver.setStrat(true);
         }
-        if (hint) {
+        if (old) {
+            old();
+        } else if (hint) {
             if (patternMatch && !SAT) {
                 solver.patternMatchHint();
             } else if (!patternMatch && SAT) {
@@ -166,6 +168,12 @@ public class SolverThreadWrapper implements Runnable {
     private void SATSolve() {
         Thread thisThread = Thread.currentThread();
         while (thisThread == thread && running.get() && !game.isGameOver() && solver.SATSolve()) {
+        }
+    }
+
+    private void old() {
+        Thread thisThread = Thread.currentThread();
+        while (thisThread == thread && running.get() && !game.isGameOver() && solver.old()) {
         }
     }
 

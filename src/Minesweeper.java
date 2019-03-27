@@ -320,9 +320,9 @@ public class Minesweeper extends JFrame {
 		controlBtns.add(stopBtn);
 		controlBtns.add(fullAutoBtn);
 
-		JButton randCellBtn = new JButton("Old SAT Solve");
+		JButton randCellBtn = new JButton("Temp.");
 
-		// controlBtns.add(randCellBtn);
+		controlBtns.add(randCellBtn);
 		controlBtns.add(SATBtns);
 
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);
@@ -356,15 +356,11 @@ public class Minesweeper extends JFrame {
 		// randCellBtn.setEnabled(false);
 
 		randCellBtn.addActionListener(e -> {
-			// Perform the assist action until no more safe moves exist
-			// disableAllBtns();
-			// thread = new SolverThreadWrapper(this);
-			// thread.setLoop();
-			// thread.setOld();
-			// thread.setSATSolve();			
-			// thread.start();
-			// stopBtn.setEnabled(true);
-			solver.temp();
+			disableAllBtns();
+			thread = new SolverThreadWrapper(this);
+			thread.setOld();
+			thread.start();
+			stopBtn.setEnabled(true);
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
@@ -383,6 +379,7 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			if (strategyCb.isSelected()) thread.setStrat();
+			thread.setPatternMatchSolve();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
@@ -411,6 +408,7 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			thread.setLoop();
+			thread.setPatternMatchSolve();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
@@ -738,6 +736,9 @@ public class Minesweeper extends JFrame {
 		// To remove
 		// Gson gson = new Gson();
 		// System.out.println(gson.toJson(this.mineField));
+		// System.out.println();
+		// System.out.println();
+		// System.out.println();
 	}
 
 	/**
