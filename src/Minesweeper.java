@@ -89,7 +89,7 @@ public class Minesweeper extends JFrame {
 	private Board board; // Board instance, where cells appearance is processed
 	private boolean debug; // If debug information should be printed to console
 	private boolean isGameOver; // True if the game has been lost or won
-	private int moves = 0; // Number if moves made by the player.
+	private int moves; // Number if moves made by the player.
 	private int currentGameTime;
 	private Timer gameTimer;
 	private int minesLeft;
@@ -322,7 +322,7 @@ public class Minesweeper extends JFrame {
 
 		JButton randCellBtn = new JButton("Old SAT Solve");
 
-		controlBtns.add(randCellBtn);
+		// controlBtns.add(randCellBtn);
 		controlBtns.add(SATBtns);
 
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);

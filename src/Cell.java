@@ -18,10 +18,11 @@ public class Cell {
 	// Cell behaviour
 	private boolean flagged;
 	private boolean open;
+	private boolean presumedMine;
 	private boolean safeHint;
 	private boolean mineHint;
 	private boolean fail;
-	private boolean marked;
+	private boolean marked; // Used to help deduce moves during a game
 	private Double prob; // Percentage of cell being a mine
 	private boolean bestCell; // If cell has the lowest prob of being a mine
 
@@ -29,6 +30,7 @@ public class Cell {
 		this.x = x;
 		this.y = y;
 		flagged = false;
+		presumedMine = false;
 		open = false;
 		safeHint = false;
 		mineHint = false;
@@ -231,5 +233,96 @@ public class Cell {
 		if (y != other.y)
 			return false;
 		return true;
+	}
+
+	/**
+	 * @param x the x to set
+	 */
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	/**
+	 * @param y the y to set
+	 */
+	public void setY(int y) {
+		this.y = y;
+	}
+
+	/**
+	 * @param flagged the flagged to set
+	 */
+	public void setFlagged(boolean flagged) {
+		this.flagged = flagged;
+	}
+
+	/**
+	 * @param open the open to set
+	 */
+	public void setOpen(boolean open) {
+		this.open = open;
+	}
+
+	/**
+	 * @return the presumedMine
+	 */
+	public boolean isPresumedMine() {
+		return presumedMine;
+	}
+
+	/**
+	 * @param presumedMine the presumedMine to set
+	 */
+	public void setPresumedMine(boolean presumedMine) {
+		this.presumedMine = presumedMine;
+	}
+
+	/**
+	 * @param safeHint the safeHint to set
+	 */
+	public void setSafeHint(boolean safeHint) {
+		this.safeHint = safeHint;
+	}
+
+	/**
+	 * @param mineHint the mineHint to set
+	 */
+	public void setMineHint(boolean mineHint) {
+		this.mineHint = mineHint;
+	}
+
+	/**
+	 * @return the fail
+	 */
+	public boolean isFail() {
+		return fail;
+	}
+
+	/**
+	 * @param fail the fail to set
+	 */
+	public void setFail(boolean fail) {
+		this.fail = fail;
+	}
+
+	/**
+	 * @param marked the marked to set
+	 */
+	public void setMarked(boolean marked) {
+		this.marked = marked;
+	}
+
+	/**
+	 * @param prob the prob to set
+	 */
+	public void setProb(Double prob) {
+		this.prob = prob;
+	}
+
+	/**
+	 * @param bestCell the bestCell to set
+	 */
+	public void setBestCell(boolean bestCell) {
+		this.bestCell = bestCell;
 	}
 }

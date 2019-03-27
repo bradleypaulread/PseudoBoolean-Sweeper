@@ -258,7 +258,7 @@ public class BoardSolver {
 
 	private void performStrat() {
 		// System.out.println("perform strat");
-		Map<Cell, Double> probs = calcAllCellsProb();
+		Map<Cell, BigFraction> probs = calcAllCellsProb();
 		List<Cell> cells = getBestProbCell(probs);
 		if (cells == null) {
 			return;
@@ -464,7 +464,7 @@ public class BoardSolver {
 
 	}
 
-	private Map<Cell, Double> calcAllCellsProb() {
+	private Map<Cell, BigFraction> calcAllCellsProb() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
 		cells = game.getCells();
 		// Key = Cell
@@ -474,7 +474,7 @@ public class BoardSolver {
 		// (number of times the cell appears in Key number of mine solutions)
 		Map<Cell, BigInteger> cellT = new HashMap<>();
 
-		Map<Cell, Double> probs = new HashMap<>();
+		Map<Cell, BigFraction> probs = new HashMap<>();
 
 		BigInteger T = BigInteger.ZERO;
 		BigFraction seaT = BigFraction.ZERO;
@@ -564,10 +564,9 @@ public class BoardSolver {
 			seaT = seaT.reduce();
 			BigFraction TFrac = new BigFraction(T);
 			BigFraction seaProb = seaT.divide(TFrac).reduce();
-			Double seaProbDouble = seaProb.doubleValue();
 			List<Cell> seaCells = getSeaCells();
 			for (Cell c : seaCells) {
-				probs.put(c, seaProbDouble);
+				probs.put(c, seaProb);
 			}
 		}
 
@@ -583,8 +582,7 @@ public class BoardSolver {
 				currentCellT = BigInteger.ZERO;
 			}
 			BigFraction cellProb = new BigFraction(currentCellT, T);
-			Double cellProbDouble = cellProb.doubleValue();
-			probs.put(current, cellProbDouble);
+			probs.put(current, cellProb);
 		}
 		pbSolver.reset();
 
@@ -592,39 +590,39 @@ public class BoardSolver {
 	}
 
 	public void displayProb() {
-		Map<Cell, Double> probs = calcAllCellsProb();
+		Map<Cell, BigFraction> probs = calcAllCellsProb();
 		if (probs == null) {
 			return;
 		}
-		for (Map.Entry<Cell, Double> pair : probs.entrySet()) {
+		for (Map.Entry<Cell, BigFraction> pair : probs.entrySet()) {
 			Cell current = pair.getKey();
-			Double prob = pair.getValue();
+			BigFraction prob = pair.getValue();
 
-			current.setProb(prob);
+			current.setProb(prob.doubleValue());
 		}
 
-		List<Cell> probss = getBestProbCell(probs);
-		for (Cell c : probss) {
+		List<Cell> bestProbCells = getBestProbCell(probs);
+		for (Cell c : bestProbCells) {
 			c.setBestCell();
 		}
 		game.refresh();
 	}
 
-	public List<Cell> getBestProbCell(Map<Cell, Double> probs) {
+	public List<Cell> getBestProbCell(Map<Cell, BigFraction> probs) {
 		List<Cell> cellsWithBestProb = new ArrayList<>();
 
 		if (probs == null) {
 			return cellsWithBestProb;
 		}
 
-		for (Map.Entry<Cell, Double> pair : probs.entrySet()) {
+		for (Map.Entry<Cell, BigFraction> pair : probs.entrySet()) {
 			Cell current = pair.getKey();
-			Double prob = pair.getValue();
+			BigFraction prob = pair.getValue();
 			if (cellsWithBestProb.isEmpty()) {
 				cellsWithBestProb.add(current);
 				continue;
 			}
-			Double currentBestProb = probs.get(cellsWithBestProb.get(0));
+			BigFraction currentBestProb = probs.get(cellsWithBestProb.get(0));
 			int val = prob.compareTo(currentBestProb);
 			if (val == 0) {
 				cellsWithBestProb.add(current);
