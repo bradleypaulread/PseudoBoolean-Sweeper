@@ -133,15 +133,17 @@ public class Board extends JPanel {
 				Color cellColor;
 				if (cell.isBestCell()) {
 					cellColor = Color.WHITE;
-				} else if (cellProb <= 0.33) {
-					int density = (int) (255 - ((double) 255 * cellProb));
-					cellColor = new Color(130, density, 130);
-				} else if (cellProb > 0.33 && cellProb <= 0.66) {
-					int density = (int) (175 - ((double) 255 * cellProb));
-					cellColor = new Color(255, 248, density);
+				} else if (cellProb <= 0.25) {
+					// int density = (int) (255 - ((double) 255 * cellProb));
+					cellColor = new Color(123, 237, 123);
+				} else if (cellProb > 0.25 && cellProb <= 0.50) {
+					// int density = (int) (175 - ((double) 255 * cellProb));
+					cellColor = new Color(255, 248, 150);
+				} else if (cellProb > 0.50 && cellProb <= 0.75) {
+					cellColor = new Color(255, 127, 127);
 				} else {
-					int density = (int) (255 * cellProb);
-					cellColor = new Color(255, 255 - density, 255 - density);
+					// int density = (int) (255 * cellProb);
+					cellColor = new Color(247, 76, 76);
 				}
 				g.setColor(cellColor);
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
