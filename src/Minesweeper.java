@@ -320,9 +320,9 @@ public class Minesweeper extends JFrame {
 		controlBtns.add(stopBtn);
 		controlBtns.add(fullAutoBtn);
 
-		JButton randCellBtn = new JButton("Temp.");
+		JButton tempBtn = new JButton("Temp.");
 
-		controlBtns.add(randCellBtn);
+		controlBtns.add(tempBtn);
 		controlBtns.add(SATBtns);
 
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);
@@ -355,12 +355,14 @@ public class Minesweeper extends JFrame {
 		// To Remove
 		// randCellBtn.setEnabled(false);
 
-		randCellBtn.addActionListener(e -> {
+		tempBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			thread.setOld();
 			thread.start();
 			stopBtn.setEnabled(true);
+			// solver.selectRandomCell();
+			// refresh();
 		});
 
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
@@ -379,7 +381,6 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			if (strategyCb.isSelected()) thread.setStrat();
-			thread.setPatternMatchSolve();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
@@ -408,7 +409,6 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			thread.setLoop();
-			thread.setPatternMatchSolve();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
