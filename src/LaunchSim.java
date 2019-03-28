@@ -37,10 +37,20 @@ public class LaunchSim {
 	private int noOfGames;
 	private StringBuilder resultString;
 
+	int winCount = 0;
+	int guessCount = 0;
+	BigInteger winTimes = BigInteger.ZERO;
+
 	public LaunchSim(int noOfSims, String path) throws IOException, InterruptedException {
 		this.noOfGames = noOfSims;
 		RESULT_DIR = path;
 		resultString = new StringBuilder();
+	}
+	
+	public void resetScores() {
+		winCount = 0;
+		guessCount = 0;
+		winTimes = BigInteger.ZERO;
 	}
 
 	public void startPTSim() {
@@ -59,15 +69,33 @@ public class LaunchSim {
 		}
 	}
 
+	public void startSATSim() {
+		try {
+			writeTitle();
+			System.out.println("SAT Easy");
+			playerSAT(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
+			System.out.println("SAT Medium");
+			playerSAT(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
+			System.out.println("SAT Hard");
+			playerSAT(Difficulty.EXPERT, HARD_PATH);
+			writeResults(SAT_NAME);
+			resetResults();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void startJointSim() {
 		try {
 			writeTitle();
 			System.out.println("Pattern Match + SAT Easy");
 			playerPatternMatchSAT(Difficulty.BEGINNER, EASY_PATH);
-			System.out.println("Pattern Match + SAT Medium");
-			playerPatternMatchSAT(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-			System.out.println("Pattern Match + SAT Hard");
-			playerPatternMatchSAT(Difficulty.EXPERT, HARD_PATH);
+			// System.out.println("Pattern Match + SAT Medium");
+			// playerPatternMatchSAT(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			// System.out.println("Pattern Match + SAT Hard");
+			// playerPatternMatchSAT(Difficulty.EXPERT, HARD_PATH);
 			writeResults(JOINT_NAME);
 			resetResults();
 		} catch (IOException e) {
@@ -78,10 +106,10 @@ public class LaunchSim {
 	public void startFullSim() {
 		try {
 			writeTitle();
-//			System.out.println("Full Easy");
-//			playerFull(Difficulty.BEGINNER, EASY_PATH);
-//			System.out.println("Full Medium");
-//			playerFull(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			// System.out.println("Full Easy");
+			// playerFull(Difficulty.BEGINNER, EASY_PATH);
+			// System.out.println("Full Medium");
+			// playerFull(Difficulty.INTERMEDIATE, MEDIUM_PATH);
 			System.out.println("Full Hard");
 			playerFull(Difficulty.EXPERT, HARD_PATH);
 			writeResults(FULL_NAME);
@@ -134,6 +162,55 @@ public class LaunchSim {
 		}
 		writeLine(diff.toString(), winCount, winTimes, guessCount);
 		games.clear();
+	}
+
+	public void playerSAT(Difficulty diff, String path) throws IOException {
+		int noOfThreads = Runtime.getRuntime().availableProcessors();
+		int limit = 1000;
+
+		List<GamePlayer> games = new ArrayList<>(limit);
+		int lineCount = 0;
+		while (lineCount < noOfGames) {
+			ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
+			try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+				int count = 0;
+				for (int j = 0; j < lineCount; j++) {
+					br.readLine();
+				}
+				for (String fieldJson; (fieldJson = br.readLine()) != null && count < limit;) {
+					lineCount++;
+					count++;
+					GamePlayer player = new GamePlayer(diff, fieldJson);
+					player.setSAT(true);
+					games.add(player);
+				}
+			}
+
+			for (GamePlayer game : games) {
+				pool.execute(game);
+			}
+
+			pool.shutdown();
+
+			while (!pool.isTerminated()) {
+				System.out.println(pool);
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
+			for (GamePlayer gameSim : games) {
+				if (gameSim.isGameWon()) {
+					winCount++;
+					guessCount += gameSim.getGuessCount();
+					winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+				}
+			}
+			games.clear();
+		}
+		writeLine(diff.toString(), winCount, winTimes, guessCount);
 	}
 
 	public void playerPatternMatchSAT(Difficulty diff, String path) throws IOException {
@@ -297,8 +374,8 @@ public class LaunchSim {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startFullSim();
+		LaunchSim s = new LaunchSim(100, "resources/");
+		s.startSATSim();
 
 		System.out.println("\n\n\nDONE!!!!!");
 

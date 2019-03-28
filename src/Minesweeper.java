@@ -74,7 +74,7 @@ public class Minesweeper extends JFrame {
 	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Intermediate");
 	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Expert");
 	private JMenuItem customGameItem = new JMenuItem("Custom Game");
-	private JMenuItem startSimItem = new JMenuItem("Start Simulation");
+	private JMenuItem printFieldItem = new JMenuItem("Print Minefield Json");
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menu = new JMenu("File");
 
@@ -105,7 +105,7 @@ public class Minesweeper extends JFrame {
 	public Minesweeper(int x, int y, int d) {
 		setup(x, y, d);
 	}
-	
+
 	public Minesweeper(int x, int y, int d, String m) {
 		Gson gson = new Gson();
 		MineField mf = gson.fromJson(m, MineField.class);
@@ -192,7 +192,7 @@ public class Minesweeper extends JFrame {
 		board = new Board(this, x, y);
 		loadUI();
 		loadFileMenu();
-		
+
 		// Centres minefield
 		Container fl = new Container();
 		fl.add(board);
@@ -211,7 +211,7 @@ public class Minesweeper extends JFrame {
 		setVisible(true);
 		solver = new BoardSolver(this);
 	}
-	
+
 	private void setup(int x, int y, int d, MineField m) {
 		width = x;
 		height = y;
@@ -222,7 +222,7 @@ public class Minesweeper extends JFrame {
 		board = new Board(this, x, y);
 		loadUI();
 		loadFileMenu();
-		
+
 		// Centres minefield
 		Container fl = new Container();
 		fl.add(board);
@@ -250,16 +250,16 @@ public class Minesweeper extends JFrame {
 		JPanel SATBtns = new JPanel();
 		JPanel details = new JPanel();
 		JPanel stats = new JPanel();
-		
+
 		Container gameStatsAndDetails = new Container();
 		gameStatsAndDetails.setLayout(new FlowLayout());
-		
+
 		Container topBar = new Container();
 		topBar.setLayout(new BorderLayout());
 
 		Container controlBtns = new Container();
 		controlBtns.setLayout(new FlowLayout());
-		
+
 		TitledBorder statsTitle = new TitledBorder("Stats");
 		statsTitle.setTitleJustification(TitledBorder.CENTER);
 		stats.setBorder(new TitledBorder(statsTitle));
@@ -270,7 +270,7 @@ public class Minesweeper extends JFrame {
 		minesLbl.setText(Integer.toString(minesLeft));
 		stats.setPreferredSize(new Dimension(250, 50));
 		gameStatsAndDetails.add(stats);
-		
+
 		TitledBorder detailsTitle = new TitledBorder("Details");
 		detailsTitle.setTitleJustification(TitledBorder.CENTER);
 		details.setBorder(new TitledBorder(detailsTitle));
@@ -320,9 +320,24 @@ public class Minesweeper extends JFrame {
 		controlBtns.add(stopBtn);
 		controlBtns.add(fullAutoBtn);
 
+		// To Remove
 		JButton tempBtn = new JButton("Temp.");
-
+		JButton randBtn = new JButton("Rand.");
+		tempBtn.addActionListener(e -> {
+			disableAllBtns();
+			thread = new SolverThreadWrapper(this);
+			thread.setOld();
+			thread.start();
+			stopBtn.setEnabled(true);
+		});
+		randBtn.addActionListener(e -> {
+			solver.selectRandomCell();
+			refresh();
+		});
 		controlBtns.add(tempBtn);
+		controlBtns.add(randBtn);
+
+
 		controlBtns.add(SATBtns);
 
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);
@@ -352,19 +367,6 @@ public class Minesweeper extends JFrame {
 			}
 		});
 
-		// To Remove
-		// randCellBtn.setEnabled(false);
-
-		tempBtn.addActionListener(e -> {
-			disableAllBtns();
-			thread = new SolverThreadWrapper(this);
-			thread.setOld();
-			thread.start();
-			stopBtn.setEnabled(true);
-			// solver.selectRandomCell();
-			// refresh();
-		});
-
 		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
 
 		SATHintBtn.addActionListener(e -> {
@@ -380,7 +382,8 @@ public class Minesweeper extends JFrame {
 		SATAssistBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			if (strategyCb.isSelected()) thread.setStrat();
+			if (strategyCb.isSelected())
+				thread.setStrat();
 			thread.setSATSolve();
 			thread.start();
 			stopBtn.setEnabled(true);
@@ -418,7 +421,8 @@ public class Minesweeper extends JFrame {
 			// Perform the assist action until no more safe moves exist
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			if (strategyCb.isSelected()) thread.setStrat();
+			if (strategyCb.isSelected())
+				thread.setStrat();
 			thread.setLoop();
 			thread.setPatternMatchSolve();
 			thread.setSATSolve();
@@ -504,20 +508,15 @@ public class Minesweeper extends JFrame {
 		diffRdGroup.add(diffHardRb);
 		menu.add(diffHardRb);
 
-		startSimItem.addActionListener(e -> {
-			// solver.SATStratergy();
-			// JFrame simWindow = new JFrame("Simulating...");
-			// simWindow.add(new JLabel("Simulating..."));
-			// simWindow.setSize(new Dimension(100, 100));
-			// simWindow.setVisible(true);
-			// simWindow.setLocationRelativeTo(null);
-			// GameSimulation gameSim = new GameSimulation(5);
-			// gameSim.genericSim();
-			// simWindow.setVisible(false);
-			// simWindow.dispose();
+		printFieldItem.addActionListener(e -> {
+			Gson gson = new Gson();
+			System.out.println(gson.toJson(this.mineField));
+			System.out.println();
+			System.out.println();
+			System.out.println();
 		});
 		menu.addSeparator();
-		menu.add(startSimItem);
+		menu.add(printFieldItem);
 
 		customGameItem.addActionListener(e -> {
 			// Formats to format and parse numbers
@@ -733,12 +732,6 @@ public class Minesweeper extends JFrame {
 		boolean strat = strategyCb.isSelected();
 		solver = new BoardSolver(this);
 		solver.setStrat(strat);
-		// To remove
-		// Gson gson = new Gson();
-		// System.out.println(gson.toJson(this.mineField));
-		// System.out.println();
-		// System.out.println();
-		// System.out.println();
 	}
 
 	/**
@@ -919,7 +912,7 @@ public class Minesweeper extends JFrame {
 		return debug;
 	}
 
-	public JCheckBoxMenuItem  getStratCb() {
+	public JCheckBoxMenuItem getStratCb() {
 		return strategyCb;
 	}
 

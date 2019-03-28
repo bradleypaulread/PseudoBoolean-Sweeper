@@ -4,6 +4,7 @@ public class GamePlayer implements Runnable {
 
     private Difficulty gameDifficulty;
     private MineField mineField;
+    private String mineFieldBackup;
 
     private Minesweeper game;
     private BoardSolver solver;
@@ -24,10 +25,15 @@ public class GamePlayer implements Runnable {
         Gson gson = new Gson();
 
         mineField = gson.fromJson(fieldJson, MineField.class);
+        mineFieldBackup = fieldJson;
 
         game = new Minesweeper(gameDifficulty, mineField);
         solver = new BoardSolver(game);
         solver.setQuiet();
+    }
+
+    public String getFieldBackup() {
+        return mineFieldBackup;
     }
 
     public void reset() {
@@ -92,7 +98,7 @@ public class GamePlayer implements Runnable {
     private void SATSolve() {
         startTime = System.nanoTime();
         while (!game.isGameOver()) {
-            if (!solver.SATSolve()) {
+            if (!solver.old()) {
                 solver.selectRandomCell();
                 guessCount++;
             }
