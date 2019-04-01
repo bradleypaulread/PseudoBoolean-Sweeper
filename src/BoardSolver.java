@@ -294,7 +294,7 @@ public class BoardSolver {
 		}
 		result = result.substring(0, result.length() - 2);
 		result += type + " " + degree;
-		// System.out.println(result);
+		System.out.println(result);
 	}
 
 	private Map<Cell, Boolean> binaryShallowSolve() {
@@ -387,11 +387,14 @@ public class BoardSolver {
 		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
+		pbSolver.reset();
 
 		if (!seaCells.isEmpty()) {
 			IVecInt lits = new VecInt();
 			IVecInt coeffs = new VecInt();
 			try {
+				genBinaryConstraints(pbSolver);
+
 				// Generate the known constraints on the board
 				int noOfLits = Integer.toBinaryString(seaCells.size()).length();
 				for (int i = 0; i < noOfLits; i++) {
@@ -399,7 +402,7 @@ public class BoardSolver {
 					coeffs.push((int) Math.pow(2, i));
 
 				}
-				IConstr seaConstr = pbSolver.addAtMost(lits, coeffs, seaCells.size() - 1);
+				pbSolver.addAtMost(lits, coeffs, seaCells.size() - 1);
 				// Find if cell is safe or mine
 				if (!pbSolver.isSatisfiable()) {
 					boolean isMine = true;
@@ -407,10 +410,9 @@ public class BoardSolver {
 						results.put(c, isMine);
 					}
 				}
+				pbSolver.reset();
 
-				if (seaConstr != null) {
-					pbSolver.removeConstr(seaConstr);
-				}
+				genBinaryConstraints(pbSolver);
 
 				pbSolver.addAtLeast(lits, coeffs, 1);
 
@@ -439,6 +441,7 @@ public class BoardSolver {
 		cells = game.getCells();
 		List<Cell> closedShore = getShoreClosedCells();
 		List<Cell> seaCells = getSeaCells();
+		int seaSize = seaCells.size();
 		List<Cell> landCells = getLandCells();
 
 		int noOfMines = game.getNoOfMines();
@@ -447,19 +450,16 @@ public class BoardSolver {
 		IVecInt coeffs = new VecInt();
 
 		for (int i = 0; i < noOfLits; i++) {
+			int square = (int) Math.pow(2, i);
 			lits.push(encodeLit(i));
-			coeffs.push((int) Math.pow(2, i));
+			coeffs.push(square);
 		}
-		printConstraint(lits, coeffs, "<=", seaCells.size());
-		pbSolver.addAtMost(lits, coeffs, seaCells.size());
+		printConstraint(lits, coeffs, "<=", seaSize);
+		pbSolver.addAtMost(lits, coeffs, seaSize);
 
 		int presumedMineCount = 0;
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
-			if (current.isPresumedMine()) {
-				presumedMineCount++;
-				continue;
-			}
 			lits.push(encodeCellId(current));
 			coeffs.push(1);
 		}
@@ -475,6 +475,10 @@ public class BoardSolver {
 		for (Cell current : landCells) {
 			landLits.push(encodeCellId(current));
 			landCoeffs.push(1);
+			// pbSolver.addExactly(landLits, landCoeffs, 0);
+			// landLits.clear();
+			// landCoeffs.clear();
+
 			List<Cell> neighbours = getNeighbours(current);
 			// neighbours.removeIf(c -> !c.isClosed());
 			// if (neighbours.isEmpty()) {
@@ -491,6 +495,22 @@ public class BoardSolver {
 		}
 		printConstraint(landLits, landCoeffs, "=", 0);
 		pbSolver.addExactly(landLits, landCoeffs, 0);
+
+		lits.clear();
+		coeffs.clear();
+
+		int limit = 0;
+		for (Cell c : getShoreOpenCells()) {
+			limit += c.getNumber();
+		}
+
+		for (Cell c : closedShore) {
+			lits.push(encodeCellId(c));
+			coeffs.push(1);
+		}
+		pbSolver.addAtMost(lits, coeffs, limit);
+		lits.clear();
+		coeffs.clear();
 	}
 
 	private Map<Cell, BigFraction> calcAllCellsProb() {
@@ -523,6 +543,7 @@ public class BoardSolver {
 				int noOfMines = 0;
 				for (int i : model) {
 					// Test if lit is for a cell and if cell is also a mine
+					// System.out.print("" + i + ", ");
 					boolean mine = i < 0 ? false : true;
 					Cell testForCell = decodeCellId(i);
 					if (testForCell != null && mine) {
@@ -713,10 +734,9 @@ public class BoardSolver {
 	 * When passed a cell and a board, create a unique identifier (a single integer)
 	 * for that cell. To be used for creating litrals
 	 * 
-	 * @param c
-	 *            Cell to encode.
-	 * @param board
-	 *            Board the cell is present in, used to get the width of the board.
+	 * @param c     Cell to encode.
+	 * @param board Board the cell is present in, used to get the width of the
+	 *              board.
 	 * @return Unique integer identifier for given cell.
 	 */
 	private int encodeCellId(Cell c) {
@@ -726,11 +746,9 @@ public class BoardSolver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id
-	 *            Unique encoded identity id.
-	 * @param board
-	 *            Board the cell would be present in, used to get the width of the
-	 *            board.
+	 * @param id    Unique encoded identity id.
+	 * @param board Board the cell would be present in, used to get the width of the
+	 *              board.
 	 * @return Cell that the id refers to.
 	 */
 	private Cell decodeCellId(int id) {
@@ -839,10 +857,8 @@ public class BoardSolver {
 	/**
 	 * Count the amount of flagged cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of flagged neighbouring cells.
 	 */
 	private int calcFlaggedNeighbours(int x, int y) {
@@ -860,10 +876,8 @@ public class BoardSolver {
 	/**
 	 * Count the amount of closed cells are around a cell.
 	 * 
-	 * @param x
-	 *            X-axis coordinate of cell.
-	 * @param y
-	 *            Y-axis coordinate of cell.
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
 	 * @return Number of closed neighbouring cells.
 	 */
 	private int calcClosedNeighbours(int x, int y) {
@@ -973,7 +987,8 @@ public class BoardSolver {
 
 		try {
 			genAllConstraints(pbSolver);
-		} catch (ContradictionException e) {}
+		} catch (ContradictionException e) {
+		}
 
 		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
 			Cell current = closedShore.get(i);
@@ -1030,7 +1045,7 @@ public class BoardSolver {
 				}
 			}
 		}
-		
+
 		if (!sea.isEmpty()) {
 			Cell current = sea.get(0);
 			for (int weight = 0; weight <= 1; weight++) {
