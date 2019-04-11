@@ -9,7 +9,7 @@ import com.google.gson.Gson;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.apache.commons.math3.fraction.Fraction;
 
-public class PatternMatchSimulator {
+public class SinglePointSimulator {
 
     private final String EASY_PATH = "resources/easyFields.txt";
     private final String MEDIUM_PATH = "resources/mediumFields.txt";
@@ -19,7 +19,7 @@ public class PatternMatchSimulator {
     private int noOfGames;
     private StringBuilder resultString;
 
-    public PatternMatchSimulator(int noOfSims, String path) {
+    public SinglePointSimulator(int noOfSims, String path) {
         this.noOfGames = noOfSims;
         RESULT_PATH = path;
         resultString = new StringBuilder();
@@ -122,7 +122,7 @@ public class PatternMatchSimulator {
     }
 
     public static void main(String[] args) throws IOException {
-        PatternMatchSimulator sim = new PatternMatchSimulator(10000,  "resources/test.csv");
+        SinglePointSimulator sim = new SinglePointSimulator(10000,  "resources/test.csv");
         sim.startFullSim();
         sim.writeResults();
         System.out.println("DONE!");

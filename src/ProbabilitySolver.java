@@ -28,16 +28,8 @@ public class ProbabilitySolver extends BoardSolver {
     }
 
     public void makeBestMove() {
-        // System.out.println("perform strat");
         Map<Cell, BigFraction> probs = calcAllCellsProb();
-        List<Cell> cells = getBestProbCells(probs);
-        if (cells == null) {
-            return;
-        }
-        Cell bestCell = getBestStratCell(cells);
-        if (bestCell == null) {
-            return;
-        }
+        Cell bestCell = getBestMove(probs);
         if (quiet) {
             game.quietSelect(bestCell.getX(), bestCell.getY());
         } else {
@@ -46,6 +38,22 @@ public class ProbabilitySolver extends BoardSolver {
             game.setDetail(detail);
             game.select(bestCell.getX(), bestCell.getY());
         }
+    }
+
+    public Cell getBestMove(Map<Cell, BigFraction> probs) { 
+         List<Cell> cells = getBestProbCells(probs);
+         if (cells == null) {
+             return null;
+         }
+         Cell bestCell = getBestStratCell(cells);
+         if (bestCell == null) {
+             return null;
+         }
+         return bestCell;
+    }
+
+    public Cell getBestMove() {
+       return getBestMove(calcAllCellsProb());
     }
 
     private Map<Cell, BigFraction> calcAllCellsProb() {

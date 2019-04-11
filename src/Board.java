@@ -13,8 +13,11 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JPanel;
+import javax.swing.ToolTipManager;
 
 public class Board extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -23,12 +26,46 @@ public class Board extends JPanel {
 	// Width of a cell
 	private final int CELL_WIDTH = 35;
 
+	private int lastX;
+	private int lastY;
+
 	public Board(Minesweeper m, int width, int height) {
 		game = m;
 		cells = game.getCells();
 		addMouseListener(new MouseActions(game, this));
-		addMouseMotionListener(new MouseMove(game, this));
+		// addMouseMotionListener(new MouseMove(game, this));
 		setPreferredSize(new Dimension(width * CELL_WIDTH, height * CELL_WIDTH));
+		ToolTipManager.sharedInstance().registerComponent(this);
+		lastX = -1;
+		lastY = -1;
+	}
+
+	@Override
+	public String getToolTipText(MouseEvent event) {
+		int x = event.getX() / CELL_WIDTH;
+		int y = event.getY() / CELL_WIDTH;
+		if (x == lastX && y == lastY) {
+			return super.getToolTipText(event);
+		}
+		lastX = x;
+		lastY = y;
+		Double t = cells[x][y].getProb();
+		if (t != null) {
+			game.setDetail("Cell " + cells[x][y] + " has a prob. of " + t);
+			return t.toString();
+		}
+		return super.getToolTipText(event);
+	}
+
+	@Override
+	public Point getToolTipLocation(MouseEvent event) {
+		int x = event.getX() / CELL_WIDTH;
+		int y = event.getY() / CELL_WIDTH;
+		x *= CELL_WIDTH;
+		x += CELL_WIDTH;
+		y *= CELL_WIDTH;
+		Point p = new Point(x, y);
+		return p;
 	}
 
 	public int getCellWidth() {
@@ -149,7 +186,7 @@ public class Board extends JPanel {
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 				g.setColor(Color.BLACK);
 				g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 4)));
-				String strProb = Double.toString(cellProb*100);
+				String strProb = Double.toString(cellProb * 100);
 				if (strProb.length() > 4) {
 					strProb = strProb.substring(0, 5);
 				}

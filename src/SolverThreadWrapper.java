@@ -9,7 +9,6 @@ public class SolverThreadWrapper implements Runnable {
     boolean quiet, hint, loop, singlePoint, pb, prob, sim, strat, old;
 
     private volatile Thread thread;
-    private BoardSolver solver;
 
     public SolverThreadWrapper(Minesweeper g) {
         game = g;
@@ -30,7 +29,6 @@ public class SolverThreadWrapper implements Runnable {
     }
 
     public void start() {
-        this.solver = new BoardSolver(game, running);
         this.thread = new Thread(this);
         this.thread.start();
     }
@@ -86,9 +84,6 @@ public class SolverThreadWrapper implements Runnable {
 
     @Override
     public void run() {
-        if (strat && !hint) {
-            solver.setStrat(true);
-        }
         if (hint) {
             if (singlePoint && !pb) {
                 SinglePointSolver sp = new SinglePointSolver(game);

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.sat4j.specs.IVecInt;
 
-public class BoardSolver {
+public abstract class BoardSolver {
 
 	protected boolean quiet;
 	protected boolean strat;

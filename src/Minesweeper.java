@@ -94,7 +94,6 @@ public class Minesweeper extends JFrame {
 	private Timer gameTimer;
 	private int minesLeft;
 	private boolean gameWon;
-	private BoardSolver solver;
 
 	public Minesweeper(int x, int y, double d) {
 		// Cast number of mines down to integer value
@@ -208,7 +207,6 @@ public class Minesweeper extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
-		solver = new BoardSolver(this);
 	}
 
 	private void setup(int x, int y, int d, MineField m) {
@@ -238,7 +236,6 @@ public class Minesweeper extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 		setVisible(true);
-		solver = new BoardSolver(this);
 	}
 
 	/**
@@ -329,10 +326,12 @@ public class Minesweeper extends JFrame {
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
+
 		randBtn.addActionListener(e -> {
-			solver.selectRandomCell();
+			new SinglePointSolver(this).selectRandomCell();
 			refresh();
 		});
+
 		controlBtns.add(tempBtn);
 		controlBtns.add(randBtn);
 
@@ -730,8 +729,6 @@ public class Minesweeper extends JFrame {
 		gameTimer.start();
 		refresh();
 		boolean strat = strategyCb.isSelected();
-		solver = new BoardSolver(this);
-		solver.setStrat(strat);
 	}
 
 	/**
