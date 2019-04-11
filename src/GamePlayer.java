@@ -7,7 +7,6 @@ public class GamePlayer implements Runnable {
     private String mineFieldBackup;
 
     private Minesweeper game;
-    private BoardSolver solver;
 
     private long startTime;
     private long endTime;
@@ -28,8 +27,6 @@ public class GamePlayer implements Runnable {
         mineFieldBackup = fieldJson;
 
         game = new Minesweeper(gameDifficulty, mineField);
-        solver = new BoardSolver(game);
-        solver.setQuiet();
     }
 
     public String getFieldBackup() {
@@ -45,14 +42,14 @@ public class GamePlayer implements Runnable {
     /**
      * @param patternMatch the patternMatch to set
      */
-    public void setPatternMatch(boolean patternMatch) {
+    public void setSinglePoint(boolean patternMatch) {
         this.patternMatch = patternMatch;
     }
 
     /**
      * @param sAT the sAT to set
      */
-    public void setSAT(boolean SAT) {
+    public void setPB(boolean SAT) {
         this.SAT = SAT;
     }
 
@@ -72,10 +69,10 @@ public class GamePlayer implements Runnable {
             jointSolve();
             return;
         } else if (patternMatch) {
-            patternMatchSolve();
+            singlePointSolve();
             return;
         } else if (SAT) {
-            SATSolve();
+            PBSolve();
             return;
         } else {
             System.err.println("No sim specs configured.");
@@ -83,11 +80,13 @@ public class GamePlayer implements Runnable {
         }
     }
 
-    private void patternMatchSolve() {
+    private void singlePointSolve() {
+        SinglePointSolver sp = new SinglePointSolver(game);
+        sp.setQuiet();
         startTime = System.nanoTime();
         while (!game.isGameOver()) {
-            if (!solver.patternMatch()) {
-                solver.selectRandomCell();
+            if (!sp.assist()) {
+                sp.selectRandomCell();
                 guessCount++;
             }
         }
@@ -95,11 +94,13 @@ public class GamePlayer implements Runnable {
         gameWon = game.isGameWon();
     }
 
-    private void SATSolve() {
+    private void PBSolve() {
+        PBSolver pb = new PBSolver(game);
+        pb.setQuiet();
         startTime = System.nanoTime();
         while (!game.isGameOver()) {
-            if (!solver.old()) {
-                solver.selectRandomCell();
+            if (!pb.assist()) {
+                pb.selectRandomCell();
                 guessCount++;
             }
         }
@@ -108,10 +109,13 @@ public class GamePlayer implements Runnable {
     }
 
     private void jointSolve() {
-        startTime = System.nanoTime();
+        SinglePointSolver sp = new SinglePointSolver(game);
+        PBSolver pb = new PBSolver(game);
+        sp.setQuiet();
+        pb.setQuiet();
         while (!game.isGameOver()) {
-            if (!solver.patternAndSATSolve()) {
-                solver.selectRandomCell();
+            if (!sp.assist() && !pb.assist()) {
+                sp.selectRandomCell();
                 guessCount++;
             }
         }
@@ -120,10 +124,17 @@ public class GamePlayer implements Runnable {
     }
 
     private void fullSolve() {
-        guessCount = 0;
+        SinglePointSolver sp = new SinglePointSolver(game);
+        PBSolver pb = new PBSolver(game);
+        ProbabilitySolver prob = new ProbabilitySolver(game);
+        sp.setQuiet();
+        pb.setQuiet();
         startTime = System.nanoTime();
         while (!game.isGameOver()) {
-            solver.fullSolve();
+            if (!sp.assist() && !pb.assist()) {
+                prob.makeBestMove();
+                guessCount++;
+            }
         }
         endTime = System.nanoTime();
         gameWon = game.isGameWon();
@@ -171,8 +182,8 @@ public class GamePlayer implements Runnable {
         return guessCount;
     }
 
-	public Minesweeper getGame() {
-		return game;
-	}
+    public Minesweeper getGame() {
+        return game;
+    }
 
 }

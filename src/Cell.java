@@ -18,7 +18,6 @@ public class Cell {
 	// Cell behaviour
 	private boolean flagged;
 	private boolean open;
-	private boolean presumedMine;
 	private boolean safeHint;
 	private boolean mineHint;
 	private boolean fail;
@@ -30,7 +29,6 @@ public class Cell {
 		this.x = x;
 		this.y = y;
 		flagged = false;
-		presumedMine = false;
 		open = false;
 		safeHint = false;
 		mineHint = false;
@@ -261,20 +259,6 @@ public class Cell {
 	 */
 	public void setOpen(boolean open) {
 		this.open = open;
-	}
-
-	/**
-	 * @return the presumedMine
-	 */
-	public boolean isPresumedMine() {
-		return presumedMine;
-	}
-
-	/**
-	 * @param presumedMine the presumedMine to set
-	 */
-	public void setPresumedMine(boolean presumedMine) {
-		this.presumedMine = presumedMine;
 	}
 
 	/**

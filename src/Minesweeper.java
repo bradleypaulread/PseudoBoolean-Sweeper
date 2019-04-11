@@ -61,7 +61,7 @@ public class Minesweeper extends JFrame {
 	private JButton SATHintBtn = new JButton("Hint");
 	private JButton SATAssistBtn = new JButton("Assist");
 	private JButton SATSolveBtn = new JButton("Solve");
-	private JButton SATProbBtn = new JButton("Show Probabilities");
+	private JButton showProbBtn = new JButton("Show Probabilities");
 
 	private JButton fullAutoBtn = new JButton("Full Auto");
 
@@ -94,7 +94,6 @@ public class Minesweeper extends JFrame {
 	private Timer gameTimer;
 	private int minesLeft;
 	private boolean gameWon;
-
 	private BoardSolver solver;
 
 	public Minesweeper(int x, int y, double d) {
@@ -313,7 +312,7 @@ public class Minesweeper extends JFrame {
 		SATBtns.add(SATHintBtn);
 		SATBtns.add(SATAssistBtn);
 		SATBtns.add(SATSolveBtn);
-		SATBtns.add(SATProbBtn);
+		SATBtns.add(showProbBtn);
 
 		controlBtns.add(ptBtns);
 		stopBtn.setEnabled(false);
@@ -323,10 +322,10 @@ public class Minesweeper extends JFrame {
 		// To Remove
 		JButton tempBtn = new JButton("Temp.");
 		JButton randBtn = new JButton("Rand.");
+		tempBtn.setEnabled(false);
 		tempBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			thread.setOld();
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
@@ -336,7 +335,6 @@ public class Minesweeper extends JFrame {
 		});
 		controlBtns.add(tempBtn);
 		controlBtns.add(randBtn);
-
 
 		controlBtns.add(SATBtns);
 
@@ -367,7 +365,10 @@ public class Minesweeper extends JFrame {
 			}
 		});
 
-		ptHintBtn.addActionListener(e -> solver.patternMatchHint());
+		ptHintBtn.addActionListener(e -> {
+			SinglePointSolver s = new SinglePointSolver(this);
+			s.hint();
+		});
 
 		SATHintBtn.addActionListener(e -> {
 			disableAllBtns();
@@ -377,7 +378,10 @@ public class Minesweeper extends JFrame {
 			stopBtn.setEnabled(true);
 		});
 
-		ptAssistBtn.addActionListener(e -> solver.patternMatch());
+		ptAssistBtn.addActionListener(e -> {
+			SinglePointSolver s = new SinglePointSolver(this);
+			s.assist();
+		});
 
 		SATAssistBtn.addActionListener(e -> {
 			disableAllBtns();
@@ -389,22 +393,18 @@ public class Minesweeper extends JFrame {
 			stopBtn.setEnabled(true);
 		});
 
-		SATProbBtn.addActionListener(e -> {
+		showProbBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			thread.setProbSolve();
+			thread.setProb();
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
 
 		ptSolveBtn.addActionListener(e -> {
 			// Perform the assist action until no more safe moves exist
-			disableAllBtns();
-			while (solver.patternMatch())
-				;
-			if (!isGameOver) {
-				enableAllBtns();
-			}
+			SinglePointSolver s = new SinglePointSolver(this);
+			s.solve();
 		});
 
 		SATSolveBtn.addActionListener(e -> {
@@ -426,7 +426,7 @@ public class Minesweeper extends JFrame {
 			thread.setLoop();
 			thread.setPatternMatchSolve();
 			thread.setSATSolve();
-			thread.setProbSolve();
+			thread.setProb();
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
@@ -814,7 +814,7 @@ public class Minesweeper extends JFrame {
 		SATHintBtn.setEnabled(false);
 		SATAssistBtn.setEnabled(false);
 		SATSolveBtn.setEnabled(false);
-		SATProbBtn.setEnabled(false);
+		showProbBtn.setEnabled(false);
 		fullAutoBtn.setEnabled(false);
 	}
 
@@ -825,7 +825,7 @@ public class Minesweeper extends JFrame {
 		SATHintBtn.setEnabled(true);
 		SATAssistBtn.setEnabled(true);
 		SATSolveBtn.setEnabled(true);
-		SATProbBtn.setEnabled(true);
+		showProbBtn.setEnabled(true);
 		fullAutoBtn.setEnabled(true);
 	}
 

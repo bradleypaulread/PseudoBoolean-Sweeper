@@ -44,10 +44,10 @@ public class PatternMatchSimulator {
                 MineField mf = gson.fromJson(strFieldJson, MineField.class);
                 long start = System.nanoTime();
                 Minesweeper game = new Minesweeper(diff, mf);
-                BoardSolver solver = new BoardSolver(game);
+                SinglePointSolver solver = new SinglePointSolver(game);
                 solver.setQuiet();
                 while (!game.isGameOver()) {
-                    if (!solver.patternMatch()) {
+                    if (!solver.assist()) {
                         solver.selectRandomCell();
                         guessCount++;
                     }

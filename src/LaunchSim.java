@@ -131,7 +131,7 @@ public class LaunchSim {
 			for (String fieldJson; (fieldJson = br.readLine()) != null && limit < noOfGames;) {
 				limit++;
 				GamePlayer player = new GamePlayer(diff, fieldJson);
-				player.setPatternMatch(true);
+				player.setSinglePoint(true);
 				games.add(player);
 			}
 		}
@@ -181,7 +181,7 @@ public class LaunchSim {
 					lineCount++;
 					count++;
 					GamePlayer player = new GamePlayer(diff, fieldJson);
-					player.setSAT(true);
+					player.setPB(true);
 					games.add(player);
 				}
 			}
@@ -225,8 +225,8 @@ public class LaunchSim {
 			for (String fieldJson; (fieldJson = br.readLine()) != null && limit < noOfGames;) {
 				limit++;
 				GamePlayer player = new GamePlayer(diff, fieldJson);
-				player.setPatternMatch(true);
-				player.setSAT(true);
+				player.setSinglePoint(true);
+				player.setPB(true);
 				games.add(player);
 			}
 		}
@@ -271,8 +271,8 @@ public class LaunchSim {
 			for (String fieldJson; (fieldJson = br.readLine()) != null && limit < noOfGames;) {
 				limit++;
 				GamePlayer player = new GamePlayer(diff, fieldJson);
-				player.setPatternMatch(true);
-				player.setSAT(true);
+				player.setSinglePoint(true);
+				player.setPB(true);
 				player.setStrat(true);
 				games.add(player);
 			}

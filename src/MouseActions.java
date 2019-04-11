@@ -11,7 +11,6 @@
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 
 public class MouseActions implements MouseListener {
 	private Minesweeper game;
