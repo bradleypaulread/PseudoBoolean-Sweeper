@@ -8,7 +8,6 @@ import org.sat4j.specs.IVecInt;
 public abstract class BoardSolver {
 
 	protected boolean quiet;
-	protected boolean strat;
 
 	protected Minesweeper game;
 	protected Cell[][] cells;
@@ -17,7 +16,6 @@ public abstract class BoardSolver {
 	public BoardSolver(Minesweeper game) {
 		running = new AtomicBoolean(true);
 		quiet = false;
-		strat = false;
 		this.game = game;
 		cells = game.getCells();
 	}
@@ -25,7 +23,6 @@ public abstract class BoardSolver {
 	public BoardSolver(Minesweeper game, AtomicBoolean running) {
 		this.running = running;
 		quiet = false;
-		strat = false;
 		this.game = game;
 		cells = game.getCells();
 	}
@@ -47,6 +44,7 @@ public abstract class BoardSolver {
 		System.out.println(result);
 	}
 
+	// To Remove
 	public void temp() {
 		selectRandomCell();
 	}
@@ -250,13 +248,4 @@ public abstract class BoardSolver {
 		}
 		return null;
 	}
-
-	public void setStrat(boolean strat) {
-		this.strat = strat;
-	}
-
-	public boolean getStrat() {
-		return strat;
-	}
-
 }

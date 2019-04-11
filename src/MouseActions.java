@@ -28,6 +28,7 @@ public class MouseActions implements MouseListener {
 	}
 
 	public void mouseExited(MouseEvent e) {
+		board.resetBounds();
 	}
 
 	public void mousePressed(MouseEvent e) {

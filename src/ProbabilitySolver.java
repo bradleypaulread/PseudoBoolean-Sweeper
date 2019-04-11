@@ -29,7 +29,13 @@ public class ProbabilitySolver extends BoardSolver {
 
     public void makeBestMove() {
         Map<Cell, BigFraction> probs = calcAllCellsProb();
+        if (probs == null) {
+            return;
+        }
         Cell bestCell = getBestMove(probs);
+        if (bestCell == null) {
+            return;
+        }
         if (quiet) {
             game.quietSelect(bestCell.getX(), bestCell.getY());
         } else {

@@ -6,7 +6,7 @@ public class SolverThreadWrapper implements Runnable {
 
     private volatile AtomicBoolean running = new AtomicBoolean(true);
     Minesweeper game;
-    boolean quiet, hint, loop, singlePoint, pb, prob, sim, strat, old;
+    boolean quiet, hint, loop, singlePoint, pb, prob, strat;
 
     private volatile Thread thread;
 
@@ -14,18 +14,6 @@ public class SolverThreadWrapper implements Runnable {
         game = g;
 
         reset();
-    }
-
-    /**
-     * For use by simulators only.
-     */
-    public SolverThreadWrapper(Minesweeper g, boolean sim, boolean patternMatch, boolean SAT, boolean prob) {
-        game = g;
-        this.singlePoint = patternMatch;
-        this.pb = SAT;
-        this.prob = prob;
-        this.sim = sim;
-        thread = new Thread(this, Integer.toString(threadID++));
     }
 
     public void start() {
@@ -41,9 +29,7 @@ public class SolverThreadWrapper implements Runnable {
     }
 
     public void reset() {
-        this.sim = false;
         this.strat = false;
-        this.old = false;
         this.quiet = false;
         this.loop = false;
         this.hint = false;
@@ -52,30 +38,24 @@ public class SolverThreadWrapper implements Runnable {
         this.prob = false;
     }
 
-    public void setPatternMatchHint() {
+    public void setHint() {
         this.hint = true;
-        this.singlePoint = true;
     }
 
-    public void setStrat() {
-        this.strat = true;
+    public void setSinglePoint(boolean singlePoint) {
+        this.singlePoint = singlePoint;
     }
 
-    public void setSATHint() {
-        this.hint = true;
-        this.pb = true;
+    public void setPB(boolean pb) {
+        this.pb = pb;
+    }
+
+    public void setStrat(boolean strat) {
+        this.strat = strat;
     }
 
     public void setLoop() {
         this.loop = true;
-    }
-
-    public void setPatternMatchSolve() {
-        this.singlePoint = true;
-    }
-
-    public void setSATSolve() {
-        this.pb = true;
     }
 
     public void setProb() {
@@ -96,14 +76,18 @@ public class SolverThreadWrapper implements Runnable {
                 pb.hint();
             }
         } else if (prob) {
-            if (singlePoint && pb) {
-                fullSolve();
-            } else {
                 ProbabilitySolver probS = new ProbabilitySolver(game, running);
                 probS.displayProb();
-            }
         } else if (loop) {
-            if (singlePoint && pb) {
+            if (strat) {
+                if (singlePoint && pb) {
+                    jointStratSolve();
+                } else if (singlePoint) {
+                    singlePointStratSolve();
+                } else if (pb) {
+                    pbStratSolve();
+                }
+            } else if (singlePoint && pb) {
                 jointSolve();
             } else if (singlePoint) {
                 singlePointSolve();
@@ -111,7 +95,15 @@ public class SolverThreadWrapper implements Runnable {
                 pbSolve();
             }
         } else { // Just Assist
-            if (singlePoint && pb) {
+            if (strat) {
+                if (singlePoint && pb) {
+                    jointStrat();
+                } else if (singlePoint) {
+                    singlePointStrat();
+                } else if (pb) {
+                    pbStrat();
+                }
+            } else if (singlePoint && pb) {
                 SinglePointSolver sp = new SinglePointSolver(game);
                 PBSolver pb = new PBSolver(game, running);
                 if (!sp.assist()) {
@@ -164,6 +156,49 @@ public class SolverThreadWrapper implements Runnable {
                     probS.makeBestMove();
                 }
             }
+        }
+    }
+
+    private void singlePointStrat() {
+        SinglePointSolver sp = new SinglePointSolver(game);
+        if (!sp.assist()) {
+            ProbabilitySolver probS = new ProbabilitySolver(game, running);
+            probS.makeBestMove();
+        }
+    }
+    
+    private void pbStrat() {
+        PBSolver pb = new PBSolver(game, running);
+        if (!pb.assist()) {
+            ProbabilitySolver probS = new ProbabilitySolver(game, running);
+            probS.makeBestMove();
+        }
+    }
+
+    private void jointStrat() {
+        SinglePointSolver sp = new SinglePointSolver(game);
+        PBSolver pb = new PBSolver(game, running);
+        if (!sp.assist() && !pb.assist()) {
+            ProbabilitySolver probS = new ProbabilitySolver(game, running);
+            probS.makeBestMove();
+        }
+    }
+
+    private void singlePointStratSolve() {
+        while(!game.isGameOver()) {
+            singlePointStrat();
+        }
+    }
+
+    private void pbStratSolve() {
+        while(!game.isGameOver()) {
+            pbStrat();
+        }
+    }
+
+    private void jointStratSolve() {
+        while(!game.isGameOver()) {
+            jointStrat();
         }
     }
 

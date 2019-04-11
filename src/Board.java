@@ -33,9 +33,14 @@ public class Board extends JPanel {
 		game = m;
 		cells = game.getCells();
 		addMouseListener(new MouseActions(game, this));
-		// addMouseMotionListener(new MouseMove(game, this));
 		setPreferredSize(new Dimension(width * CELL_WIDTH, height * CELL_WIDTH));
 		ToolTipManager.sharedInstance().registerComponent(this);
+		ToolTipManager.sharedInstance().setInitialDelay(250);
+		lastX = -1;
+		lastY = -1;
+	}
+
+	public void resetBounds() {
 		lastX = -1;
 		lastY = -1;
 	}
@@ -51,8 +56,9 @@ public class Board extends JPanel {
 		lastY = y;
 		Double t = cells[x][y].getProb();
 		if (t != null) {
-			game.setDetail("Cell " + cells[x][y] + " has a prob. of " + t);
-			return t.toString();
+			Double percent = t*100;
+			game.setDetail("Cell " + cells[x][y] + " has a prob. of " + percent + "%");
+			return percent.toString() + "%";
 		}
 		return super.getToolTipText(event);
 	}

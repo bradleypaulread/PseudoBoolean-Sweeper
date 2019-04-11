@@ -79,9 +79,6 @@ public class SinglePointSolver extends BoardSolver {
                 }
             }
         }
-        if (game.getNoOfMoves() == 0 && strat) {
-
-        }
         return false;
     }
 
