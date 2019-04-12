@@ -15,9 +15,8 @@ public class SinglePointSolver extends BoardSolver {
                     Cell current = cells[i][j];
                     // Only check open cells
                     if (current.isOpen() && !current.isFlagged()) {
-                        List<Cell> cells;
-                        if (!(cells = singlePointSafe(current)).isEmpty()) {
-                            for (Cell c : cells) {
+                        if (isSinglePointSafe(current)) {
+                            for (Cell c : getSinglePointSafe(current)) {
                                 if (c.isBlank() && !c.isHint()) {
                                     c.setSafeHint();
                                     game.getHintCells().add(c);
@@ -26,8 +25,8 @@ public class SinglePointSolver extends BoardSolver {
                                 }
                             }
                         }
-                        if (!(cells = singlePointMine(current)).isEmpty()) {
-                            for (Cell c : cells) {
+                        if (isSinglePointMine(current)) {
+                            for (Cell c : getSinglePointMine(current)) {
                                 if (c.isBlank() && !c.isHint()) {
                                     c.setMineHint();
                                     game.getHintCells().add(c);
@@ -49,9 +48,8 @@ public class SinglePointSolver extends BoardSolver {
                 if (game.is_good(i, j)) {
                     Cell current = cells[i][j];
                     if (current.isOpen()) {
-                        List<Cell> cells;
-                        if (!(cells = singlePointSafe(current)).isEmpty()) {
-                            for (Cell c : cells) {
+                        if (isSinglePointSafe(current)) {
+                            for (Cell c : getSinglePointSafe(current)) {
                                 if (c.isBlank()) {
                                     if (quiet) {
                                         game.quietSelect(c.getX(), c.getY());
@@ -63,8 +61,8 @@ public class SinglePointSolver extends BoardSolver {
                                 }
                             }
                         }
-                        if (!(cells = singlePointMine(current)).isEmpty()) {
-                            for (Cell c : cells) {
+                        if (isSinglePointMine(current)) {
+                            for (Cell c : getSinglePointMine(current)) {
                                 if (c.isBlank()) {
                                     c.flag();
                                     game.decrementMines();
@@ -86,7 +84,17 @@ public class SinglePointSolver extends BoardSolver {
         while (assist());
     }
 
-    private List<Cell> singlePointSafe(Cell cell) {
+    private boolean isSinglePointSafe(Cell cell) {
+        int flagsNo = calcFlaggedNeighbours(cell.getX(), cell.getY());
+        return cell.getNumber() == flagsNo;
+    }
+
+    private boolean isSinglePointMine(Cell cell) {
+        int closedNo = calcClosedNeighbours(cell.getX(), cell.getY());
+        return cell.getNumber() == closedNo;
+    }
+
+    private List<Cell> getSinglePointSafe(Cell cell) {
         List<Cell> safeCells = new ArrayList<>();
         // No. of flagged neighbours
         int flagsNo = calcFlaggedNeighbours(cell.getX(), cell.getY());
@@ -100,9 +108,9 @@ public class SinglePointSolver extends BoardSolver {
         return safeCells;
     }
 
-    private List<Cell> singlePointMine(Cell cell) {
+    private List<Cell> getSinglePointMine(Cell cell) {
         List<Cell> mineCells = new ArrayList<>();
-        // No. of flagged neighbours
+        // No. of closed neighbours
         int closedNo = calcClosedNeighbours(cell.getX(), cell.getY());
         if (cell.getNumber() == closedNo) {
             for (Cell c : getNeighbours(cell)) {

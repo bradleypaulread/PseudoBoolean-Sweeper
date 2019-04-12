@@ -174,8 +174,10 @@ public class Board extends JPanel {
 		if (cellProb != null) {
 			if (!cell.isFlagged()) {
 				Color cellColor;
-				if (cell.isBestCell()) {
+				if (cellProb == 0.0) {
 					cellColor = Color.WHITE;
+				} else if (cell.isBestCell()) {
+					cellColor = new Color(160, 160, 211);
 				} else if (cellProb <= 0.25) {
 					// int density = (int) (255 - ((double) 255 * cellProb));
 					cellColor = new Color(123, 237, 123);
@@ -190,13 +192,13 @@ public class Board extends JPanel {
 				}
 				g.setColor(cellColor);
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
-				g.setColor(Color.BLACK);
-				g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 4)));
-				String strProb = Double.toString(cellProb * 100);
-				if (strProb.length() > 4) {
-					strProb = strProb.substring(0, 5);
-				}
-				g.drawString(strProb + "%", x + 2, y + ((int) (CELL_WIDTH / 3)));
+				// g.setColor(Color.BLACK);
+				// g.setFont(new Font("", Font.PLAIN, (int) (CELL_WIDTH / 4)));
+				// String strProb = Double.toString(cellProb * 100);
+				// if (strProb.length() > 4) {
+				// 	strProb = strProb.substring(0, 5);
+				// }
+				// g.drawString(strProb + "%", x + 2, y + ((int) (CELL_WIDTH / 3)));
 			} else {
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 			}

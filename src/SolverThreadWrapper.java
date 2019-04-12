@@ -71,9 +71,6 @@ public class SolverThreadWrapper implements Runnable {
             } else if (!singlePoint && pb) {
                 PBSolver pb = new PBSolver(game, running);
                 pb.hint();
-            } else {
-                PBSolver pb = new PBSolver(game, running);
-                pb.hint();
             }
         } else if (prob) {
                 ProbabilitySolver probS = new ProbabilitySolver(game, running);
