@@ -38,7 +38,7 @@ public class MouseActions implements MouseListener {
 			int y = e.getY() / board.getCellWidth();
 			if (game.is_good(x, y)) {
 				if (game.getCell(x, y).isClosed()) {
-					game.select(x, y);
+					game.probe(x, y);
 				}
 			}
 		} else if (e.getButton() == MouseEvent.BUTTON3) { // If right click is pressed

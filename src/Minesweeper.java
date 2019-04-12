@@ -553,7 +553,7 @@ public class Minesweeper extends JFrame {
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
 	 */
-	public void select(int x, int y) {
+	public void probe(int x, int y) {
 		// Dont perform any behaviour if cell is flagged or game has already been
 		// won/lost
 		if (cells[x][y].isFlagged() || isGameOver) {
@@ -610,7 +610,7 @@ public class Minesweeper extends JFrame {
 		refresh();
 	}
 
-	public void quietSelect(int x, int y) {
+	public void quietProbe(int x, int y) {
 		// Dont perform any behaviour if cell is flagged or game has already been
 		// won/lost
 		if (cells[x][y].isFlagged() || isGameOver) {
@@ -632,7 +632,7 @@ public class Minesweeper extends JFrame {
 			for (Cell c : neighbours) {
 				// Only attempt to open closed cells
 				if (c.isClosed() && !c.isFlagged()) {
-					quietSelect(c.getX(), c.getY());
+					quietProbe(c.getX(), c.getY());
 				}
 			}
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
@@ -652,7 +652,7 @@ public class Minesweeper extends JFrame {
 		for (Cell c : neighbours) {
 			// Only attempt to open closed cells
 			if (c.isClosed() && !c.isFlagged()) {
-				select(c.getX(), c.getY());
+				probe(c.getX(), c.getY());
 				--moves;
 			}
 		}

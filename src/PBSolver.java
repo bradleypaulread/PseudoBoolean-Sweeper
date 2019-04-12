@@ -122,11 +122,11 @@ public class PBSolver extends BoardSolver {
 			} else {
 				if (current.isBlank()) {
 					if (quiet) {
-						game.quietSelect(current.getX(), current.getY());
+						game.quietProbe(current.getX(), current.getY());
 					} else {
 						String detail = "Selecting " + current + " as Cell is Safe";
 						game.setDetail(detail);
-						game.select(current.getX(), current.getY());
+						game.probe(current.getX(), current.getY());
 					}
 					change = true;
 				}

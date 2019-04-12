@@ -52,9 +52,9 @@ public class SinglePointSolver extends BoardSolver {
                             for (Cell c : getSinglePointSafe(current)) {
                                 if (c.isBlank()) {
                                     if (quiet) {
-                                        game.quietSelect(c.getX(), c.getY());
+                                        game.quietProbe(c.getX(), c.getY());
                                     } else {
-                                        game.select(c.getX(), c.getY());
+                                        game.probe(c.getX(), c.getY());
                                         game.refresh();
                                     }
                                     return true;

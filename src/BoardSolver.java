@@ -235,7 +235,7 @@ public abstract class BoardSolver {
 
 		if (!sea.isEmpty()) {
 			Cell selectedCell = sea.get(new Random().nextInt(sea.size()));
-			game.quietSelect(selectedCell.getX(), selectedCell.getY());
+			game.quietProbe(selectedCell.getX(), selectedCell.getY());
 		} else {
 			game.setGameOver(true);
 		}

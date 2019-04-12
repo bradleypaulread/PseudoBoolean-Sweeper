@@ -37,12 +37,12 @@ public class ProbabilitySolver extends BoardSolver {
             return;
         }
         if (quiet) {
-            game.quietSelect(bestCell.getX(), bestCell.getY());
+            game.quietProbe(bestCell.getX(), bestCell.getY());
         } else {
             String detail = "Strategically Selecting Cell " + bestCell + " with prob. "
                     + probs.get(bestCell).doubleValue();
             game.setDetail(detail);
-            game.select(bestCell.getX(), bestCell.getY());
+            game.probe(bestCell.getX(), bestCell.getY());
         }
     }
 
