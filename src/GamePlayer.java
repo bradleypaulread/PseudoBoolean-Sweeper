@@ -81,9 +81,17 @@ public class GamePlayer implements Runnable {
     }
 
     private void singlePointSolve() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        sp.setQuiet();
-        startTime = System.nanoTime();
+        SinglePointSolver sp;
+
+        do {
+            MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+            game = new Minesweeper(gameDifficulty, mineField);
+            sp = new SinglePointSolver(game);
+            sp.setQuiet();
+            startTime = System.nanoTime();
+            sp.selectRandomCell();
+        } while (!game.isGameOver());
+
         while (!game.isGameOver()) {
             if (!sp.assist()) {
                 sp.selectRandomCell();
@@ -95,9 +103,18 @@ public class GamePlayer implements Runnable {
     }
 
     private void PBSolve() {
-        PBSolver pb = new PBSolver(game);
-        pb.setQuiet();
+        PBSolver pb;
         startTime = System.nanoTime();
+
+        do {
+            MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+            game = new Minesweeper(gameDifficulty, mineField);
+            pb = new PBSolver(game);
+            pb.setQuiet();
+            startTime = System.nanoTime();
+            pb.selectRandomCell();
+        } while (!game.isGameOver());
+
         while (!game.isGameOver()) {
             if (!pb.assist()) {
                 pb.selectRandomCell();
@@ -109,10 +126,20 @@ public class GamePlayer implements Runnable {
     }
 
     private void jointSolve() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        PBSolver pb = new PBSolver(game);
-        sp.setQuiet();
-        pb.setQuiet();
+        SinglePointSolver sp;
+        PBSolver pb;
+
+        do {
+            MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+            game = new Minesweeper(gameDifficulty, mineField);
+            sp = new SinglePointSolver(game);
+            pb = new PBSolver(game);
+            sp.setQuiet();
+            pb.setQuiet();
+            startTime = System.nanoTime();
+            sp.selectRandomCell();
+        } while (!game.isGameOver());
+
         while (!game.isGameOver()) {
             if (!sp.assist() && !pb.assist()) {
                 sp.selectRandomCell();
@@ -124,11 +151,23 @@ public class GamePlayer implements Runnable {
     }
 
     private void fullSolve() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        PBSolver pb = new PBSolver(game);
-        ProbabilitySolver prob = new ProbabilitySolver(game);
-        sp.setQuiet();
-        pb.setQuiet();
+        SinglePointSolver sp;
+        PBSolver pb;
+        ProbabilitySolver prob;
+
+        do {
+            MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+            game = new Minesweeper(gameDifficulty, mineField);
+            sp = new SinglePointSolver(game);
+            pb = new PBSolver(game);
+            prob = new ProbabilitySolver(game);
+            sp.setQuiet();
+            pb.setQuiet();
+            prob.setQuiet();
+            startTime = System.nanoTime();
+            prob.assist();
+        } while (!game.isGameOver());
+
         startTime = System.nanoTime();
         while (!game.isGameOver()) {
             if (!sp.assist() && !pb.assist()) {
