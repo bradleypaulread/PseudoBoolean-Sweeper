@@ -205,7 +205,7 @@ public class Board extends JPanel {
 		} else {
 			g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 		}
-		if (game.getDebug()) {
+		if (game.isDebug()) {
 			g.setFont(new Font("", Font.BOLD, (int) (CELL_WIDTH / 3)));
 			g.setColor(Color.BLACK);
 			g.drawString("" + (x / CELL_WIDTH) + "," + (y / CELL_WIDTH), x + 2, y + ((int) (CELL_WIDTH / 3)));

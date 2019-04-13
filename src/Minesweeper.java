@@ -394,6 +394,19 @@ public class Minesweeper extends JFrame {
 		});
 	}
 
+	private void copySettings(Minesweeper game) {
+		diffEasyRb.setSelected(game.isEasy());
+		diffEasyRb.setEnabled(!game.isEasy());
+		diffMediumRb.setSelected(game.isMedium());
+		diffMediumRb.setEnabled(!game.isMedium());
+		diffHardRb.setSelected(game.isHard());
+		diffHardRb.setEnabled(!game.isHard());
+		debugCb.setSelected(game.isDebug());
+		singlePointCb.setSelected(game.isSinglePoint());
+		pbCb.setSelected(game.isPb());
+		stratCb.setSelected(game.isStrat());
+	}
+
 	private void configureSolver(SolverThreadWrapper solver) {
 		solver.reset();
 		boolean doSinglePoint = singlePointCb.isSelected();
@@ -428,12 +441,7 @@ public class Minesweeper extends JFrame {
 		diffEasyRb.setEnabled(false);
 		diffEasyRb.addActionListener(e -> {
 			Minesweeper newGame = new Minesweeper(Difficulty.BEGINNER);
-			newGame.getDiffEasyRb().setSelected(true);
-			newGame.getDiffEasyRb().setEnabled(false);
-			newGame.getDiffMediumRb().setEnabled(true);
-			newGame.getDiffHardRb().setEnabled(true);
-			newGame.setDebug(debugCb.isSelected());
-			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			newGame.copySettings(this);
 			setVisible(false);
 			dispose();
 		});
@@ -442,12 +450,7 @@ public class Minesweeper extends JFrame {
 
 		diffMediumRb.addActionListener(e -> {
 			Minesweeper newGame = new Minesweeper(Difficulty.INTERMEDIATE);
-			newGame.getDiffMediumRb().setSelected(true);
-			newGame.getDiffEasyRb().setEnabled(true);
-			newGame.getDiffMediumRb().setEnabled(false);
-			newGame.getDiffHardRb().setEnabled(true);
-			newGame.setDebug(debugCb.isSelected());
-			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			newGame.copySettings(this);
 			setVisible(false);
 			dispose();
 		});
@@ -456,12 +459,7 @@ public class Minesweeper extends JFrame {
 
 		diffHardRb.addActionListener(e -> {
 			Minesweeper newGame = new Minesweeper(Difficulty.EXPERT);
-			newGame.getDiffHardRb().setSelected(true);
-			newGame.getDiffEasyRb().setEnabled(true);
-			newGame.getDiffMediumRb().setEnabled(true);
-			newGame.getDiffHardRb().setEnabled(false);
-			newGame.setDebug(debugCb.isSelected());
-			newGame.getDebugCB().setSelected(debugCb.isSelected());
+			newGame.copySettings(this);
 			setVisible(false);
 			dispose();
 		});
@@ -476,34 +474,33 @@ public class Minesweeper extends JFrame {
 			System.out.println();
 			System.out.println();
 		});
-		
-		
+
 		menu.add(printFieldItem);
-		
+
 		customGameItem.addActionListener(e -> {
 			// Formats to format and parse numbers
 			NumberFormat newWidth;
 			NumberFormat newHeight;
 			NumberFormat newNoOfMines;
-			
+
 			newWidth = NumberFormat.getIntegerInstance();
 			newHeight = NumberFormat.getIntegerInstance();
 			newNoOfMines = NumberFormat.getIntegerInstance();
-			
+
 			// Fields for data entry
 			JFormattedTextField widthField = new JFormattedTextField(newWidth);
 			JFormattedTextField heightField = new JFormattedTextField(newHeight);
 			JFormattedTextField noOfMinesField = new JFormattedTextField(newNoOfMines);
-			
+
 			widthField.setValue(0);
 			heightField.setValue(0);
 			noOfMinesField.setValue(0);
-			
+
 			JPanel fieldPane = new JPanel(new GridLayout(0, 1));
 			fieldPane.add(widthField);
 			fieldPane.add(heightField);
 			fieldPane.add(noOfMinesField);
-			
+
 			JFrame frame = new JFrame("Custom Board Test");
 			JButton btn = new JButton("Create");
 			btn.addActionListener(e2 -> {
@@ -511,11 +508,7 @@ public class Minesweeper extends JFrame {
 				int newY = ((Number) heightField.getValue()).intValue();
 				int newMines = ((Number) noOfMinesField.getValue()).intValue();
 				Minesweeper newGame = new Minesweeper(newX, newY, newMines);
-				newGame.getDiffEasyRb().setEnabled(true);
-				newGame.getDiffMediumRb().setEnabled(true);
-				newGame.getDiffHardRb().setEnabled(true);
-				newGame.setDebug(debugCb.isSelected());
-				newGame.getDebugCB().setSelected(debugCb.isSelected());
+				newGame.copySettings(this);
 				frame.setVisible(false);
 				frame.dispose();
 				setVisible(false);
@@ -531,14 +524,14 @@ public class Minesweeper extends JFrame {
 		menu.add(customGameItem);
 		menu.addSeparator();
 		menu.addSeparator();
-		
+
 		menu.add(singlePointCb);
 		menu.add(pbCb);
 		menu.add(stratCb);
 
 		this.setJMenuBar(menuBar);
 	}
-	
+
 	/**
 	 * Redraw the board, updating all cells appearance and behaviour.
 	 */
@@ -845,36 +838,12 @@ public class Minesweeper extends JFrame {
 		return cells;
 	}
 
-	public JCheckBoxMenuItem getDebugCB() {
-		return debugCb;
-	}
-
-	public JRadioButtonMenuItem getDiffEasyRb() {
-		return diffEasyRb;
-	}
-
-	public JRadioButtonMenuItem getDiffMediumRb() {
-		return diffMediumRb;
-	}
-
-	public JRadioButtonMenuItem getDiffHardRb() {
-		return diffHardRb;
-	}
-
 	public boolean isGameOver() {
 		return isGameOver;
 	}
 
-	public boolean getDebug() {
-		return debug;
-	}
-
 	public int getMinesLeft() {
 		return minesLeft;
-	}
-
-	public void setDebug(boolean value) {
-		debug = value;
 	}
 
 	public boolean isGameWon() {
@@ -905,6 +874,35 @@ public class Minesweeper extends JFrame {
 	public void setDetail(String detail) {
 		this.detailsLbl.setText(detail + ".");
 	}
+
+	public boolean isEasy() {
+		return diffEasyRb.isSelected();
+	}
+
+	public boolean isMedium() {
+		return diffMediumRb.isSelected();
+	}
+
+	public boolean isHard() {
+		return diffHardRb.isSelected();
+	}
+
+	public boolean isSinglePoint() {
+		return singlePointCb.isSelected();
+	}
+
+	public boolean isPb() {
+		return pbCb.isSelected();
+	}
+
+	public boolean isStrat() {
+		return stratCb.isSelected();
+	}
+
+	public boolean isDebug() {
+		return debugCb.isSelected();
+	}
+
 }
 // Sample for loop for copy and paste
 // for(int i = 0;i<width;i++) {
