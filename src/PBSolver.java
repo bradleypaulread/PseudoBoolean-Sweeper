@@ -69,11 +69,11 @@ public class PBSolver extends BoardSolver {
 		}
 	}
 
-    public void hint() {
+    public boolean hint() {
         cells = game.getCells();
 		Map<Cell, Boolean> known = gestKnownCells();
 		if (known == null || !running.get()) {
-			return;
+			return false;
 		}
 		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
 			Cell current = pair.getKey();
@@ -87,17 +87,18 @@ public class PBSolver extends BoardSolver {
 					current.setMineHint();
 					game.getHintCells().add(current);
 					game.refresh();
-					return;
+					return true;
 				}
 			} else {
 				if (current.isBlank()) {
 					current.setSafeHint();
 					game.getHintCells().add(current);
 					game.refresh();
-					return;
+					return true;
 				}
 			}
 		}
+		return false;
     }
 
     public boolean assist() {

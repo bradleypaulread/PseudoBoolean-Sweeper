@@ -68,9 +68,6 @@ public class Cell {
 		this.prob = prob;
 	}
 	
-	/**
-	 * @param prob the prob to set
-	 */
 	public void resetProb() {
 		this.prob = null;
 	}

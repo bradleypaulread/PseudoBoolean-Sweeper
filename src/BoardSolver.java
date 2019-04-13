@@ -44,6 +44,12 @@ public abstract class BoardSolver {
 		System.out.println(result);
 	}
 
+	public abstract boolean hint();
+
+	public abstract boolean assist();
+
+	public abstract void solve();
+	
 	// To Remove
 	public void temp() {
 		selectRandomCell();

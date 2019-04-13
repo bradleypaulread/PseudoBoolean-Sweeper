@@ -7,7 +7,7 @@ public class SinglePointSolver extends BoardSolver {
         super(game);
     }
 
-    public void hint() {
+    public boolean hint() {
         cells = game.getCells();
         for (int i = 0; i < cells.length; ++i) {
             for (int j = 0; j < cells[i].length; ++j) {
@@ -21,7 +21,7 @@ public class SinglePointSolver extends BoardSolver {
                                     c.setSafeHint();
                                     game.getHintCells().add(c);
                                     game.refresh();
-                                    return;
+                                    return true;
                                 }
                             }
                         }
@@ -31,7 +31,7 @@ public class SinglePointSolver extends BoardSolver {
                                     c.setMineHint();
                                     game.getHintCells().add(c);
                                     game.refresh();
-                                    return;
+                                    return true;
                                 }
                             }
                         }
@@ -39,6 +39,7 @@ public class SinglePointSolver extends BoardSolver {
                 }
             }
         }
+        return false;
     }
 
     public boolean assist() {

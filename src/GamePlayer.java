@@ -132,7 +132,7 @@ public class GamePlayer implements Runnable {
         startTime = System.nanoTime();
         while (!game.isGameOver()) {
             if (!sp.assist() && !pb.assist()) {
-                prob.makeBestMove();
+                prob.assist();
                 guessCount++;
             }
         }
