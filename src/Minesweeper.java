@@ -87,7 +87,6 @@ public class Minesweeper extends JFrame {
 	private List<Cell> hintCells = new ArrayList<Cell>(); //
 	private int noOfMines; // Number of mines
 	private Board board; // Board instance, where cells appearance is processed
-	private boolean debug; // If debug information should be printed to console
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves; // Number if moves made by the player.
 	private int currentGameTime;
@@ -427,10 +426,8 @@ public class Minesweeper extends JFrame {
 		menuBar.add(menu);
 
 		ButtonGroup diffRdGroup = new ButtonGroup();
-
 		// When option selected invert the debug variable.
 		debugCb.addActionListener(e -> {
-			debug = !debug;
 			refresh();
 		});
 
@@ -560,7 +557,7 @@ public class Minesweeper extends JFrame {
 		// Reset probabilies
 		resetProbs();
 
-		if (debug) {
+		if (debugCb.isSelected()) {
 			debug(x, y);
 		}
 
