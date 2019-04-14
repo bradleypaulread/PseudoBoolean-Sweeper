@@ -94,6 +94,17 @@ public class ProbabilitySolver extends BoardSolver {
             ;
     }
 
+    @Override
+    public boolean firstGuess() {
+        System.out.println("test");
+        if (doneFirstGuess) {
+            return true;
+        }
+        new SinglePointSolver(game).firstGuess();
+        doneFirstGuess = true;
+        return true;
+    }
+
     private Cell getBestMove(Map<Cell, BigFraction> probs) {
         List<Cell> cells = getBestProbCells(probs);
         if (cells == null) {

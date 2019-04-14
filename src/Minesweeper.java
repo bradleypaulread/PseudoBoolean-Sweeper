@@ -307,12 +307,9 @@ public class Minesweeper extends JFrame {
 		// To Remove
 		JButton tempBtn = new JButton("Temp.");
 		JButton randBtn = new JButton("Rand.");
-		tempBtn.setEnabled(false);
 		tempBtn.addActionListener(e -> {
-			disableAllBtns();
-			thread = new SolverThreadWrapper(this);
-			thread.start();
-			stopBtn.setEnabled(true);
+			ProbabilitySolver tempSolver = new ProbabilitySolver(this);
+			while(!tempSolver.firstGuess());
 		});
 
 		randBtn.addActionListener(e -> {
@@ -322,7 +319,7 @@ public class Minesweeper extends JFrame {
 		});
 
 		// To Remove
-		// controlBtns.add(tempBtn);
+		controlBtns.add(tempBtn);
 		// controlBtns.add(randBtn);
 
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);

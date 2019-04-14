@@ -8,6 +8,7 @@ import org.sat4j.specs.IVecInt;
 public abstract class BoardSolver {
 
 	protected boolean quiet;
+	protected boolean doneFirstGuess;
 
 	protected Minesweeper game;
 	protected Cell[][] cells;
@@ -16,6 +17,7 @@ public abstract class BoardSolver {
 	public BoardSolver(Minesweeper game) {
 		running = new AtomicBoolean(true);
 		quiet = false;
+		doneFirstGuess = false;
 		this.game = game;
 		cells = game.getCells();
 	}
@@ -23,6 +25,7 @@ public abstract class BoardSolver {
 	public BoardSolver(Minesweeper game, AtomicBoolean running) {
 		this.running = running;
 		quiet = false;
+		doneFirstGuess = false;
 		this.game = game;
 		cells = game.getCells();
 	}
@@ -44,12 +47,86 @@ public abstract class BoardSolver {
 		System.out.println(result);
 	}
 
+	public boolean firstGuess() {
+		if (doneFirstGuess) {
+			return true;
+		}
+		cells = game.getCells();
+		List<Cell> landCells = getLandCells();
+		int openCellsCount = landCells.size();
+		int width = cells.length;
+		int height = cells[0].length;
+		Cell cellToProbe;
+		List<Cell> cornerCells = new ArrayList<>();
+
+		if (cells[0][0].isClosed()) {
+			cornerCells.add(cells[0][0]);
+		}
+		if (cells[width - 1][0].isClosed()) {
+			cornerCells.add(cells[width - 1][0]);
+		}
+		if (cells[0][height - 1].isClosed()) {
+			cornerCells.add(cells[0][height - 1]);
+		}
+		if (cells[width - 1][height - 1].isClosed()) {
+			cornerCells.add(cells[width - 1][height - 1]);
+		}
+
+		if (cornerCells.isEmpty()) {
+			List<Cell> borderCells = getClosedBorder();
+			if (!borderCells.isEmpty()) {
+				cellToProbe = getRandomCell(borderCells);
+			} else {
+				cellToProbe = getRandomCell(landCells);
+			}
+		} else {
+			cellToProbe = getRandomCell(cornerCells);
+		}
+		game.probe(cellToProbe.getX(), cellToProbe.getY());
+		int newOpenCellsCount = getLandCells().size();
+		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
+		if (foundOpening) {
+			doneFirstGuess = true;
+		}
+		// return true if more than 1 square was revealed (an opening was made/probed a
+		// 0)
+		return foundOpening;
+	}
+
+	public List<Cell> getClosedBorder() {
+		cells = game.getCells();
+		List<Cell> borderCells = new ArrayList<>();
+		int width = cells.length;
+		int height = cells[0].length;
+		for (int i = 0; i < width; i++) {
+			Cell c = cells[i][0];
+			if (c.isClosed()) {
+				borderCells.add(c);
+			}
+			c = cells[i][height - 1];
+			if (c.isClosed()) {
+				borderCells.add(c);
+			}
+		}
+		for (int i = 0; i < height; i++) {
+			Cell c = cells[0][i];
+			if (c.isClosed()) {
+				borderCells.add(c);
+			}
+			c = cells[width - 1][i];
+			if (c.isClosed()) {
+				borderCells.add(c);
+			}
+		}
+		return borderCells;
+	}
+
 	public abstract boolean hint();
 
 	public abstract boolean assist();
 
 	public abstract void solve();
-	
+
 	// To Remove
 	public void temp() {
 		selectRandomCell();
@@ -98,7 +175,7 @@ public abstract class BoardSolver {
 	}
 
 	protected int encodeLit(int i) {
-		return ((cells[0].length - 1) * cells.length + (cells.length - 1)) + (i + 2);
+		return (cells[0].length * cells.length) + cells.length + i;
 	}
 
 	private Cell decodeLit(int lit) {
