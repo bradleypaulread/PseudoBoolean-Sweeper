@@ -190,6 +190,9 @@ public class Board extends JPanel {
 					// int density = (int) (255 * cellProb);
 					cellColor = new Color(247, 76, 76);
 				}
+				// for (int i = 0; i < (cellProb*100)/50; i++) {
+				// 	cellColor = cellColor.darker();
+				// }
 				g.setColor(cellColor);
 				g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 				// g.setColor(Color.BLACK);
