@@ -67,7 +67,7 @@ public class ProbabilitySolver extends BoardSolver {
             }
             return false;
         }
-        List<Cell> bestCells = getBestStratCells(bestProbCells);
+        List<Cell> bestCells = getBestStratCells(bestProbCells, probs);
         bestCells.removeIf(c -> c.isBestCell());
         if (bestCells == null || bestCells.isEmpty()) {
             return false;
@@ -95,12 +95,11 @@ public class ProbabilitySolver extends BoardSolver {
     }
 
     @Override
-    public boolean firstGuess() {
-        System.out.println("test");
+    public boolean makeFirstGuess() {
         if (doneFirstGuess) {
             return true;
         }
-        new SinglePointSolver(game).firstGuess();
+        new SinglePointSolver(game).makeFirstGuess();
         doneFirstGuess = true;
         return true;
     }
@@ -110,7 +109,7 @@ public class ProbabilitySolver extends BoardSolver {
         if (cells == null) {
             return null;
         }
-        Cell bestCell = getBestStratCell(cells);
+        Cell bestCell = getBestStratCell(cells, probs);
         if (bestCell == null) {
             return null;
         }
@@ -206,7 +205,6 @@ public class ProbabilitySolver extends BoardSolver {
             pbSolver.reset();
             e.printStackTrace();
         } catch (ContradictionException e) {
-            System.out.println("shit");
             pbSolver.reset();
             e.printStackTrace();
         }
@@ -295,7 +293,7 @@ public class ProbabilitySolver extends BoardSolver {
         return cellsWithBestProb;
     }
 
-    private List<Cell> getBestStratCells(List<Cell> bestProbCells) {
+    private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
         if (bestProbCells.isEmpty()) {
             return null;
         }
@@ -317,14 +315,43 @@ public class ProbabilitySolver extends BoardSolver {
         return bestCells;
     }
 
-    private Cell getBestStratCell(List<Cell> bestProbCells) {
-        List<Cell> bestCells = getBestStratCells(bestProbCells);
+    private Cell getBestStratCell(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
+        List<Cell> bestCells = getBestStratCells(bestProbCells, probs);
         if (bestCells.size() > 1) {
             return getRandomCell(bestCells);
         } else {
             return bestCells.get(0);
         }
     }
+
+    // Cell with highest avg surrounding density.
+    // private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
+    //     if (bestProbCells.isEmpty()) {
+    //         return null;
+    //     }
+    //     List<Cell> bestCells = new ArrayList<>();
+    //     Double bestDensity = 0.0;
+    //     for (Cell c : bestProbCells) {
+    //         List<Cell> neighbours = getNeighbours(c);
+    //         neighbours.removeIf(c2 -> c2.isOpen());
+    //         int closedCount = neighbours.size();
+    //         Double avgDensity = 0.0;
+    //         for (Cell n : neighbours) {
+    //             avgDensity += probs.get(n).doubleValue();
+    //         }
+    //         avgDensity /= closedCount;
+    //         int compare = avgDensity.compareTo(bestDensity);
+    //         if (compare > 0) {
+    //             bestDensity = avgDensity;
+    //             bestCells.clear();
+    //             bestCells.add(c);
+    //         } else if (compare == 0) {
+    //             bestCells.add(c);
+    //         }
+    //     }
+    //     System.out.println(bestCells);
+    //     return bestCells;
+    // }
 
     private void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
         cells = game.getCells();

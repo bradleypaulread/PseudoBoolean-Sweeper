@@ -47,13 +47,12 @@ public abstract class BoardSolver {
 		System.out.println(result);
 	}
 
-	public boolean firstGuess() {
+	public Cell getFirstGuess() {
 		if (doneFirstGuess) {
-			return true;
+			return null;
 		}
 		cells = game.getCells();
 		List<Cell> landCells = getLandCells();
-		int openCellsCount = landCells.size();
 		int width = cells.length;
 		int height = cells[0].length;
 		Cell cellToProbe;
@@ -82,6 +81,17 @@ public abstract class BoardSolver {
 		} else {
 			cellToProbe = getRandomCell(cornerCells);
 		}
+		return cellToProbe;
+	}
+
+	public boolean makeFirstGuess() {
+		if (doneFirstGuess) {
+			return true;
+		}
+		cells = game.getCells();
+		List<Cell> landCells = getLandCells();
+		int openCellsCount = landCells.size();
+		Cell cellToProbe = getFirstGuess();
 		game.probe(cellToProbe.getX(), cellToProbe.getY());
 		int newOpenCellsCount = getLandCells().size();
 		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
