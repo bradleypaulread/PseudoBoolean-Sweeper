@@ -206,7 +206,6 @@ public class ProbabilitySolver extends BoardSolver {
             e.printStackTrace();
         } catch (ContradictionException e) {
             pbSolver.reset();
-            e.printStackTrace();
         }
         pbSolver.reset();
         if (!running.get()) {

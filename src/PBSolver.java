@@ -27,7 +27,7 @@ public class PBSolver extends BoardSolver {
     protected void genConstraints(IPBSolver solver) throws ContradictionException {
 
 		IVecInt lits = new VecInt();
-		IVec<BigInteger> coeffs = new Vec<BigInteger>();
+		IVecInt coeffs = new VecInt();
 
 		// Constraint that sum of all cells must be the no.
 		// of mines present on the board
@@ -35,10 +35,11 @@ public class PBSolver extends BoardSolver {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
 				lits.push(encodeCellId(current));
-				coeffs.push(BigInteger.ONE);
+				coeffs.push(1);
 			}
 		}
-		solver.addExactly(lits, coeffs, BigInteger.valueOf(game.getNoOfMines()));
+		// printConstraint(lits, coeffs, "=", game.getNoOfMines());
+		solver.addExactly(lits, coeffs, game.getNoOfMines());
 		lits.clear();
 		coeffs.clear();
 
@@ -51,8 +52,9 @@ public class PBSolver extends BoardSolver {
 
 			// Every open cell is guaranteed to not be a mine
 			lits.push(encodeCellId(current));
-			coeffs.push(BigInteger.ONE);
-			solver.addExactly(lits, coeffs, BigInteger.ZERO);
+			coeffs.push(1);
+			solver.addExactly(lits, coeffs, 0);
+			// printConstraint(lits, coeffs, "=", 0);
 			lits.clear();
 			coeffs.clear();
 
@@ -61,9 +63,10 @@ public class PBSolver extends BoardSolver {
 			// Normal constraint
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
-				coeffs.push(BigInteger.ONE);
+				coeffs.push(1);
 			}
-			solver.addExactly(lits, coeffs, BigInteger.valueOf(current.getNumber()));
+			// printConstraint(lits, coeffs, "=", current.getNumber());
+			solver.addExactly(lits, coeffs, current.getNumber());
 			lits.clear();
 			coeffs.clear();
 		}

@@ -518,7 +518,7 @@ public class Minesweeper extends JFrame {
 		menu.add(customGameItem);
 		menu.addSeparator();
 		menu.addSeparator();
-
+		singlePointCb.setSelected(true);
 		menu.add(singlePointCb);
 		menu.add(pbCb);
 		menu.add(stratCb);

@@ -30,7 +30,7 @@ public abstract class BoardSolver {
 		cells = game.getCells();
 	}
 
-	private void printConstraint(IVecInt lits, IVecInt coeffs, String type, int degree) {
+	protected void printConstraint(IVecInt lits, IVecInt coeffs, String type, int degree) {
 		String result = "";
 		for (int i = 0; i < lits.size(); i++) {
 			result += coeffs.get(i) + " x" + lits.get(i) + " + ";
