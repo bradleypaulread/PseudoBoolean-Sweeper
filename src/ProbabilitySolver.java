@@ -148,18 +148,21 @@ public class ProbabilitySolver extends BoardSolver {
                 List<Cell> currentSol = new ArrayList<>();
                 int[] model = pbSolver.model();
                 int noOfMines = 0;
+                String m = "[";
                 for (int i : model) {
                     // Test if lit is for a cell and if cell is also a mine
                     // System.out.print("" + i + ", ");
                     boolean mine = i < 0 ? false : true;
                     Cell testForCell = decodeCellId(i);
+                    m += "" + i + ", ";
                     if (testForCell != null && mine) {
                         // System.out.print("" + testForCell + ", ");
                         currentSol.add(testForCell);
                         noOfMines++;
                     }
                 }
-                // System.out.println("\n");
+                m += "]";
+                // System.out.println(m);
                 // System.out.println("\n");
                 // System.out.println("\n");
                 // Increment cell config count
@@ -211,18 +214,16 @@ public class ProbabilitySolver extends BoardSolver {
         if (!running.get()) {
             return null;
         }
-        // System.out.println("No. of solutions: " + noOfSolutions);
-        // System.out.print("Solutions Map: ");
-        // for (Integer i : solutions.keySet()) {
-        // System.out.println("{" + i + "=" + solutions.get(i).size() + "}");
-        // }
-        // System.out.println("Solutions List: " + solutions);
-        // System.out.println("T: " + T);
+
+        // System.out.println(T);
+        // System.out.println(cellT.get(cells[2][0]));
+
         if (seaSize > 0) {
             seaT = seaT.reduce();
             BigFraction TFrac = new BigFraction(T);
             BigFraction seaProb = seaT.divide(TFrac).reduce();
             List<Cell> seaCells = getSeaCells();
+            // System.out.println(seaT);
             for (Cell c : seaCells) {
                 probs.put(c, seaProb);
             }
@@ -369,15 +370,16 @@ public class ProbabilitySolver extends BoardSolver {
             lits.push(encodeLit(i));
             coeffs.push(square);
         }
+        // printConstraint(lits, coeffs, "<=", seaSize);
         pbSolver.addAtMost(lits, coeffs, seaSize);
 
-        int presumedMineCount = 0;
         for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
             Cell current = closedShore.get(i);
             lits.push(encodeCellId(current));
             coeffs.push(1);
         }
-        pbSolver.addExactly(lits, coeffs, noOfMines - presumedMineCount);
+        // printConstraint(lits, coeffs, "=", noOfMines);
+        pbSolver.addExactly(lits, coeffs, noOfMines);
 
         lits.clear();
         coeffs.clear();
@@ -388,9 +390,10 @@ public class ProbabilitySolver extends BoardSolver {
         for (Cell current : landCells) {
             landLits.push(encodeCellId(current));
             landCoeffs.push(1);
-            // pbSolver.addExactly(landLits, landCoeffs, 0);
-            // landLits.clear();
-            // landCoeffs.clear();
+            // printConstraint(landLits, landCoeffs, "=", 0);
+            pbSolver.addExactly(landLits, landCoeffs, 0);
+            landLits.clear();
+            landCoeffs.clear();
 
             List<Cell> neighbours = getNeighbours(current);
             // neighbours.removeIf(c -> !c.isClosed());
@@ -401,11 +404,12 @@ public class ProbabilitySolver extends BoardSolver {
                 lits.push(encodeCellId(c));
                 coeffs.push(1);
             }
+            // printConstraint(lits, coeffs, "=", current.getNumber());
             pbSolver.addExactly(lits, coeffs, current.getNumber());
             lits.clear();
             coeffs.clear();
         }
-        pbSolver.addExactly(landLits, landCoeffs, 0);
+        // pbSolver.addExactly(landLits, landCoeffs, 0);
 
         lits.clear();
         coeffs.clear();
