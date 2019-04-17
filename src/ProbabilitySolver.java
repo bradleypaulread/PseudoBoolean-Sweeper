@@ -99,7 +99,7 @@ public class ProbabilitySolver extends BoardSolver {
         if (doneFirstGuess) {
             return true;
         }
-        new SinglePointSolver(game).makeFirstGuess();
+        super.makeFirstGuess();
         doneFirstGuess = true;
         return true;
     }

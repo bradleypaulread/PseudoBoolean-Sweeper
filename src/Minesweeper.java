@@ -309,7 +309,9 @@ public class Minesweeper extends JFrame {
 		JButton randBtn = new JButton("Rand.");
 		tempBtn.addActionListener(e -> {
 			ProbabilitySolver tempSolver = new ProbabilitySolver(this);
-			while(!tempSolver.makeFirstGuess());
+			while(!tempSolver.makeFirstGuess()) {
+				System.out.println("teet");
+			}
 		});
 
 		randBtn.addActionListener(e -> {
