@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 
@@ -118,13 +120,13 @@ public class LaunchSim {
 		try {
 			this.firstGuess = true;
 			writeTitle();
-			System.out.println("PB Easy");
+			System.out.println("PB Easy (FG)");
 			playPB(Difficulty.BEGINNER, EASY_PATH);
 			resetScores();
-			System.out.println("PB Medium");
+			System.out.println("PB Medium (FG)");
 			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
 			resetScores();
-			System.out.println("PB Hard");
+			System.out.println("PB Hard (FG)");
 			playPB(Difficulty.EXPERT, HARD_PATH);
 			writeResults(PB_NAME_FIRSTGUESS);
 			resetResults();
@@ -247,10 +249,11 @@ public class LaunchSim {
 
 			try (BufferedReader br = new BufferedReader(new FileReader(path))) {
 				int count = 0;
-				for (int j = 0; j < lineCount; j++) {
-					br.readLine();
-				}
-				for (String fieldJson; (fieldJson = br.readLine()) != null && count < batch;) {
+				Stream<String> fields = br.lines().skip(lineCount);
+				fields = fields.limit(batch);
+				Iterator<String> it = fields.iterator();
+				while (it.hasNext()) {
+					String fieldJson = it.next();
 					lineCount++;
 					count++;
 					GamePlayer player = new GamePlayer(diff, fieldJson);
@@ -558,13 +561,12 @@ public class LaunchSim {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startSPSim();
-		LaunchSim s2 = new LaunchSim(10000, "resources/");
-		s2.startSPFirstGuessSim();
+		LaunchSim s = new LaunchSim(100, "resources/");
+		s.startPBSim();
+		LaunchSim s2 = new LaunchSim(100, "resources/");
+		s2.startPBFirstGuessSim();
 
-		System.out.println("\n\nDONE!!!!!");
-
+		System.out.println("\n\nDONE!!!!");
 		// Gson gson = new Gson();
 
 		// PrintWriter writer;
