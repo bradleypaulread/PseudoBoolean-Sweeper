@@ -92,7 +92,11 @@ public abstract class BoardSolver {
 		List<Cell> landCells = getLandCells();
 		int openCellsCount = landCells.size();
 		Cell cellToProbe = getFirstGuess();
-		game.probe(cellToProbe.getX(), cellToProbe.getY());
+		if (quiet) {
+			game.quietProbe(cellToProbe.getX(), cellToProbe.getY());
+		} else {
+			game.probe(cellToProbe.getX(), cellToProbe.getY());
+		}
 		int newOpenCellsCount = getLandCells().size();
 		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
 		if (foundOpening) {

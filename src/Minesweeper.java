@@ -605,7 +605,7 @@ public class Minesweeper extends JFrame {
 		if (cells[x][y].isFlagged() || isGameOver) {
 			return;
 		}
-
+		moves++;
 		// How many mines are around the cell
 		// x and y has to be reversed as MineField.java takes parameters
 		// (height, width) not (width, height).
@@ -622,6 +622,7 @@ public class Minesweeper extends JFrame {
 				// Only attempt to open closed cells
 				if (c.isClosed() && !c.isFlagged()) {
 					quietProbe(c.getX(), c.getY());
+					moves--;
 				}
 			}
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
