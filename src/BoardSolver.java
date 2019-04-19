@@ -192,6 +192,7 @@ public abstract class BoardSolver {
 		return (cells[0].length * cells.length) + cells.length + i;
 	}
 
+	@SuppressWarnings("unused")
 	private Cell decodeLit(int lit) {
 		int posLit = lit < 0 ? lit * -1 : lit;
 		if (posLit > (cells[0].length - 1) * cells.length + (cells.length - 1) + 2) {

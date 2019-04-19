@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import com.google.gson.Gson;
@@ -100,16 +101,22 @@ public class LaunchSim {
 
 	public void startPBSim() {
 		try {
+//			writeTitle();
+//			System.out.println("PB Easy");
+//			playPB(Difficulty.BEGINNER, EASY_PATH);
+//			writeResults("" + 1 + PB_NAME);
+//			resetResults();
+//			resetScores();
+//			writeTitle();
+//			System.out.println("PB Medium");
+//			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+//			writeResults("" + 2 + PB_NAME);
+//			resetResults();
+//			resetScores();
 			writeTitle();
-			System.out.println("PB Easy");
-			playPB(Difficulty.BEGINNER, EASY_PATH);
-			resetScores();
-			System.out.println("PB Medium");
-			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-			resetScores();
 			System.out.println("PB Hard");
 			playPB(Difficulty.EXPERT, HARD_PATH);
-			writeResults(PB_NAME);
+			writeResults("" + 3 + PB_NAME);
 			resetResults();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -119,16 +126,22 @@ public class LaunchSim {
 	public void startPBFirstGuessSim() {
 		try {
 			this.firstGuess = true;
+//			writeTitle();
+//			System.out.println("PB Easy (FG)");
+//			playPB(Difficulty.BEGINNER, EASY_PATH);
+//			writeResults("" + 1 + PB_NAME_FIRSTGUESS);
+//			resetResults();
+//			resetScores();
+//			writeTitle();
+//			System.out.println("PB Medium (FG)");
+//			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+//			writeResults("" + 2 + PB_NAME_FIRSTGUESS);
+//			resetResults();
+//			resetScores();
 			writeTitle();
-			System.out.println("PB Easy (FG)");
-			playPB(Difficulty.BEGINNER, EASY_PATH);
-			resetScores();
-			System.out.println("PB Medium (FG)");
-			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-			resetScores();
 			System.out.println("PB Hard (FG)");
 			playPB(Difficulty.EXPERT, HARD_PATH);
-			writeResults(PB_NAME_FIRSTGUESS);
+			writeResults("" + 3 + PB_NAME_FIRSTGUESS);
 			resetResults();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -241,16 +254,18 @@ public class LaunchSim {
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
 		batch = calcPoolSize(diff);
-		List<GamePlayer> games = new ArrayList<>(batch);
+		List<GamePlayer> games = new ArrayList<>();
 		int lineCount = 0;
 		while (lineCount < noOfGames) {
-			// ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
+//			 ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
 			ExecutorService pool = Executors.newCachedThreadPool();
 
 			try (BufferedReader br = new BufferedReader(new FileReader(path))) {
 				int count = 0;
+				
 				Stream<String> fields = br.lines().skip(lineCount);
-				fields = fields.limit(batch);
+				int limit = (batch > (noOfGames - lineCount)) ? (noOfGames - lineCount) : batch;
+				fields = fields.limit(limit);
 				Iterator<String> it = fields.iterator();
 				while (it.hasNext()) {
 					String fieldJson = it.next();
@@ -262,11 +277,15 @@ public class LaunchSim {
 					games.add(player);
 				}
 			}
-
+			
 			for (GamePlayer game : games) {
 				pool.execute(game);
 			}
-
+//			try {
+//				pool.awaitTermination((long) 30, TimeUnit.MINUTES);
+//			} catch (InterruptedException e1) {
+//				e1.printStackTrace();
+//			}
 			pool.shutdown();
 			int print = 0;
 			while (!pool.isTerminated()) {
@@ -306,16 +325,16 @@ public class LaunchSim {
 		int batch;
 		switch (diff) {
 		case BEGINNER:
-			batch = 50;
+			batch = 250;
 			break;
 		case INTERMEDIATE:
-			batch = 24;
+			batch = 100;
 			break;
 		case EXPERT:
-			batch = 16;
+			batch = Runtime.getRuntime().availableProcessors();
 			break;
 		default:
-			batch = 16;
+			batch = Runtime.getRuntime().availableProcessors();
 			break;
 		}
 		return batch;
@@ -326,18 +345,21 @@ public class LaunchSim {
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
 		batch = calcPoolSize(diff);
-		List<GamePlayer> games = new ArrayList<>(batch);
+		List<GamePlayer> games = new ArrayList<>();
 		int lineCount = 0;
 		while (lineCount < noOfGames) {
-			// ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
+//			 ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
 			ExecutorService pool = Executors.newCachedThreadPool();
 
 			try (BufferedReader br = new BufferedReader(new FileReader(path))) {
 				int count = 0;
-				for (int j = 0; j < lineCount; j++) {
-					br.readLine();
-				}
-				for (String fieldJson; (fieldJson = br.readLine()) != null && count < batch;) {
+				
+				Stream<String> fields = br.lines().skip(lineCount);
+				int limit = (batch > (noOfGames - lineCount)) ? (noOfGames - lineCount) : batch;
+				fields = fields.limit(limit);
+				Iterator<String> it = fields.iterator();
+				while (it.hasNext()) {
+					String fieldJson = it.next();
 					lineCount++;
 					count++;
 					GamePlayer player = new GamePlayer(diff, fieldJson);
@@ -347,7 +369,7 @@ public class LaunchSim {
 					games.add(player);
 				}
 			}
-
+			
 			for (GamePlayer game : games) {
 				pool.execute(game);
 			}
@@ -366,15 +388,15 @@ public class LaunchSim {
 			}
 
 			for (GamePlayer gameSim : games) {
-				totalTime = totalTime.add(BigInteger.valueOf(gameSim.getElapsedTime()));
-				guessCount += gameSim.getGuessCount();
-				if (gameSim.isGameWon()) {
-					winCount++;
-					winGuessCount += gameSim.getGuessCount();
-					winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+				if (gameSim.getGame().getNoOfMoves() == 1 && !gameSim.isGameWon()) {
+					gamesLostOnFirstMove++;
 				} else {
-					if (gameSim.getGame().getNoOfMoves() == 1) {
-						gamesLostOnFirstMove++;
+					totalTime = totalTime.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+					guessCount += gameSim.getGuessCount();
+					if (gameSim.isGameWon()) {
+						winCount++;
+						winGuessCount += gameSim.getGuessCount();
+						winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
 					}
 				}
 			}
@@ -388,54 +410,72 @@ public class LaunchSim {
 	}
 
 	public void playerFull(Difficulty diff, String path) throws IOException {
+		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
+		int batch;
+		batch = calcPoolSize(diff);
+		List<GamePlayer> games = new ArrayList<>();
+		int lineCount = 0;
+		while (lineCount < noOfGames) {
+//			 ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
+			ExecutorService pool = Executors.newCachedThreadPool();
 
-		ExecutorService pool = Executors.newFixedThreadPool(noOfThreads);
-
-		List<GamePlayer> games = new ArrayList<>(noOfGames);
-		int limit = 0;
-
-		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-			for (String fieldJson; (fieldJson = br.readLine()) != null && limit < noOfGames;) {
-				limit++;
-				GamePlayer player = new GamePlayer(diff, fieldJson);
-				player.setSinglePoint(true);
-				player.setPB(true);
-				player.setStrat(true);
-				games.add(player);
+			try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+				int count = 0;
+				
+				Stream<String> fields = br.lines().skip(lineCount);
+				int limit = (batch > (noOfGames - lineCount)) ? (noOfGames - lineCount) : batch;
+				fields = fields.limit(limit);
+				Iterator<String> it = fields.iterator();
+				while (it.hasNext()) {
+					String fieldJson = it.next();
+					lineCount++;
+					count++;
+					GamePlayer player = new GamePlayer(diff, fieldJson);
+					player.setSinglePoint(true);
+					player.setPB(true);
+					player.setStrat(true);
+					games.add(player);
+				}
 			}
-		}
-
-		for (GamePlayer game : games) {
-			pool.execute(game);
-		}
-
-		pool.shutdown();
-		int consoleNum = 0;
-		while (!pool.isTerminated()) {
-			System.out.println(consoleNum++ + " - " + pool);
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			
+			for (GamePlayer game : games) {
+				pool.execute(game);
 			}
-		}
-		int winCount = 0;
-		int guessCount = 0;
-		BigInteger winTimes = BigInteger.ZERO;
-		for (GamePlayer gameSim : games) {
-			if (gameSim.isGameWon()) {
-				winCount++;
-				guessCount += gameSim.getGuessCount();
-				winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+
+			pool.shutdown();
+			int print = 0;
+			while (!pool.isTerminated()) {
+				if (print % 20 == 0)
+					System.out.println(pool);
+				print++;
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
+
+			for (GamePlayer gameSim : games) {
+				if (gameSim.getGame().getNoOfMoves() == 1 && !gameSim.isGameWon()) {
+					gamesLostOnFirstMove++;
+				} else {
+					totalTime = totalTime.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+					guessCount += gameSim.getGuessCount();
+					if (gameSim.isGameWon()) {
+						winCount++;
+						winGuessCount += gameSim.getGuessCount();
+						winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+					}
+				}
+			}
+			games.clear();
 		}
 		if (firstGuess) {
-			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, 1);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, gamesLostOnFirstMove);
 		} else {
 			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime);
 		}
-		games.clear();
 	}
 
 	public void writeResults(String fileName) throws FileNotFoundException {
@@ -519,8 +559,12 @@ public class LaunchSim {
 		resultString.append(",");
 		resultString.append(playedGames - winCount);
 		resultString.append(",");
-		Fraction winPercent = new Fraction(winCount, playedGames);
-		resultString.append(winPercent.percentageValue());
+		if (winCount == 0) {
+			resultString.append("0");
+		} else {
+			Fraction winPercent = new Fraction(winCount, playedGames);
+			resultString.append(winPercent.percentageValue());
+		}
 		resultString.append(",");
 		if (winCount == 0) {
 			resultString.append("0");
@@ -561,10 +605,10 @@ public class LaunchSim {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		LaunchSim s = new LaunchSim(100, "resources/");
+		LaunchSim s = new LaunchSim(10000, "resources/");
 		s.startPBSim();
-		LaunchSim s2 = new LaunchSim(100, "resources/");
-		s2.startPBFirstGuessSim();
+//		LaunchSim s2 = new LaunchSim(10000, "resources/");
+//		s2.startPBFirstGuessSim();
 
 		System.out.println("\n\nDONE!!!!");
 		// Gson gson = new Gson();

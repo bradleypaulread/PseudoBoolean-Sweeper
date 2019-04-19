@@ -2,6 +2,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SolverThreadWrapper implements Runnable {
 
+    @SuppressWarnings("unused")
     private static int threadID = 0;
 
     private volatile AtomicBoolean running = new AtomicBoolean(true);

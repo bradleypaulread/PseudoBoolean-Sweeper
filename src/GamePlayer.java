@@ -14,7 +14,7 @@ public class GamePlayer implements Runnable {
 	private boolean gameWon;
 	private int guessCount;
 
-	private boolean patternMatch, SAT, strat, firstGuess;
+	private boolean singlePoint, PB, strat, firstGuess;
 
 	public GamePlayer(Difficulty diff, String fieldJson) {
 		gameDifficulty = diff;
@@ -34,8 +34,8 @@ public class GamePlayer implements Runnable {
 	}
 
 	public void reset() {
-		patternMatch = false;
-		SAT = false;
+		singlePoint = false;
+		PB = false;
 		strat = false;
 		firstGuess = false;
 	}
@@ -45,24 +45,21 @@ public class GamePlayer implements Runnable {
 	}
 
 	/**
-	 * @param patternMatch
-	 *            the patternMatch to set
+	 * @param patternMatch the patternMatch to set
 	 */
 	public void setSinglePoint(boolean patternMatch) {
-		this.patternMatch = patternMatch;
+		this.singlePoint = patternMatch;
 	}
 
 	/**
-	 * @param sAT
-	 *            the sAT to set
+	 * @param sAT the sAT to set
 	 */
 	public void setPB(boolean SAT) {
-		this.SAT = SAT;
+		this.PB = SAT;
 	}
 
 	/**
-	 * @param strat
-	 *            the strat to set
+	 * @param strat the strat to set
 	 */
 	public void setStrat(boolean strat) {
 		this.strat = strat;
@@ -70,16 +67,16 @@ public class GamePlayer implements Runnable {
 
 	@Override
 	public void run() {
-		if (patternMatch && SAT && strat) {
+		if (singlePoint && PB && strat) {
 			fullSolve();
 			return;
-		} else if (patternMatch && SAT) {
+		} else if (singlePoint && PB) {
 			jointSolve();
 			return;
-		} else if (patternMatch) {
+		} else if (singlePoint) {
 			singlePointSolve();
 			return;
-		} else if (SAT) {
+		} else if (PB) {
 			PBSolve();
 			return;
 		} else {
@@ -212,8 +209,7 @@ public class GamePlayer implements Runnable {
 		PBSolver pb;
 		ProbabilitySolver prob;
 
-		if (firstGuess) {
-			boolean opening = false;
+		do {
 			MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 			game = new Minesweeper(gameDifficulty, mineField);
 			sp = new SinglePointSolver(game);
@@ -223,25 +219,8 @@ public class GamePlayer implements Runnable {
 			pb.setQuiet();
 			prob.setQuiet();
 			startTime = System.nanoTime();
-			opening = prob.makeFirstGuess();
-			while (!opening && !game.isGameOver()) {
-				opening = prob.makeFirstGuess();
-				guessCount++;
-			}
-		} else {
-			do {
-				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
-				game = new Minesweeper(gameDifficulty, mineField);
-				sp = new SinglePointSolver(game);
-				pb = new PBSolver(game);
-				prob = new ProbabilitySolver(game);
-				sp.setQuiet();
-				pb.setQuiet();
-				prob.setQuiet();
-				startTime = System.nanoTime();
-				prob.makeFirstGuess();
-			} while (game.isGameOver());
-		}
+			prob.makeFirstGuess();
+		} while (game.isGameOver());
 
 		// First move
 		guessCount++;

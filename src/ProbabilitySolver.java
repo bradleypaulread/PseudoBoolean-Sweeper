@@ -116,6 +116,7 @@ public class ProbabilitySolver extends BoardSolver {
         return bestCell;
     }
 
+    @SuppressWarnings("unused")
     private Cell getBestMove() {
         return getBestMove(calcAllCellsProb());
     }
