@@ -39,12 +39,12 @@ public class LaunchSim {
 
 	private String RESULT_DIR;
 	private int noOfGames;
-	private int batchSize;
 	private StringBuilder resultString;
 	private boolean firstGuess;
 
-	private int winCount = 0;
-	private int guessCount = 0;
+	private int winCount;
+	private int guessCount;
+	private int winGuessCount;
 	private BigInteger winTimes = BigInteger.ZERO;
 	private BigInteger totalTime = BigInteger.ZERO;
 
@@ -52,26 +52,18 @@ public class LaunchSim {
 		this.noOfGames = noOfSims;
 		RESULT_DIR = path;
 		resultString = new StringBuilder();
-		batchSize = 10000;
-		firstGuess = false;
-	}
-
-	public LaunchSim(int noOfSims, int batchSize, String path) throws IOException, InterruptedException {
-		this.noOfGames = noOfSims;
-		RESULT_DIR = path;
-		resultString = new StringBuilder();
-		this.batchSize = batchSize;
 		firstGuess = false;
 	}
 
 	public void resetScores() {
 		winCount = 0;
 		guessCount = 0;
+		winGuessCount = 0;
 		totalTime = BigInteger.ZERO;
 		winTimes = BigInteger.ZERO;
 	}
 
-	public void startPTSim() {
+	public void startSPSim() {
 		try {
 			writeTitle();
 			System.out.println("Pattern Match Easy");
@@ -87,7 +79,7 @@ public class LaunchSim {
 		}
 	}
 
-	public void startPTFirstGuessSim() {
+	public void startSPFirstGuessSim() {
 		try {
 			this.firstGuess = true;
 			writeTitle();
@@ -175,31 +167,30 @@ public class LaunchSim {
 
 	public void playSinglePoint(Difficulty diff, String path) throws IOException {
 		int winCount = 0;
-		int guessCount = 0;
-		int gamesLostOnFirstMove = 0;
 		BigInteger winTimes = BigInteger.ZERO;
+		int guessCount = 0;
+		int winGuessCount = 0;
 		BigInteger totalTime = BigInteger.ZERO;
+		int gamesLostOnFirstMove = 0;
 
 		int count = 0;
 		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
 			for (String fieldJson; (fieldJson = br.readLine()) != null && count < noOfGames;) {
+				int currentGuessCount = 0;
 				SinglePointSolver sp;
 				Minesweeper game;
 				long startTime;
 				if (firstGuess) {
 					boolean opening = false;
 					MineField mineField = new Gson().fromJson(fieldJson, MineField.class);
-					// System.out.println(fieldJson);
 					game = new Minesweeper(diff, mineField);
 					sp = new SinglePointSolver(game);
 					sp.setQuiet();
 					startTime = System.nanoTime();
-					// Cell c = sp.getFirstGuess();
-					// System.out.println(c);
 					opening = sp.makeFirstGuess();
 					while (!opening && !game.isGameOver()) {
 						opening = sp.makeFirstGuess();
-						guessCount++;
+						currentGuessCount++;
 					}
 				} else {
 					do {
@@ -211,23 +202,25 @@ public class LaunchSim {
 						sp.selectRandomCell();
 					} while (game.isGameOver());
 				}
-				guessCount++; // First move
+				currentGuessCount++; // First move
 				while (!game.isGameOver()) {
 					if (!sp.assist()) {
 						sp.selectRandomCell();
-						guessCount++;
+						currentGuessCount++;
 					}
 				}
 				long endTime = System.nanoTime();
 				long elapsedTime = endTime - startTime;
-				totalTime = totalTime.add(BigInteger.valueOf(elapsedTime));
-				if (game.isGameWon()) {
-					winCount++;
-					winTimes = winTimes.add(BigInteger.valueOf(elapsedTime));
-				}
-				if (!game.isGameWon()) {
-					if (game.getNoOfMoves() == 1 || game.getNoOfMoves() == 0) {
-						gamesLostOnFirstMove++;
+
+				if (game.getNoOfMoves() == 1 && !game.isGameWon()) {
+					gamesLostOnFirstMove++;
+				} else {
+					totalTime = totalTime.add(BigInteger.valueOf(elapsedTime));
+					guessCount += currentGuessCount;
+					if (game.isGameWon()) {
+						winCount++;
+						winGuessCount += currentGuessCount;
+						winTimes = winTimes.add(BigInteger.valueOf(elapsedTime));
 					}
 				}
 				count++;
@@ -235,9 +228,9 @@ public class LaunchSim {
 			}
 		}
 		if (firstGuess) {
-			writeLine(diff.toString(), winCount, winTimes, guessCount, gamesLostOnFirstMove);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, gamesLostOnFirstMove);
 		} else {
-			writeLine(diff.toString(), winCount, winTimes, guessCount);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime);
 		}
 	}
 
@@ -245,7 +238,7 @@ public class LaunchSim {
 		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
-		batch = calcNoOfThreads(diff);
+		batch = calcPoolSize(diff);
 		List<GamePlayer> games = new ArrayList<>(batch);
 		int lineCount = 0;
 		while (lineCount < noOfGames) {
@@ -285,27 +278,28 @@ public class LaunchSim {
 			}
 
 			for (GamePlayer gameSim : games) {
-				totalTime = totalTime.add(BigInteger.valueOf(gameSim.getElapsedTime()));
-				if (gameSim.isGameWon()) {
-					winCount++;
-					guessCount += gameSim.getGuessCount();
-					winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+				if (gameSim.getGame().getNoOfMoves() == 1 && !gameSim.isGameWon()) {
+					gamesLostOnFirstMove++;
 				} else {
-					if (gameSim.getGame().getNoOfMoves() == 1) {
-						gamesLostOnFirstMove++;
+					totalTime = totalTime.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+					guessCount += gameSim.getGuessCount();
+					if (gameSim.isGameWon()) {
+						winCount++;
+						winGuessCount += gameSim.getGuessCount();
+						winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
 					}
 				}
 			}
 			games.clear();
 		}
 		if (firstGuess) {
-			writeLine(diff.toString(), winCount, winTimes, guessCount, gamesLostOnFirstMove);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, gamesLostOnFirstMove);
 		} else {
-			writeLine(diff.toString(), winCount, winTimes, guessCount);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime);
 		}
 	}
 
-	private int calcNoOfThreads(Difficulty diff) {
+	private int calcPoolSize(Difficulty diff) {
 		int batch;
 		switch (diff) {
 		case BEGINNER:
@@ -328,7 +322,7 @@ public class LaunchSim {
 		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
-		batch = calcNoOfThreads(diff);
+		batch = calcPoolSize(diff);
 		List<GamePlayer> games = new ArrayList<>(batch);
 		int lineCount = 0;
 		while (lineCount < noOfGames) {
@@ -370,9 +364,10 @@ public class LaunchSim {
 
 			for (GamePlayer gameSim : games) {
 				totalTime = totalTime.add(BigInteger.valueOf(gameSim.getElapsedTime()));
+				guessCount += gameSim.getGuessCount();
 				if (gameSim.isGameWon()) {
 					winCount++;
-					guessCount += gameSim.getGuessCount();
+					winGuessCount += gameSim.getGuessCount();
 					winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
 				} else {
 					if (gameSim.getGame().getNoOfMoves() == 1) {
@@ -383,9 +378,9 @@ public class LaunchSim {
 			games.clear();
 		}
 		if (firstGuess) {
-			writeLine(diff.toString(), winCount, winTimes, guessCount, gamesLostOnFirstMove);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, gamesLostOnFirstMove);
 		} else {
-			writeLine(diff.toString(), winCount, winTimes, guessCount);
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime);
 		}
 	}
 
@@ -432,7 +427,11 @@ public class LaunchSim {
 				winTimes = winTimes.add(BigInteger.valueOf(gameSim.getElapsedTime()));
 			}
 		}
-		writeLine(diff.toString(), winCount, winTimes, guessCount);
+		if (firstGuess) {
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, 1);
+		} else {
+			writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime);
+		}
 		games.clear();
 	}
 
@@ -457,12 +456,15 @@ public class LaunchSim {
 		resultString.append(",");
 		resultString.append("no. of guesses");
 		resultString.append(",");
-		// resultString.append("avg. guesses per win");
-		// resultString.append(",");
+		resultString.append("avg. guesses in win");
+		resultString.append(",");
+		resultString.append("total elapsed time (ms)");
+		resultString.append(",");
 		resultString.append("\n");
 	}
 
-	public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount) {
+	public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int winGuessCount,
+			BigInteger totalElapsedTime) {
 		resultString.append(diff);
 		resultString.append(",");
 		resultString.append(noOfGames);
@@ -485,26 +487,36 @@ public class LaunchSim {
 		resultString.append(",");
 		resultString.append(guessCount);
 		resultString.append(",");
-		// if (guessCount == 0) {
-		// resultString.append("0");
-		// } else {
-		// Fraction guessAvg = new Fraction(guessCount, winCount);
-		// resultString.append(guessAvg.doubleValue());
-		// }
-		// resultString.append(",");
+		if (winGuessCount == 0) {
+			resultString.append("0");
+		} else {
+			Fraction avgWinGuesses = new Fraction(winGuessCount, winCount);
+			resultString.append(avgWinGuesses.doubleValue());
+		}
+		resultString.append(",");
+		if (winCount == 0) {
+			resultString.append("0");
+		} else {
+			// Convert from nano to ms
+			BigFraction elapsedTime = new BigFraction(totalElapsedTime, BigInteger.valueOf(1000000));
+			resultString.append(elapsedTime.doubleValue());
+		}
+		resultString.append(",");
 		resultString.append("\n");
 	}
 
-	public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int gamesLostOnFirstMove) {
+	public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int winGuessCount,
+			BigInteger totalElapsedTime, int gamesLostOnFirstMove) {
 		resultString.append(diff);
 		resultString.append(",");
-		resultString.append(noOfGames - gamesLostOnFirstMove);
+		int playedGames = noOfGames - gamesLostOnFirstMove;
+		resultString.append(playedGames);
 		resultString.append(",");
 		resultString.append(winCount);
 		resultString.append(",");
-		resultString.append(noOfGames - gamesLostOnFirstMove - winCount);
+		resultString.append(playedGames - winCount);
 		resultString.append(",");
-		Fraction winPercent = new Fraction(winCount, noOfGames - gamesLostOnFirstMove);
+		Fraction winPercent = new Fraction(winCount, playedGames);
 		resultString.append(winPercent.percentageValue());
 		resultString.append(",");
 		if (winCount == 0) {
@@ -518,17 +530,23 @@ public class LaunchSim {
 		resultString.append(",");
 		resultString.append(guessCount);
 		resultString.append(",");
-		// if (guessCount == 0) {
-		// resultString.append("0");
-		// } else {
-		// Fraction guessAvg = new Fraction(guessCount, winCount);
-		// resultString.append(guessAvg.doubleValue());
-		// }
-		// resultString.append(",");
+		if (winGuessCount == 0) {
+			resultString.append("0");
+		} else {
+			Fraction avgWinGuesses = new Fraction(winGuessCount, winCount);
+			resultString.append(avgWinGuesses.doubleValue());
+		}
+		resultString.append(",");
+		if (winCount == 0) {
+			resultString.append("0");
+		} else {
+			// Convert from nano to ms
+			BigFraction elapsedTime = new BigFraction(totalElapsedTime, BigInteger.valueOf(1000000));
+			resultString.append(elapsedTime.doubleValue());
+		}
+		resultString.append(",");
 		resultString.append("\n");
 	}
-	
-	
 
 	public void resetResults() {
 		resultString = new StringBuilder();
@@ -541,9 +559,11 @@ public class LaunchSim {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startPBFirstGuessSim();
+		s.startSPSim();
+		LaunchSim s2 = new LaunchSim(10000, "resources/");
+		s2.startSPFirstGuessSim();
 
-		System.out.println("\n\n\nDONE!!!!!");
+		System.out.println("\n\nDONE!!!!!");
 
 		// Gson gson = new Gson();
 

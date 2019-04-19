@@ -297,7 +297,6 @@ public class ProbabilitySolver extends BoardSolver {
         if (bestProbCells.isEmpty()) {
             return null;
         }
-        Cell bestCell = null;
         List<Cell> bestCells = new ArrayList<>();
         int lowestClosed = 9;
         for (Cell c : bestProbCells) {
