@@ -38,6 +38,7 @@ public class LaunchSim {
 	private final String PB_NAME = "SAT-Results.csv";
 	private final String PB_NAME_FIRSTGUESS = "SATFirstGuess-Results.csv";
 	private final String JOINT_NAME = "Joint-Results.csv";
+	private final String JOINT_NAME_FIRSTGUESS = "JointFirstGuess-Results.csv";
 	private final String FULL_NAME = "Full-Results.csv";
 
 	private String RESULT_DIR;
@@ -151,13 +152,46 @@ public class LaunchSim {
 	public void startJointSim() {
 		try {
 			writeTitle();
-			System.out.println("Pattern Match + SAT Easy");
+			System.out.println("SP+PB Easy");
 			playSinglePointPB(Difficulty.BEGINNER, EASY_PATH);
-			// System.out.println("Pattern Match + SAT Medium");
-			// playerPatternMatchSAT(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-			// System.out.println("Pattern Match + SAT Hard");
-			// playerPatternMatchSAT(Difficulty.EXPERT, HARD_PATH);
-			writeResults(JOINT_NAME);
+			writeResults("" + 1 + JOINT_NAME);
+			resetResults();
+			resetScores();
+			writeTitle();
+			System.out.println("SP+PB Medium");
+			playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			writeResults("" + 2 + JOINT_NAME);
+			resetResults();
+			resetScores();
+//			writeTitle();
+//			System.out.println("SP+PB Hard");
+//			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
+//			writeResults("" + 3 + JOINT_NAME);
+//			resetResults();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void startJointFirstGuessSim() {
+		try {
+//			this.firstGuess = true;
+//			writeTitle();
+//			System.out.println("SP+PB Easy (FG)");
+//			playSinglePointPB(Difficulty.BEGINNER, EASY_PATH);
+//			writeResults("" + 1 + JOINT_NAME_FIRSTGUESS);
+//			resetResults();
+//			resetScores();
+//			writeTitle();
+//			System.out.println("SP+PB Medium (FG)");
+//			playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+//			writeResults("" + 2 + JOINT_NAME_FIRSTGUESS);
+//			resetResults();
+//			resetScores();
+			writeTitle();
+			System.out.println("SP+PB Hard (FG)");
+			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
+			writeResults("" + 3 + JOINT_NAME_FIRSTGUESS);
 			resetResults();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -606,7 +640,7 @@ public class LaunchSim {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startPBSim();
+		s.startJointFirstGuessSim();
 //		LaunchSim s2 = new LaunchSim(10000, "resources/");
 //		s2.startPBFirstGuessSim();
 
