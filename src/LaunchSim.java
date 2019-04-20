@@ -191,17 +191,17 @@ public class LaunchSim {
 			// writeResults("" + 1 + JOINT_NAME_FIRSTGUESS);
 			// resetResults();
 			// resetScores();
-			// writeTitle();
-			// System.out.println("SP+PB Medium (FG)");
-			// playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-			// writeResults("" + 2 + JOINT_NAME_FIRSTGUESS);
-			// resetResults();
-			// resetScores();
-			writeTitle();
-			System.out.println("SP+PB Hard (FG)");
-			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
-			writeResults("from" + this.id + 3 + JOINT_NAME_FIRSTGUESS);
-			resetResults();
+			 writeTitle();
+			 System.out.println("SP+PB Medium (FG)");
+			 playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			 writeResults("" + 2 + JOINT_NAME_FIRSTGUESS);
+			 resetResults();
+			 resetScores();
+//			writeTitle();
+//			System.out.println("SP+PB Hard (FG)");
+//			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
+//			writeResults("from" + this.id + 3 + JOINT_NAME_FIRSTGUESS);
+//			resetResults();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -216,18 +216,18 @@ public class LaunchSim {
 //			writeResults("" + 1 + FULL_NAME);
 //			resetResults();
 //			resetScores();
-//			 writeTitle();
-//			 System.out.println("SP+PB+Strat Medium");
-//			 playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
-//			 writeResults("" + 2 + FULL_NAME);
-//			 resetResults();
-//			 resetScores();
 			 writeTitle();
-			 System.out.println("SP+PB+Strat Hard");
-			 playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
-//			 writeResults("from" + this.id + 3 + FULL_NAME);
-			 writeResults("" + 3 + FULL_NAME);
+			 System.out.println("SP+PB+Strat Medium");
+			 playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			 writeResults("" + 2 + FULL_NAME);
 			 resetResults();
+			 resetScores();
+//			 writeTitle();
+//			 System.out.println("SP+PB+Strat Hard");
+//			 playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
+//			 writeResults("from" + this.id + 3 + FULL_NAME);
+//			 writeResults("" + 3 + FULL_NAME);
+//			 resetResults();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -674,7 +674,7 @@ public class LaunchSim {
 		// s.startJointFirstGuessSim();
 		// }
 		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startFullSim();
+		s.startJointFirstGuessSim();
 
 		// LaunchSim s2 = new LaunchSim(10000, "resources/");
 		// s2.startPBFirstGuessSim();

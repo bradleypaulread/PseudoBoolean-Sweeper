@@ -1,2 +1,2 @@
-difficulty,no. of games,wins,loss,win (%),avg. win time (m/s),no. of guesses,avg. guesses in win,total elapsed time (ms),
-INTERMEDIATE,8409,6144,2265,73.06457367106671,294.3179891743164,19654,2.03466796875,2525339.591646,
+difficulty,no. of games,wins,loss,win (%),avg. win time (m/s),no. of guesses,avg. guesses in win,total elapsed time (ms)
+INTERMEDIATE,8410,6137,2273,72.97265161,242.8806319,20114,2.109988594,2041658.44

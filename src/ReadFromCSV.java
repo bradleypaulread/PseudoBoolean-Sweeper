@@ -72,7 +72,7 @@ public class ReadFromCSV {
     }
 
     public static void main(String[] args) {
-        ReadFromCSV data = new ReadFromCSV("resources/SPPBFirstGuess/HArd/", "3JointFirstGuess-Results.csv");
+        ReadFromCSV data = new ReadFromCSV("resources/Full/Hard/", "3Full-Results.csv");
         data.readResults();
         data.writeTheTing();
     }
