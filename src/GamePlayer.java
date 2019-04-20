@@ -45,21 +45,24 @@ public class GamePlayer implements Runnable {
 	}
 
 	/**
-	 * @param patternMatch the patternMatch to set
+	 * @param patternMatch
+	 *            the patternMatch to set
 	 */
 	public void setSinglePoint(boolean patternMatch) {
 		this.singlePoint = patternMatch;
 	}
 
 	/**
-	 * @param sAT the sAT to set
+	 * @param sAT
+	 *            the sAT to set
 	 */
 	public void setPB(boolean SAT) {
 		this.PB = SAT;
 	}
 
 	/**
-	 * @param strat the strat to set
+	 * @param strat
+	 *            the strat to set
 	 */
 	public void setStrat(boolean strat) {
 		this.strat = strat;
@@ -209,18 +212,21 @@ public class GamePlayer implements Runnable {
 		PBSolver pb;
 		ProbabilitySolver prob;
 
-		do {
-			MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
-			game = new Minesweeper(gameDifficulty, mineField);
-			sp = new SinglePointSolver(game);
-			pb = new PBSolver(game);
-			prob = new ProbabilitySolver(game);
-			sp.setQuiet();
-			pb.setQuiet();
-			prob.setQuiet();
-			startTime = System.nanoTime();
-			prob.makeFirstGuess();
-		} while (game.isGameOver());
+		boolean opening = false;
+		MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+		game = new Minesweeper(gameDifficulty, mineField);
+		sp = new SinglePointSolver(game);
+		pb = new PBSolver(game);
+		prob = new ProbabilitySolver(game);
+		sp.setQuiet();
+		pb.setQuiet();
+		prob.setQuiet();
+		startTime = System.nanoTime();
+		opening = prob.makeFirstGuess();
+		while (!opening && !game.isGameOver()) {
+			opening = sp.makeFirstGuess();
+			guessCount++;
+		}
 
 		// First move
 		guessCount++;

@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - ReadFromCSV",
+            "request": "launch",
+            "mainClass": "ReadFromCSV",
+            "projectName": "SATMinesweeper"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - GameLauncher",
             "request": "launch",
             "mainClass": "GameLauncher",

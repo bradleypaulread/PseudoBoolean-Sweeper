@@ -147,7 +147,7 @@ public class PBSolver extends BoardSolver {
 	protected Map<Cell, Boolean> getKnownCells() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
 		pbSolver.reset();
-
+		
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
 		List<Cell> closedShore = getShoreClosedCells();
