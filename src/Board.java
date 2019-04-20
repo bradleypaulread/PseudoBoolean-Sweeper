@@ -24,7 +24,9 @@ public class Board extends JPanel {
 	private Minesweeper game;
 	private Cell[][] cells;
 	// Width of a cell
-	private final int CELL_WIDTH = 35;
+	private int CELL_WIDTH = 35;
+	private int width;
+	private int height;
 
 	private int lastX;
 	private int lastY;
@@ -34,6 +36,8 @@ public class Board extends JPanel {
 		cells = game.getCells();
 		addMouseListener(new MouseActions(game, this));
 		setPreferredSize(new Dimension(width * CELL_WIDTH, height * CELL_WIDTH));
+		this.width = width;
+		this.height = height;
 		ToolTipManager.sharedInstance().registerComponent(this);
 		ToolTipManager.sharedInstance().setInitialDelay(250);
 		lastX = -1;
@@ -248,5 +252,10 @@ public class Board extends JPanel {
 		}
 		g.drawString(Integer.toString(num), (x * CELL_WIDTH + CELL_WIDTH / 2) - (CELL_WIDTH / 6),
 				(y * CELL_WIDTH + CELL_WIDTH / 2) + (CELL_WIDTH / 5));
+	}
+
+	public void setCellSize(int size) {
+		CELL_WIDTH = size;
+		setPreferredSize(new Dimension(width * CELL_WIDTH, height * CELL_WIDTH));
 	}
 }

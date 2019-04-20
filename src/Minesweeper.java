@@ -73,6 +73,7 @@ public class Minesweeper extends JFrame {
 	private JCheckBoxMenuItem stratCb = new JCheckBoxMenuItem("Strategy");
 
 	private JMenuItem customGameItem = new JMenuItem("Custom Game");
+	private JMenuItem changeCellSizeItem = new JMenuItem("Change Cell Size");
 	private JMenuItem printFieldItem = new JMenuItem("Print Minefield Json");
 
 	private JMenuBar menuBar = new JMenuBar();
@@ -308,10 +309,12 @@ public class Minesweeper extends JFrame {
 		JButton tempBtn = new JButton("Temp.");
 		JButton randBtn = new JButton("Rand.");
 		tempBtn.addActionListener(e -> {
-			ProbabilitySolver tempSolver = new ProbabilitySolver(this);
-			while(!tempSolver.makeFirstGuess()) {
-				System.out.println("teet");
-			}
+			// ProbabilitySolver tempSolver = new ProbabilitySolver(this);
+			// while(!tempSolver.makeFirstGuess()) {
+			// 	System.out.println("teet");
+			// }
+			// Formats to format and parse numbers
+			
 		});
 
 		randBtn.addActionListener(e -> {
@@ -321,7 +324,7 @@ public class Minesweeper extends JFrame {
 		});
 
 		// To Remove
-		// controlBtns.add(tempBtn);
+		controlBtns.add(tempBtn);
 		// controlBtns.add(randBtn);
 
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);
@@ -503,6 +506,10 @@ public class Minesweeper extends JFrame {
 				int newX = ((Number) widthField.getValue()).intValue();
 				int newY = ((Number) heightField.getValue()).intValue();
 				int newMines = ((Number) noOfMinesField.getValue()).intValue();
+				// Dont do anything is any input is invalid
+				if (newX < 1 || newY < 1 || newMines < 0 || newMines > (newX*newY)) {
+					return;
+				}
 				Minesweeper newGame = new Minesweeper(newX, newY, newMines);
 				newGame.copySettings(this);
 				frame.setVisible(false);
@@ -518,6 +525,38 @@ public class Minesweeper extends JFrame {
 			frame.setVisible(true);
 		});
 		menu.add(customGameItem);
+
+		changeCellSizeItem.addActionListener(e -> {
+			NumberFormat newSize;
+
+			newSize = NumberFormat.getIntegerInstance();
+
+			// Fields for data entry
+			JFormattedTextField newSizeField = new JFormattedTextField(newSize);
+
+			newSizeField.setValue(board.getCellWidth());
+
+			JPanel fieldPane = new JPanel(new GridLayout(0, 1));
+			fieldPane.add(newSizeField);
+
+			JFrame frame = new JFrame("Change Cell Size");
+			JButton btn = new JButton("Change");
+			btn.addActionListener(e2 -> {
+				int userSetSize = ((Number) newSizeField.getValue()).intValue();
+				System.out.println(userSetSize);
+				frame.setVisible(false);
+				frame.dispose();
+				changeCellSize(userSetSize);
+			});
+			fieldPane.add(btn);
+			frame.add(fieldPane);
+			// Display the window.
+			frame.pack();
+			frame.setLocationRelativeTo(null);
+			frame.setVisible(true);
+		});
+		menu.add(changeCellSizeItem);
+
 		menu.addSeparator();
 		menu.addSeparator();
 		singlePointCb.setSelected(true);
@@ -635,6 +674,19 @@ public class Minesweeper extends JFrame {
 			gameWon = true;
 			isGameOver = true;
 		}
+	}
+
+	private void changeCellSize(int size) {
+		// Bug where screen would stop adjusting size if tried to set
+		// the size as current size (not sure why)
+		if (size == board.getCellWidth()|| size < 1) {
+			return;
+		}
+		this.board.setCellSize(size);
+		refresh();
+		this.pack();
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 	}
 
 	public void clearNeighbours(int x, int y) {

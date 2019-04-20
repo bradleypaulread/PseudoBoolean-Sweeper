@@ -40,7 +40,8 @@ public class LaunchSim {
 	private final String JOINT_NAME = "Joint-Results.csv";
 	private final String JOINT_NAME_FIRSTGUESS = "JointFirstGuess-Results.csv";
 	private final String FULL_NAME = "Full-Results.csv";
-
+	private int id;
+	
 	private String RESULT_DIR;
 	private int noOfGames;
 	private StringBuilder resultString;
@@ -58,6 +59,15 @@ public class LaunchSim {
 		resultString = new StringBuilder();
 		firstGuess = false;
 	}
+	
+	public LaunchSim(int noOfSims, String path, int id) throws IOException, InterruptedException {
+		this.noOfGames = noOfSims;
+		RESULT_DIR = path;
+		resultString = new StringBuilder();
+		firstGuess = false;
+		this.id = id;
+	}
+
 
 	public void resetScores() {
 		winCount = 0;
@@ -191,7 +201,7 @@ public class LaunchSim {
 			writeTitle();
 			System.out.println("SP+PB Hard (FG)");
 			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
-			writeResults("" + 3 + JOINT_NAME_FIRSTGUESS);
+			writeResults("from" + this.id + 3 + JOINT_NAME_FIRSTGUESS);
 			resetResults();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -355,25 +365,6 @@ public class LaunchSim {
 		}
 	}
 
-	private int calcPoolSize(Difficulty diff) {
-		int batch;
-		switch (diff) {
-		case BEGINNER:
-			batch = 250;
-			break;
-		case INTERMEDIATE:
-			batch = 100;
-			break;
-		case EXPERT:
-			batch = Runtime.getRuntime().availableProcessors();
-			break;
-		default:
-			batch = Runtime.getRuntime().availableProcessors();
-			break;
-		}
-		return batch;
-	}
-
 	public void playSinglePointPB(Difficulty diff, String path) throws IOException {
 		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
@@ -388,7 +379,7 @@ public class LaunchSim {
 			try (BufferedReader br = new BufferedReader(new FileReader(path))) {
 				int count = 0;
 				
-				Stream<String> fields = br.lines().skip(lineCount);
+				Stream<String> fields = br.lines().skip(lineCount+this.id);
 				int limit = (batch > (noOfGames - lineCount)) ? (noOfGames - lineCount) : batch;
 				fields = fields.limit(limit);
 				Iterator<String> it = fields.iterator();
@@ -420,7 +411,7 @@ public class LaunchSim {
 					e.printStackTrace();
 				}
 			}
-
+			System.out.println("\n\n\n" + lineCount);
 			for (GamePlayer gameSim : games) {
 				if (gameSim.getGame().getNoOfMoves() == 1 && !gameSim.isGameWon()) {
 					gamesLostOnFirstMove++;
@@ -637,10 +628,33 @@ public class LaunchSim {
 		this.RESULT_DIR = path;
 	}
 
+	private int calcPoolSize(Difficulty diff) {
+		int batch;
+		switch (diff) {
+		case BEGINNER:
+			batch = 250;
+			break;
+		case INTERMEDIATE:
+			batch = 100;
+			break;
+		case EXPERT:
+			batch = Runtime.getRuntime().availableProcessors();
+			break;
+		default:
+			batch = Runtime.getRuntime().availableProcessors();
+			break;
+		}
+		return batch;
+	}
+	
 	public static void main(String[] args) throws IOException, InterruptedException {
+		for (int i = 3; i < 20; i++) {
+			System.out.println(i + "================= FROM " + (i*500));
+			LaunchSim s = new LaunchSim(500, "resources/", (i*500));
+			s.startJointFirstGuessSim();
+		}
+//		LaunchSim s = new LaunchSim(1000, "resources/", "from1000");
 
-		LaunchSim s = new LaunchSim(10000, "resources/");
-		s.startJointFirstGuessSim();
 //		LaunchSim s2 = new LaunchSim(10000, "resources/");
 //		s2.startPBFirstGuessSim();
 
