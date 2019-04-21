@@ -214,18 +214,20 @@ public class GamePlayer implements Runnable {
 
 		if (firstGuess) {
 			boolean opening = false;
-			do {
-				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
-				game = new Minesweeper(gameDifficulty, mineField);
-				sp = new SinglePointSolver(game);
-				pb = new PBSolver(game);
-				prob = new ProbabilitySolver(game);
-				sp.setQuiet();
-				pb.setQuiet();
-				prob.setQuiet();
+			MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+			game = new Minesweeper(gameDifficulty, mineField);
+			sp = new SinglePointSolver(game);
+			pb = new PBSolver(game);
+			prob = new ProbabilitySolver(game);
+			sp.setQuiet();
+			pb.setQuiet();
+			prob.setQuiet();
+			startTime = System.nanoTime();
+			opening = sp.makeFirstGuess();
+			while (!opening && !game.isGameOver()) {
 				opening = sp.makeFirstGuess();
-				startTime = System.nanoTime();
-			} while (!opening);
+				guessCount++;
+			}
 		} else {
 			do {
 				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);

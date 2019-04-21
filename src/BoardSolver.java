@@ -85,6 +85,9 @@ public abstract class BoardSolver {
 	}
 
 	public boolean makeFirstGuess() {
+		if (game.isGameOver()) {
+			return false;
+		}
 		if (doneFirstGuess) {
 			return true;
 		}
