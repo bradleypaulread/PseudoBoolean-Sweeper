@@ -1,4 +1,4 @@
-difficulty,no. of games,wins,loss,win (%),avg. win time (m/s),no. of guesses,avg. guesses in win,total elapsed time (ms)
+Difficulty,No. of Games,Wins,Losses,Win Rate(%),Avg. Win Time (ms),No. of Guesses,Avg. guesses in Win,Total Elapsed Time (ms)
 BEGINNER,8814,7922,892,89.87973678,998.795488,15265,1.628124211,8357928.052
 INTERMEDIATE,8360,6093,2267,72.88277512,2783.634129,19662,2.062038405,2.01E+07
 EXPERT,7930,1949,5981,24.57755359,1634.43215,32342,3.700359159,3.78E+06
