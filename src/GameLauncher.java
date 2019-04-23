@@ -19,16 +19,16 @@ public class GameLauncher {
                 String temp2 = "{\"field\":[[false,false,false,false,true,false,false,false,false],[true,false,true,false,false,true,false,false,false],[false,false,false,true,false,false,false,true,false],[true,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false],[false,true,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,true],[false,false,false,false,false,false,false,false,false],[true,false,false,false,false,false,false,false,false]],\"exploded\":false,\"opened\":false}";
                 String testForTestTableOldPb = "{\"field\":[[false,true,false,false],[false,false,false,true],[false,false,true,false],[false,false,false,false]],\"exploded\":false,\"opened\":false}";
                 String testForTestTableNewPbMineSea = "{\"field\":[[false,false,false,false],[false,false,false,false],[true,true,false,false],[true,true,false,false]],\"exploded\":false,\"opened\":false}";
-                String badsim = "{\"field\":[[true,false,false,false,false,false,false,false,true],[true,false,false,false,false,false,false,false,true],[false,false,false,true,false,false,true,false,false],[false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,true],[false,false,false,false,false,false,false,false,false],[true,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false],[true,false,false,false,false,false,false,false,true]],\"exploded\":false,\"opened\":false}";
-                
+                String badsim = "{\"field\":[[false,true,false,false,false,false,false,false,false,false,false,false,false,true,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,false,true,true,false,true,false,false,false,true,false,false,false,true,false,false],[false,false,false,true,true,false,false,false,true,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],[false,true,true,false,false,false,false,false,true,false,false,false,false,false,false,false],[false,false,true,true,false,false,false,false,false,false,false,false,false,false,true,false],[false,true,false,false,false,false,true,false,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false],[false,false,false,false,true,false,false,true,false,false,false,false,true,false,true,false],[true,false,false,false,false,false,true,true,false,false,false,false,false,false,false,false],[false,true,false,false,true,false,true,false,false,false,false,true,false,false,false,false],[false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,true],[false,false,false,false,false,true,true,false,false,true,false,true,false,false,false,false]],\"exploded\":false,\"opened\":false}";
+
                 // new Minesweeper(4, 4, 4, testForTestTableNewPbMineSea);
                 // new Minesweeper(4, 4, 3, testForTestTableOldPb);
                 // new Minesweeper(9, 9, 10, temp2);
                 // new Minesweeper(30, 16, 99, longComp);
                 // new Minesweeper(9, 9, 28, lotsCellMineSeaField);
                 // new Minesweeper(9, 9, 10, lotsCellSafeSeaField);
-                 new Minesweeper(9, 9, 10, badsim);
-//                new Minesweeper();
+                new Minesweeper(16, 16, 40, badsim);
+                // new Minesweeper();
                 // new Minesweeper(Difficulty.INTERMEDIATE);
                 // new Minesweeper(Difficulty.EXPERT);
 
