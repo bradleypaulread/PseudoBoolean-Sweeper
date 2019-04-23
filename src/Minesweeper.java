@@ -21,6 +21,12 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -30,6 +36,7 @@ import javax.swing.Timer;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -47,7 +54,7 @@ public class Minesweeper extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	// Password to unlock MineField.java
+	// Password to unlock MineField instance
 	private final String PASSWORD = "hello";
 
 	// Swing components (buttons etc.)
@@ -311,10 +318,10 @@ public class Minesweeper extends JFrame {
 		tempBtn.addActionListener(e -> {
 			// ProbabilitySolver tempSolver = new ProbabilitySolver(this);
 			// while(!tempSolver.makeFirstGuess()) {
-			// 	System.out.println("teet");
+			// System.out.println("teet");
 			// }
 			// Formats to format and parse numbers
-			
+
 		});
 
 		randBtn.addActionListener(e -> {
@@ -340,19 +347,6 @@ public class Minesweeper extends JFrame {
 		this.setIconImages(icons);
 
 		resetBtn.addActionListener(e -> reset());
-
-		KeyboardFocusManager keyManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-		keyManager.addKeyEventDispatcher(new KeyEventDispatcher() {
-			@Override
-			public boolean dispatchKeyEvent(KeyEvent e) {
-				if (e.getID() == KeyEvent.KEY_PRESSED && e.isControlDown() && e.getKeyCode() == 82) {
-					reset();
-					refresh();
-					return true;
-				}
-				return false;
-			}
-		});
 
 		hintBtn.addActionListener(e -> {
 			disableAllBtns();
@@ -406,6 +400,11 @@ public class Minesweeper extends JFrame {
 		singlePointCb.setSelected(game.isSinglePoint());
 		pbCb.setSelected(game.isPb());
 		stratCb.setSelected(game.isStrat());
+		changeCellSize(game.getBoard().getCellWidth());
+	}
+
+	private Board getBoard() {
+		return this.board;
 	}
 
 	private void configureSolver(SolverThreadWrapper solver) {
@@ -423,7 +422,6 @@ public class Minesweeper extends JFrame {
 	 * code.
 	 */
 	private void loadFileMenu() {
-		menu.setMnemonic(KeyEvent.VK_A);
 		menu.getAccessibleContext().setAccessibleDescription("Playability settings.");
 		menuBar.add(menu);
 
@@ -463,6 +461,7 @@ public class Minesweeper extends JFrame {
 			dispose();
 		});
 		diffRdGroup.add(diffHardRb);
+
 		menu.add(diffHardRb);
 		menu.addSeparator();
 		menu.addSeparator();
@@ -507,7 +506,7 @@ public class Minesweeper extends JFrame {
 				int newY = ((Number) heightField.getValue()).intValue();
 				int newMines = ((Number) noOfMinesField.getValue()).intValue();
 				// Dont do anything is any input is invalid
-				if (newX < 1 || newY < 1 || newMines < 0 || newMines > (newX*newY)) {
+				if (newX < 1 || newY < 1 || newMines < 0 || newMines > (newX * newY)) {
 					return;
 				}
 				Minesweeper newGame = new Minesweeper(newX, newY, newMines);
@@ -679,7 +678,7 @@ public class Minesweeper extends JFrame {
 	private void changeCellSize(int size) {
 		// Bug where screen would stop adjusting size if tried to set
 		// the size as current size (not sure why)
-		if (size == board.getCellWidth()|| size < 1) {
+		if (size == board.getCellWidth() || size < 1) {
 			return;
 		}
 		this.board.setCellSize(size);
@@ -716,6 +715,43 @@ public class Minesweeper extends JFrame {
 		refresh();
 	}
 
+	private void saveBoard() throws FileNotFoundException {
+		Gson gson = new Gson();
+		String seperator = "|";
+		String mineFieldJson = gson.toJson(mineField);
+		String boardStateJson = gson.toJson(cells);
+
+		String saveData = mineFieldJson + seperator + boardStateJson;
+		// JFileChooser fileChooser = new JFileChooser();
+		// if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+		// File file = fileChooser.getSelectedFile();
+		// }
+		try (PrintWriter writer = new PrintWriter("resources/" + "test.txt")) {
+			writer.write(saveData);
+		}
+	}
+
+	public void setCells(Cell[][] cells) {
+		int width = cells.length;
+		int height = cells[0].length;
+		this.cells = new Cell[width][height];
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				this.cells[i][j] = cells[i][j];
+			}
+		}
+	}
+
+	private void loadBoard() throws IOException {
+		Gson gson = new Gson();
+		try (BufferedReader br = new BufferedReader(new FileReader("resources/" + "test.txt"))) {
+			String[] saveData = br.readLine().split("|");
+			MineField savedMineField = gson.fromJson(saveData[0], MineField.class);
+			Cell[][] savedBoardState = gson.fromJson(saveData[1], Cell[][].class);
+		}
+		// Minesweeper newGame = new Minesweeper
+	}
+
 	/**
 	 * Generate a fresh board and a new minefield.
 	 */
@@ -730,7 +766,6 @@ public class Minesweeper extends JFrame {
 		minesLbl.setText("~ Mines Left: " + Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
 		cells = new Cell[width][height];
-
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				cells[i][j] = new Cell(i, j);
