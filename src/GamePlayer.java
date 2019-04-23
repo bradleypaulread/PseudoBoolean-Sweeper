@@ -212,36 +212,18 @@ public class GamePlayer implements Runnable {
 		PBSolver pb;
 		ProbabilitySolver prob;
 
-		if (firstGuess) {
-			boolean opening = false;
-			MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
-			game = new Minesweeper(gameDifficulty, mineField);
-			sp = new SinglePointSolver(game);
-			pb = new PBSolver(game);
-			prob = new ProbabilitySolver(game);
-			sp.setQuiet();
-			pb.setQuiet();
-			prob.setQuiet();
-			startTime = System.nanoTime();
-			opening = sp.makeFirstGuess();
-			while (!opening && !game.isGameOver()) {
-				opening = sp.makeFirstGuess();
-				guessCount++;
-			}
-		} else {
-			do {
-				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
-				game = new Minesweeper(gameDifficulty, mineField);
-				sp = new SinglePointSolver(game);
-				pb = new PBSolver(game);
-				prob = new ProbabilitySolver(game);
-				sp.setQuiet();
-				pb.setQuiet();
-				prob.setQuiet();
-				startTime = System.nanoTime();
-				sp.selectRandomCell();
-			} while (game.isGameOver());
-		}
+		// No need to check until an opening is created as strat algorithm
+		// 	will then take over and dictate the moves
+		MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
+		game = new Minesweeper(gameDifficulty, mineField);
+		sp = new SinglePointSolver(game);
+		pb = new PBSolver(game);
+		prob = new ProbabilitySolver(game);
+		sp.setQuiet();
+		pb.setQuiet();
+		prob.setQuiet();
+		startTime = System.nanoTime();
+		prob.makeFirstGuess();
 
 		// First move
 		guessCount++;
