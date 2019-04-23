@@ -1,6 +1,2 @@
 difficulty,no. of games,wins,loss,win (%),avg. win time (m/s),no. of guesses,avg. guesses in win,total elapsed time (ms)
-EXPERT,10000,1946,8054,19.46,18441,44792,3.95,1.19E+07
-,,,,,,,,
-,,,,,,,,
-,,,,,,,,
-,,,,,,,,
+EXPERT,10000,1946,8054,19.46,3441.352351,44792,3.95,1.19E+07
