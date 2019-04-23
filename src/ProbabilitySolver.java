@@ -294,26 +294,26 @@ public class ProbabilitySolver extends BoardSolver {
         return cellsWithBestProb;
     }
 
-    // private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
-    //     if (bestProbCells.isEmpty()) {
-    //         return null;
-    //     }
-    //     List<Cell> bestCells = new ArrayList<>();
-    //     int lowestClosed = 9;
-    //     for (Cell c : bestProbCells) {
-    //         List<Cell> neighbours = getNeighbours(c);
-    //         neighbours.removeIf(c2 -> c2.isOpen() || c2.isFlagged());
-    //         int closedCount = neighbours.size();
-    //         if (closedCount < lowestClosed) {
-    //             lowestClosed = closedCount;
-    //             bestCells.clear();
-    //             bestCells.add(c);
-    //         } else if (closedCount == lowestClosed) {
-    //             bestCells.add(c);
-    //         }
-    //     }
-    //     return bestCells;
-    // }
+     private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
+         if (bestProbCells.isEmpty()) {
+             return null;
+         }
+         List<Cell> bestCells = new ArrayList<>();
+         int lowestClosed = 9;
+         for (Cell c : bestProbCells) {
+             List<Cell> neighbours = getNeighbours(c);
+             neighbours.removeIf(c2 -> c2.isOpen() || c2.isFlagged());
+             int closedCount = neighbours.size();
+             if (closedCount < lowestClosed) {
+                 lowestClosed = closedCount;
+                 bestCells.clear();
+                 bestCells.add(c);
+             } else if (closedCount == lowestClosed) {
+                 bestCells.add(c);
+             }
+         }
+         return bestCells;
+     }
 
     private Cell getBestStratCell(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
         List<Cell> bestCells = getBestStratCells(bestProbCells, probs);
@@ -325,33 +325,33 @@ public class ProbabilitySolver extends BoardSolver {
     }
 
     // Cell with highest avg surrounding density.
-    private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
-        if (bestProbCells.isEmpty()) {
-            return null;
-        }
-        List<Cell> bestCells = new ArrayList<>();
-        BigFraction bestDensity = new BigFraction(0);
-        for (Cell c : bestProbCells) {
-            List<Cell> neighbours = getNeighbours(c);
-            neighbours.removeIf(c2 -> c2.isOpen());
-            int closedCount = neighbours.size();
-            BigFraction avgDensity = new BigFraction(0);
-            for (Cell n : neighbours) {
-                BigFraction nProb = probs.get(n);
-                avgDensity = avgDensity.add(nProb);
-            }
-            avgDensity = avgDensity.divide(closedCount);
-            int compare = avgDensity.compareTo(bestDensity);
-            if (compare > 0) {
-                bestDensity = avgDensity;
-                bestCells.clear();
-                bestCells.add(c);
-            } else if (compare == 0) {
-                bestCells.add(c);
-            }
-        }
-        return bestCells;
-    }
+//    private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
+//        if (bestProbCells.isEmpty()) {
+//            return null;
+//        }
+//        List<Cell> bestCells = new ArrayList<>();
+//        BigFraction bestDensity = new BigFraction(0);
+//        for (Cell c : bestProbCells) {
+//            List<Cell> neighbours = getNeighbours(c);
+//            neighbours.removeIf(c2 -> c2.isOpen());
+//            int closedCount = neighbours.size();
+//            BigFraction avgDensity = new BigFraction(0);
+//            for (Cell n : neighbours) {
+//                BigFraction nProb = probs.get(n);
+//                avgDensity = avgDensity.add(nProb);
+//            }
+//            avgDensity = avgDensity.divide(closedCount);
+//            int compare = avgDensity.compareTo(bestDensity);
+//            if (compare > 0) {
+//                bestDensity = avgDensity;
+//                bestCells.clear();
+//                bestCells.add(c);
+//            } else if (compare == 0) {
+//                bestCells.add(c);
+//            }
+//        }
+//        return bestCells;
+//    }
 
     private void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
         cells = game.getCells();
