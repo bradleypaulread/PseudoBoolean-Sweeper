@@ -18,20 +18,22 @@ public class ReadFromCSV {
     private int loss;
     private double winTimes;
     private int guessCount;
-    private int avgWinGuessCount;
+    private double avgWinGuessCount;
     private double totalElapsedTime;
 
     private String path;
     private String name;
+    private int fileEntries;
 
-    public ReadFromCSV(String path, String name) {
+    public ReadFromCSV(String path, String name, int fileEntries) {
         this.path = path;
         this.name = name;
+        this.fileEntries = fileEntries;
     }
 
     public void readResults() {
-        for (int i = 0; i < 20; i++) {
-            String file = path + "from" + (i * 500) + name;
+        for (int i = 0; i < (10000 / fileEntries); i++) {
+            String file = path + "from" + (i * fileEntries) + name;
             BufferedReader br;
             try {
                 br = new BufferedReader(new FileReader(file));
@@ -41,7 +43,7 @@ public class ReadFromCSV {
                 line = br.readLine();
 
                 String[] row = line.split(",");
-                diff = Difficulty.EXPERT;
+                diff = Difficulty.valueOf(row[0]);
                 noOfGames += Integer.parseInt(row[1]);
                 wins += Integer.parseInt(row[2]);
                 loss += Integer.parseInt(row[3]);
@@ -54,25 +56,24 @@ public class ReadFromCSV {
             }
         }
     }
-
+    
     public void writeTheTing() {
         System.out.println(diff);
         System.out.println(noOfGames);
         System.out.println(wins);
         System.out.println(loss);
         Fraction winPercent = new Fraction(wins, noOfGames);
-        System.out.println(winPercent.percentageValue());
-        Fraction avgWinTime = new Fraction(winTimes, 20);
-        System.out.println(avgWinTime.doubleValue());
+        System.out.println(((double)((double)wins / (double)noOfGames))*100);
+        System.out.println(winTimes / (10000/fileEntries));
         System.out.println(guessCount);
-        Fraction avgWinGuessCount_transposed = new Fraction(avgWinGuessCount, 20);
-        System.out.println(avgWinGuessCount_transposed.doubleValue());
+        Fraction avgWinGuessCount_transposed = new Fraction(avgWinGuessCount, fileEntries);
+        System.out.println(avgWinGuessCount / (double) 20);
         System.out.println(totalElapsedTime);
 
     }
 
     public static void main(String[] args) {
-        ReadFromCSV data = new ReadFromCSV("resources/Full/Hard/", "3Full-Results.csv");
+        ReadFromCSV data = new ReadFromCSV("resources/SPPB/Hard/", "3Joint-Results.csv", 500);
         data.readResults();
         data.writeTheTing();
     }
