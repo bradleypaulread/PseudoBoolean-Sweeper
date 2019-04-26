@@ -57,6 +57,8 @@ public class SinglePointSolver extends BoardSolver {
                                     } else {
                                         game.probe(c.getX(), c.getY());
                                         game.refresh();
+                                        String detail = "Probing cell " + c + " as it matched Single Point";
+                                        game.setDetail(detail);
                                     }
                                     return true;
                                 }
@@ -69,6 +71,8 @@ public class SinglePointSolver extends BoardSolver {
                                     game.decrementMines();
                                     if (!quiet) {
                                         game.refresh();
+                                        String detail = "Flagging cell " + c + " as a mine as it matched Single Point";
+                                        game.setDetail(detail);
                                     }
                                     return true;
                                 }
@@ -78,11 +82,16 @@ public class SinglePointSolver extends BoardSolver {
                 }
             }
         }
+        if (!quiet) {
+            String detail = "Could not find a move.";
+            game.setDetail(detail);
+        }
         return false;
     }
 
     public void solve() {
-        while (assist());
+        while (assist())
+            ;
     }
 
     private boolean isSinglePointSafe(Cell cell) {
