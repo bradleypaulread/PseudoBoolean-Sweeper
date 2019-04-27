@@ -52,35 +52,21 @@ public abstract class BoardSolver {
 			return null;
 		}
 		cells = game.getCells();
-		List<Cell> landCells = getLandCells();
-		int width = cells.length;
-		int height = cells[0].length;
+		
 		Cell cellToProbe;
-		List<Cell> cornerCells = new ArrayList<>();
-
-		if (cells[0][0].isClosed()) {
-			cornerCells.add(cells[0][0]);
-		}
-		if (cells[width - 1][0].isClosed()) {
-			cornerCells.add(cells[width - 1][0]);
-		}
-		if (cells[0][height - 1].isClosed()) {
-			cornerCells.add(cells[0][height - 1]);
-		}
-		if (cells[width - 1][height - 1].isClosed()) {
-			cornerCells.add(cells[width - 1][height - 1]);
-		}
+		List<Cell> cornerCells = getClosedCornerCells();
 
 		if (cornerCells.isEmpty()) {
-			List<Cell> borderCells = getClosedBorder();
-			if (!borderCells.isEmpty()) {
-				cellToProbe = getRandomCell(borderCells);
+			List<Cell> edgeCells = getClosedEdgeCells();
+			if (!edgeCells.isEmpty()) {
+				cellToProbe = getRandomCell(edgeCells);
 			} else {
-				cellToProbe = getRandomCell(landCells);
+				cellToProbe = getRandomCell(getClosedCentreCells());
 			}
 		} else {
 			cellToProbe = getRandomCell(cornerCells);
 		}
+		
 		return cellToProbe;
 	}
 
@@ -110,7 +96,104 @@ public abstract class BoardSolver {
 		return foundOpening;
 	}
 
-	public List<Cell> getClosedBorder() {
+	public boolean makeFirstGuessCorner() {
+		if (game.isGameOver()) {
+			return false;
+		}
+		if (doneFirstGuess) {
+			return true;
+		}
+		cells = game.getCells();
+		List<Cell> cornerCells = getClosedCornerCells();
+		
+		int openCellsCount = getLandCells().size();
+
+		Cell cellToProbe = getRandomCell(cornerCells);
+		game.quietProbe(cellToProbe.getX(), cellToProbe.getY());
+
+		int newOpenCellsCount = getLandCells().size();
+
+		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
+		return foundOpening;
+	}
+
+	public boolean makeFirstGuessEdge() {
+		if (game.isGameOver()) {
+			return false;
+		}
+		if (doneFirstGuess) {
+			return true;
+		}
+		cells = game.getCells();
+		List<Cell> edgeCells = getClosedEdgeCells();
+		
+		int openCellsCount = getLandCells().size();
+
+		Cell cellToProbe = getRandomCell(edgeCells);
+		game.quietProbe(cellToProbe.getX(), cellToProbe.getY());
+
+		int newOpenCellsCount = getLandCells().size();
+
+		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
+		return foundOpening;
+	}
+
+	public boolean makeFirstGuessCentre() {
+		if (game.isGameOver()) {
+			return false;
+		}
+		if (doneFirstGuess) {
+			return true;
+		}
+		cells = game.getCells();
+		List<Cell> centreCells = getClosedCentreCells();
+		
+		int openCellsCount = getLandCells().size();
+
+		Cell cellToProbe = getRandomCell(centreCells);
+		game.quietProbe(cellToProbe.getX(), cellToProbe.getY());
+
+		int newOpenCellsCount = getLandCells().size();
+
+		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
+		return foundOpening;
+	}
+
+	private List<Cell> getClosedCentreCells() {
+		int width = cells.length;
+		int height = cells[0].length;
+		List<Cell> centreCells = new ArrayList<>();
+		for(int i = 1;i<width-1;i++) {
+			for (int j = 1; j < height-1; j++) {
+				Cell c = cells[i][j];
+				if (c.isClosed()) {
+					centreCells.add(c);
+				}
+			}
+		}
+		return centreCells;		
+	}
+
+	private List<Cell> getClosedCornerCells() {
+		int width = cells.length;
+		int height = cells[0].length;
+		List<Cell> cornerCells = new ArrayList<>();
+		if (cells[0][0].isClosed()) {
+			cornerCells.add(cells[0][0]);
+		}
+		if (cells[width - 1][0].isClosed()) {
+			cornerCells.add(cells[width - 1][0]);
+		}
+		if (cells[0][height - 1].isClosed()) {
+			cornerCells.add(cells[0][height - 1]);
+		}
+		if (cells[width - 1][height - 1].isClosed()) {
+			cornerCells.add(cells[width - 1][height - 1]);
+		}
+		return cornerCells;
+	}
+
+	public List<Cell> getClosedEdgeCells() {
 		cells = game.getCells();
 		List<Cell> borderCells = new ArrayList<>();
 		int width = cells.length;

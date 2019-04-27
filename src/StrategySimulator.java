@@ -612,9 +612,108 @@ public class StrategySimulator {
 		return batch;
 	}
 
+	public void startFirstGuessCornerTest() throws IOException {
+		Difficulty[] diffs = { Difficulty.BEGINNER, Difficulty.INTERMEDIATE, Difficulty.EXPERT };
+		for (Difficulty d : diffs) {
+			int gameCount = 0;
+			int openingCount = 0;
+			while (gameCount < 1000000) {
+				MineField mf;
+				switch (d) {
+					case BEGINNER: mf = new MineField(9, 9, 10); break;
+					case INTERMEDIATE: mf = new MineField(16, 16, 40); break;
+					case EXPERT: mf = new MineField(16, 30, 99); break;
+					default: mf = new MineField(9, 9, 10); break;
+				}
+				Minesweeper game = new Minesweeper(d, mf);
+				SinglePointSolver solver = new SinglePointSolver(game);
+				solver.setQuiet();
+				boolean opening = solver.makeFirstGuessCorner();
+				if (game.isGameOver() && game.getNoOfMoves() == 1) {
+					continue;
+				}
+				gameCount++;
+				if (opening) {
+					openingCount++;
+				}
+			}
+
+			Fraction percent = new Fraction(openingCount, gameCount);
+			System.out.println("CORNER");
+			System.out.printf("Difficulty: %s%nNumber of games: %d%nNumber of openings: %d%nPercent: %f%n%n",
+					d.toString(), gameCount, openingCount, percent.percentageValue());
+		}
+	}
+
+	public void startFirstGuessEdgeTest() throws IOException {
+		Difficulty[] diffs = { Difficulty.BEGINNER, Difficulty.INTERMEDIATE, Difficulty.EXPERT };
+		for (Difficulty d : diffs) {
+			int gameCount = 0;
+			int openingCount = 0;
+			while (gameCount < 1000000) {
+				MineField mf;
+				switch (d) {
+					case BEGINNER: mf = new MineField(9, 9, 10); break;
+					case INTERMEDIATE: mf = new MineField(16, 16, 40); break;
+					case EXPERT: mf = new MineField(16, 30, 99); break;
+					default: mf = new MineField(9, 9, 10); break;
+				}
+				Minesweeper game = new Minesweeper(d, mf);
+				SinglePointSolver solver = new SinglePointSolver(game);
+				solver.setQuiet();
+				boolean opening = solver.makeFirstGuessEdge();
+				if (game.isGameOver() && game.getNoOfMoves() == 1) {
+					continue;
+				}
+				gameCount++;
+				if (opening) {
+					openingCount++;
+				}
+			}
+
+			Fraction percent = new Fraction(openingCount, gameCount);
+			System.out.println("EDGE");
+			System.out.printf("Difficulty: %s%nNumber of games: %d%nNumber of openings: %d%nPercent: %f%n%n",
+					d.toString(), gameCount, openingCount, percent.percentageValue());
+		}
+	}
+
+	public void startFirstGuessCentreTest() throws IOException {
+		Difficulty[] diffs = { Difficulty.BEGINNER, Difficulty.INTERMEDIATE, Difficulty.EXPERT };
+		for (Difficulty d : diffs) {
+			int gameCount = 0;
+			int openingCount = 0;
+			while (gameCount < 1000000) {
+				MineField mf;
+				switch (d) {
+					case BEGINNER: mf = new MineField(9, 9, 10); break;
+					case INTERMEDIATE: mf = new MineField(16, 16, 40); break;
+					case EXPERT: mf = new MineField(16, 30, 99); break;
+					default: mf = new MineField(9, 9, 10); break;
+				}
+				Minesweeper game = new Minesweeper(d, mf);
+				SinglePointSolver solver = new SinglePointSolver(game);
+				solver.setQuiet();
+				boolean opening = solver.makeFirstGuessCentre();
+				if (game.isGameOver() && game.getNoOfMoves() == 1) {
+					continue;
+				}
+				gameCount++;
+				if (opening) {
+					openingCount++;
+				}
+			}
+
+			Fraction percent = new Fraction(openingCount, gameCount);
+			System.out.println("CENTRE");
+			System.out.printf("Difficulty: %s%nNumber of games: %d%nNumber of openings: %d%nPercent: %f%n%n",
+					d.toString(), gameCount, openingCount, percent.percentageValue());
+		}
+	}
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 		// Example usage
 		StrategySimulator s = new StrategySimulator(10000, "resources/PB/");
-		s.startPBFirstGuessSim();
+		s.startFirstGuessCornerTest();
 	}
 }
