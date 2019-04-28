@@ -198,7 +198,7 @@ public abstract class BoardSolver {
 		List<Cell> borderCells = new ArrayList<>();
 		int width = cells.length;
 		int height = cells[0].length;
-		for (int i = 0; i < width; i++) {
+		for (int i = 1; i < width-1; i++) {
 			Cell c = cells[i][0];
 			if (c.isClosed()) {
 				borderCells.add(c);
@@ -208,7 +208,7 @@ public abstract class BoardSolver {
 				borderCells.add(c);
 			}
 		}
-		for (int i = 0; i < height; i++) {
+		for (int i = 1; i < height-1; i++) {
 			Cell c = cells[0][i];
 			if (c.isClosed()) {
 				borderCells.add(c);
