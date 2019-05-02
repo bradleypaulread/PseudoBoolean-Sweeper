@@ -1,12 +1,12 @@
 
-/*
+/**
  * Minesweeper.java
  * 
  * Created by Potrik
- * Last modified: 07.22.13
+ * Last modified: 22/07/13
  * 
  * Heavily modified by Bradley Read
- * Last modified: @date
+ * Last modified: 02/05/19
  */
 
 import java.awt.BorderLayout;
@@ -15,37 +15,28 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.Timer;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 import com.google.gson.Gson;
@@ -81,10 +72,11 @@ public class Minesweeper extends JFrame {
 
 	private JMenuItem customGameItem = new JMenuItem("Custom Game");
 	private JMenuItem changeCellSizeItem = new JMenuItem("Change Cell Size");
-	private JMenuItem printFieldItem = new JMenuItem("Print Minefield Json");
+	private JMenuItem firstGuessItem = new JMenuItem("Make First Guess");
 
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menu = new JMenu("Options");
+	private JMenu helpMenu = new JMenu("Help");
 
 	SolverThreadWrapper thread = new SolverThreadWrapper(this);
 
@@ -101,6 +93,7 @@ public class Minesweeper extends JFrame {
 	private Timer gameTimer;
 	private int minesLeft;
 	private boolean gameWon;
+	private boolean opening;
 
 	public Minesweeper(int x, int y, double d) {
 		// Cast number of mines down to integer value
@@ -312,28 +305,6 @@ public class Minesweeper extends JFrame {
 		stopBtn.setEnabled(false);
 		controlBtns.add(controlBtnsPnl);
 
-		// To Remove
-		JButton tempBtn = new JButton("Temp.");
-		JButton randBtn = new JButton("Rand.");
-		tempBtn.addActionListener(e -> {
-			// ProbabilitySolver tempSolver = new ProbabilitySolver(this);
-			// while(!tempSolver.makeFirstGuess()) {
-			// System.out.println("teet");
-			// }
-			// Formats to format and parse numbers
-
-		});
-
-		randBtn.addActionListener(e -> {
-			System.out.println(singlePointCb.isSelected());
-			// new SinglePointSolver(this).selectRandomCell();
-			// refresh();
-		});
-
-		// To Remove
-		controlBtns.add(tempBtn);
-		// controlBtns.add(randBtn);
-
 		topBar.add(gameStatsAndDetails, BorderLayout.NORTH);
 		topBar.add(controlBtns, BorderLayout.SOUTH);
 
@@ -389,34 +360,6 @@ public class Minesweeper extends JFrame {
 		});
 	}
 
-	private void copySettings(Minesweeper game) {
-		diffEasyRb.setSelected(game.isEasy());
-		diffEasyRb.setEnabled(!game.isEasy());
-		diffMediumRb.setSelected(game.isMedium());
-		diffMediumRb.setEnabled(!game.isMedium());
-		diffHardRb.setSelected(game.isHard());
-		diffHardRb.setEnabled(!game.isHard());
-		debugCb.setSelected(game.isDebug());
-		singlePointCb.setSelected(game.isSinglePoint());
-		pbCb.setSelected(game.isPb());
-		stratCb.setSelected(game.isStrat());
-		changeCellSize(game.getBoard().getCellWidth());
-	}
-
-	private Board getBoard() {
-		return this.board;
-	}
-
-	private void configureSolver(SolverThreadWrapper solver) {
-		solver.reset();
-		boolean doSinglePoint = singlePointCb.isSelected();
-		boolean doPB = pbCb.isSelected();
-		boolean doStrat = stratCb.isSelected();
-		solver.setSinglePoint(doSinglePoint);
-		solver.setPB(doPB);
-		solver.setStrat(doStrat);
-	}
-
 	/**
 	 * Load the File menu component options and add each option's action listener
 	 * code.
@@ -424,6 +367,16 @@ public class Minesweeper extends JFrame {
 	private void loadFileMenu() {
 		menu.getAccessibleContext().setAccessibleDescription("Playability settings.");
 		menuBar.add(menu);
+		helpMenu.getAccessibleContext().setAccessibleDescription("Help/User Guide.");
+		menuBar.add(helpMenu);
+
+		JMenuItem helpMenuItem = new JMenuItem("See Help Memu");
+		helpMenuItem.addActionListener(e -> {
+			String helpText = "The game follows the standard rules of Minesweeper. The aim is to probe all cells that are not mines.\nThe number revealed after probing a cell represents how many mines are touching that cell.\nThe Hint, Assist and Solve buttons can be used if you are stuck to reveal (or probe) known safe/mine cells.\nIf you click the Hint button and a cell's appearance turns to Green, this means that that cell is safe.\nIf the cell changes to Red, then that cell is a mine. You can customise what algorithm(s) these buttons\nuse through the \"Option\" menu. If you want to cancel/stop a solve computation then you can click the Stop button.\nClicking the \"Show Probabilties\" button will change the appearnce of cells, with their colour representing how\ndangerous they are. A low probability is safer. The darker the colour of a cell means that the cell is more likely a mine.\nCells highlighted blue mean that the solver has identified that cell as the best move.\nYou can see the full probabiltiy of a cell via a tooltip when hovering over a cell.";
+			JOptionPane.showMessageDialog(this, helpText);
+		});
+		helpMenu.add(helpMenuItem);
+
 
 		ButtonGroup diffRdGroup = new ButtonGroup();
 		// When option selected invert the debug variable.
@@ -465,15 +418,6 @@ public class Minesweeper extends JFrame {
 		menu.add(diffHardRb);
 		menu.addSeparator();
 		menu.addSeparator();
-		printFieldItem.addActionListener(e -> {
-			Gson gson = new Gson();
-			System.out.println(gson.toJson(this.mineField));
-			System.out.println();
-			System.out.println();
-			System.out.println();
-		});
-
-		menu.add(printFieldItem);
 
 		customGameItem.addActionListener(e -> {
 			// Formats to format and parse numbers
@@ -558,6 +502,15 @@ public class Minesweeper extends JFrame {
 
 		menu.addSeparator();
 		menu.addSeparator();
+		firstGuessItem.addActionListener(e -> {
+			if (!opening) {
+				opening = new SinglePointSolver(this).makeFirstGuess();
+				if (opening) {
+					firstGuessItem.setEnabled(false);
+				}
+			}
+		});
+		menu.add(firstGuessItem);
 		singlePointCb.setSelected(true);
 		menu.add(singlePointCb);
 		menu.add(pbCb);
@@ -566,6 +519,34 @@ public class Minesweeper extends JFrame {
 		this.setJMenuBar(menuBar);
 	}
 
+	private void copySettings(Minesweeper game) {
+		diffEasyRb.setSelected(game.isEasy());
+		diffEasyRb.setEnabled(!game.isEasy());
+		diffMediumRb.setSelected(game.isMedium());
+		diffMediumRb.setEnabled(!game.isMedium());
+		diffHardRb.setSelected(game.isHard());
+		diffHardRb.setEnabled(!game.isHard());
+		debugCb.setSelected(game.isDebug());
+		singlePointCb.setSelected(game.isSinglePoint());
+		pbCb.setSelected(game.isPb());
+		stratCb.setSelected(game.isStrat());
+		changeCellSize(game.getBoard().getCellWidth());
+	}
+
+	private Board getBoard() {
+		return this.board;
+	}
+
+	private void configureSolver(SolverThreadWrapper solver) {
+		solver.reset();
+		boolean doSinglePoint = singlePointCb.isSelected();
+		boolean doPB = pbCb.isSelected();
+		boolean doStrat = stratCb.isSelected();
+		solver.setSinglePoint(doSinglePoint);
+		solver.setPB(doPB);
+		solver.setStrat(doStrat);
+	}
+	
 	/**
 	 * Redraw the board, updating all cells appearance and behaviour.
 	 */
@@ -715,22 +696,6 @@ public class Minesweeper extends JFrame {
 		refresh();
 	}
 
-	private void saveBoard() throws FileNotFoundException {
-		Gson gson = new Gson();
-		String seperator = "|";
-		String mineFieldJson = gson.toJson(mineField);
-		String boardStateJson = gson.toJson(cells);
-
-		String saveData = mineFieldJson + seperator + boardStateJson;
-		// JFileChooser fileChooser = new JFileChooser();
-		// if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-		// File file = fileChooser.getSelectedFile();
-		// }
-		try (PrintWriter writer = new PrintWriter("resources/" + "test.txt")) {
-			writer.write(saveData);
-		}
-	}
-
 	public void setCells(Cell[][] cells) {
 		int width = cells.length;
 		int height = cells[0].length;
@@ -742,24 +707,16 @@ public class Minesweeper extends JFrame {
 		}
 	}
 
-	private void loadBoard() throws IOException {
-		Gson gson = new Gson();
-		try (BufferedReader br = new BufferedReader(new FileReader("resources/" + "test.txt"))) {
-			String[] saveData = br.readLine().split("|");
-			MineField savedMineField = gson.fromJson(saveData[0], MineField.class);
-			Cell[][] savedBoardState = gson.fromJson(saveData[1], Cell[][].class);
-		}
-		// Minesweeper newGame = new Minesweeper
-	}
-
 	/**
 	 * Generate a fresh board and a new minefield.
 	 */
 	public void reset() {
 		thread.end();
+		opening = false;
 		isGameOver = false;
 		currentGameTime = 0;
 		moves = 0;
+		firstGuessItem.setEnabled(true);
 		setDetail("...");
 		movesLbl.setText("Moves: " + Integer.toString(moves));
 		minesLeft = noOfMines;
@@ -850,6 +807,7 @@ public class Minesweeper extends JFrame {
 	}
 
 	private void disableAllBtns() {
+		firstGuessItem.setEnabled(false);
 		hintBtn.setEnabled(false);
 		assistBtn.setEnabled(false);
 		solveBtn.setEnabled(false);
@@ -882,7 +840,6 @@ public class Minesweeper extends JFrame {
 	}
 
 	/* Getters/Setters */
-
 	public Cell getCell(int x, int y) {
 		return cells[x][y];
 	}
@@ -986,11 +943,4 @@ public class Minesweeper extends JFrame {
 	public boolean isDebug() {
 		return debugCb.isSelected();
 	}
-
 }
-// Sample for loop for copy and paste
-// for(int i = 0;i<width;i++) {
-// for (int j = 0; j < height; j++) {
-// cells[i][j];
-// }
-// }

@@ -54,9 +54,7 @@ class MineField{
 		if(!opened){
 			assert !exploded;
 			// in case the assertions are switched off, hang if exploded
-			while(exploded) {
-				System.out.println("bad");
-			}
+			while(exploded);
 		}
 
 		// check if exploded this time

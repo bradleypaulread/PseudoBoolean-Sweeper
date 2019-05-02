@@ -94,16 +94,6 @@ public class ProbabilitySolver extends BoardSolver {
             ;
     }
 
-    // @Override
-    // public boolean makeFirstGuess() {
-    //     if (doneFirstGuess) {
-    //         return true;
-    //     }
-    //     super.makeFirstGuess();
-    //     doneFirstGuess = true;
-    //     return true;
-    // }
-
     private Cell getBestMove(Map<Cell, BigFraction> probs) {
         List<Cell> cells = getBestProbCells(probs);
         if (cells == null) {
@@ -128,12 +118,11 @@ public class ProbabilitySolver extends BoardSolver {
         IPBSolver pbSolver = SolverFactory.newDefault();
         cells = game.getCells();
         // Key = Cell
-        // Value = Map of Integer to Integer
-        // Key = Number of mines in solution
-        // Value = Coefficient
-        // (number of times the cell appears in Key number of mine solutions)
+        // Value = Cell appearance as mine count
         Map<Cell, BigInteger> cellT = new HashMap<>();
 
+        // Key = Cell
+        // Value = Cell's final probabiltiy of being a mine
         Map<Cell, BigFraction> probs = new HashMap<>();
 
         BigInteger T = BigInteger.ZERO;
@@ -144,7 +133,6 @@ public class ProbabilitySolver extends BoardSolver {
         try {
             genBinaryConstraints(pbSolver);
         } catch (ContradictionException e3) {
-            e3.printStackTrace();
         }
 
         try {
@@ -152,25 +140,14 @@ public class ProbabilitySolver extends BoardSolver {
                 List<Cell> currentSol = new ArrayList<>();
                 int[] model = pbSolver.model();
                 int noOfMines = 0;
-                String m = "[";
                 for (int i : model) {
-                    // Test if lit is for a cell and if cell is also a mine
-                    // System.out.print("" + i + ", ");
                     boolean mine = i < 0 ? false : true;
                     Cell testForCell = decodeCellId(i);
-                    m += "" + i + ", ";
                     if (testForCell != null && mine) {
-                        // System.out.print("" + testForCell + ", ");
                         currentSol.add(testForCell);
                         noOfMines++;
                     }
                 }
-                m += "]";
-                // System.out.println(m);
-                // System.out.println("\n");
-                // System.out.println("\n");
-                // Increment cell config count
-                // (number of times a cell has appeared in a certain config)
 
                 int remainingMines = totalMines - noOfMines;
 
@@ -210,7 +187,6 @@ public class ProbabilitySolver extends BoardSolver {
             }
         } catch (TimeoutException e) {
             pbSolver.reset();
-            e.printStackTrace();
         } catch (ContradictionException e) {
             pbSolver.reset();
         }
@@ -219,15 +195,11 @@ public class ProbabilitySolver extends BoardSolver {
             return null;
         }
 
-        // System.out.println(T);
-        // System.out.println(cellT.get(cells[2][0]));
-
         if (seaSize > 0) {
             seaT = seaT.reduce();
             BigFraction TFrac = new BigFraction(T);
             BigFraction seaProb = seaT.divide(TFrac).reduce();
             List<Cell> seaCells = getSeaCells();
-            // System.out.println(seaT);
             for (Cell c : seaCells) {
                 probs.put(c, seaProb);
             }
@@ -324,35 +296,6 @@ public class ProbabilitySolver extends BoardSolver {
         }
     }
 
-    // Cell with highest avg surrounding density.
-//    private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
-//        if (bestProbCells.isEmpty()) {
-//            return null;
-//        }
-//        List<Cell> bestCells = new ArrayList<>();
-//        BigFraction bestDensity = new BigFraction(0);
-//        for (Cell c : bestProbCells) {
-//            List<Cell> neighbours = getNeighbours(c);
-//            neighbours.removeIf(c2 -> c2.isOpen());
-//            int closedCount = neighbours.size();
-//            BigFraction avgDensity = new BigFraction(0);
-//            for (Cell n : neighbours) {
-//                BigFraction nProb = probs.get(n);
-//                avgDensity = avgDensity.add(nProb);
-//            }
-//            avgDensity = avgDensity.divide(closedCount);
-//            int compare = avgDensity.compareTo(bestDensity);
-//            if (compare > 0) {
-//                bestDensity = avgDensity;
-//                bestCells.clear();
-//                bestCells.add(c);
-//            } else if (compare == 0) {
-//                bestCells.add(c);
-//            }
-//        }
-//        return bestCells;
-//    }
-
     private void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
         cells = game.getCells();
         List<Cell> closedShore = getShoreClosedCells();
@@ -370,7 +313,6 @@ public class ProbabilitySolver extends BoardSolver {
             lits.push(encodeLit(i));
             coeffs.push(square);
         }
-        // printConstraint(lits, coeffs, "<=", seaSize);
         pbSolver.addAtMost(lits, coeffs, seaSize);
 
         for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
@@ -378,7 +320,6 @@ public class ProbabilitySolver extends BoardSolver {
             lits.push(encodeCellId(current));
             coeffs.push(1);
         }
-        // printConstraint(lits, coeffs, "=", noOfMines);
         pbSolver.addExactly(lits, coeffs, noOfMines);
 
         lits.clear();
@@ -390,26 +331,19 @@ public class ProbabilitySolver extends BoardSolver {
         for (Cell current : landCells) {
             landLits.push(encodeCellId(current));
             landCoeffs.push(1);
-            // printConstraint(landLits, landCoeffs, "=", 0);
             pbSolver.addExactly(landLits, landCoeffs, 0);
             landLits.clear();
             landCoeffs.clear();
 
             List<Cell> neighbours = getNeighbours(current);
-            // neighbours.removeIf(c -> !c.isClosed());
-            // if (neighbours.isEmpty()) {
-            // continue;
-            // }
             for (Cell c : neighbours) {
                 lits.push(encodeCellId(c));
                 coeffs.push(1);
             }
-            // printConstraint(lits, coeffs, "=", current.getNumber());
             pbSolver.addExactly(lits, coeffs, current.getNumber());
             lits.clear();
             coeffs.clear();
         }
-        // pbSolver.addExactly(landLits, landCoeffs, 0);
 
         lits.clear();
         coeffs.clear();

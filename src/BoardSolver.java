@@ -227,11 +227,6 @@ public abstract class BoardSolver {
 
 	public abstract void solve();
 
-	// To Remove
-	public void temp() {
-		selectRandomCell();
-	}
-
 	public void printLits(int[] model) {
 		String str = "";
 		for (int i = 0; i < model.length; i++) {

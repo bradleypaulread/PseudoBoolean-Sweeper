@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import com.google.gson.Gson;
@@ -35,8 +34,8 @@ public class StrategySimulator {
 
 	private final String PATTERN_NAME = "PatternMatching-Results.csv";
 	private final String PATTERN_NAME_FIRSTGUESS = "PatternMatchingFirstGuess-Results.csv";
-	private final String PB_NAME = "SAT-Results.csv";
-	private final String PB_NAME_FIRSTGUESS = "SATFirstGuess-Results.csv";
+	private final String PB_NAME = "PB-Results.csv";
+	private final String PB_NAME_FIRSTGUESS = "PBFirstGuess-Results.csv";
 	private final String JOINT_NAME = "Joint-Results.csv";
 	private final String JOINT_NAME_FIRSTGUESS = "JointFirstGuess-Results.csv";
 	private final String FULL_NAME = "Full-Results.csv";
@@ -125,6 +124,7 @@ public class StrategySimulator {
 			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
 			System.out.println("PB Hard");
 			playPB(Difficulty.EXPERT, HARD_PATH);
+			writeResults(PB_NAME);
 			resetResults();
 			resetScores();
 		} catch (IOException e) {
@@ -189,6 +189,7 @@ public class StrategySimulator {
 		}
 	}
 
+	// Start sim of full sovler, thats SP+PB+PROB (strat)
 	public void startFullSim() {
 		try {
 			writeTitle();
@@ -593,6 +594,7 @@ public class StrategySimulator {
 		this.RESULT_DIR = path;
 	}
 
+	// Size of the the thread pool to create
 	private int calcPoolSize(Difficulty diff) {
 		int batch;
 		switch (diff) {
@@ -710,7 +712,6 @@ public class StrategySimulator {
 					d.toString(), gameCount, openingCount, percent.percentageValue());
 		}
 	}
-
 	public static void main(String[] args) throws IOException, InterruptedException {
 		// Example usage
 		StrategySimulator s = new StrategySimulator(10000, "resources/PB/");

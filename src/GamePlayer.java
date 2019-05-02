@@ -213,7 +213,7 @@ public class GamePlayer implements Runnable {
 		ProbabilitySolver prob;
 
 		// No need to check until an opening is created as strat algorithm
-		// 	will then take over and dictate the moves
+		// 	will then take over and dictate  moves
 		MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 		game = new Minesweeper(gameDifficulty, mineField);
 		sp = new SinglePointSolver(game);
@@ -282,6 +282,9 @@ public class GamePlayer implements Runnable {
 		return guessCount;
 	}
 
+	/**
+	 * @return the game object
+	 */
 	public Minesweeper getGame() {
 		return game;
 	}

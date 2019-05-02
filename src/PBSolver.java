@@ -35,7 +35,6 @@ public class PBSolver extends BoardSolver {
 				coeffs.push(1);
 			}
 		}
-		// printConstraint(lits, coeffs, "=", game.getNoOfMines());
 		solver.addExactly(lits, coeffs, game.getNoOfMines());
 		lits.clear();
 		coeffs.clear();
@@ -51,18 +50,15 @@ public class PBSolver extends BoardSolver {
 			lits.push(encodeCellId(current));
 			coeffs.push(1);
 			solver.addExactly(lits, coeffs, 0);
-			// printConstraint(lits, coeffs, "=", 0);
 			lits.clear();
 			coeffs.clear();
 
 			List<Cell> neighbours = getNeighbours(current);
-			// neighbours.removeIf(c -> !c.isClosed());
 			// Normal constraint
 			for (Cell c : neighbours) {
 				lits.push(encodeCellId(c));
 				coeffs.push(1);
 			}
-			// printConstraint(lits, coeffs, "=", current.getNumber());
 			solver.addExactly(lits, coeffs, current.getNumber());
 			lits.clear();
 			coeffs.clear();
@@ -279,8 +275,8 @@ public class PBSolver extends BoardSolver {
 	}
 
 	/*
-		-- Code to retrieve known shore cells using improved PB constraint
-		--     algorithm. Still has issues.
+	Code to retrieve known shore cells using improved PB constraint
+	    algorithm. Still has issues.
 	private Map<Cell, Boolean> getKnownCells() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
 		cells = game.getCells();
