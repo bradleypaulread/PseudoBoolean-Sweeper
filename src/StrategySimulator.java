@@ -32,13 +32,13 @@ public class StrategySimulator {
 	private final String MEDIUM_PATH = "resources/mediumFields.txt";
 	private final String HARD_PATH = "resources/hardFields.txt";
 
-	private final String PATTERN_NAME = "PatternMatching-Results.csv";
-	private final String PATTERN_NAME_FIRSTGUESS = "PatternMatchingFirstGuess-Results.csv";
+	private final String PATTERN_NAME = "SinglePoint-Results.csv";
+	private final String PATTERN_NAME_FIRSTGUESS = "SinglePointFirstGuess-Results.csv";
 	private final String PB_NAME = "PB-Results.csv";
 	private final String PB_NAME_FIRSTGUESS = "PBFirstGuess-Results.csv";
 	private final String JOINT_NAME = "Joint-Results.csv";
 	private final String JOINT_NAME_FIRSTGUESS = "JointFirstGuess-Results.csv";
-	private final String FULL_NAME = "Full-Results.csv";
+	private final String FULL_NAME = "Prob-Results.csv";
 	private int startLine;
 
 	private String RESULT_DIR;
@@ -83,8 +83,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("Pattern Match Easy");
 			playSinglePoint(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("Pattern Match Medium");
 			playSinglePoint(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("Pattern Match Hard");
 			playSinglePoint(Difficulty.EXPERT, HARD_PATH);
 			writeResults(PATTERN_NAME);
@@ -103,8 +105,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("Pattern Match (FG) Easy");
 			playSinglePoint(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("Pattern Match (FG) Medium");
 			playSinglePoint(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("Pattern Match (FG) Hard");
 			playSinglePoint(Difficulty.EXPERT, HARD_PATH);
 			writeResults(PATTERN_NAME_FIRSTGUESS);
@@ -120,8 +124,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("PB Easy");
 			playPB(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("PB Medium");
 			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("PB Hard");
 			playPB(Difficulty.EXPERT, HARD_PATH);
 			writeResults(PB_NAME);
@@ -139,8 +145,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("PB Easy (FG)");
 			playPB(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("PB Medium (FG)");
 			playPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("PB Hard (FG)");
 			playPB(Difficulty.EXPERT, HARD_PATH);
 			writeResults(PB_NAME_FIRSTGUESS);
@@ -157,8 +165,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("SP+PB Easy");
 			playSinglePointPB(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("SP+PB Medium");
 			playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("SP+PB Hard");
 			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
 			writeResults(JOINT_NAME);
@@ -177,8 +187,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("SP+PB Easy (FG)");
 			playSinglePointPB(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("SP+PB Medium (FG)");
 			playSinglePointPB(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("SP+PB Hard (FG)");
 			playSinglePointPB(Difficulty.EXPERT, HARD_PATH);
 			writeResults(JOINT_NAME_FIRSTGUESS);
@@ -195,8 +207,10 @@ public class StrategySimulator {
 			writeTitle();
 			System.out.println("SP+PB+Strat Easy");
 			playFull(Difficulty.BEGINNER, EASY_PATH);
+			resetScores();
 			System.out.println("SP+PB+Strat Medium");
 			playFull(Difficulty.INTERMEDIATE, MEDIUM_PATH);
+			resetScores();
 			System.out.println("SP+PB+Strat Hard");
 			playFull(Difficulty.EXPERT, HARD_PATH);
 			writeResults(FULL_NAME);
@@ -714,7 +728,8 @@ public class StrategySimulator {
 	}
 	public static void main(String[] args) throws IOException, InterruptedException {
 		// Example usage
-		StrategySimulator s = new StrategySimulator(10000, "resources/PB/");
-		s.startFirstGuessCornerTest();
+		StrategySimulator s = new StrategySimulator(10, "resources/");
+		s.startSPSim();
+		System.out.println("DONE!");
 	}
 }
