@@ -592,6 +592,10 @@ public class Minesweeper extends JFrame {
 		// If there are 0 neighbouring mines then recursively open neighbouring
 		// cells
 		if (cellNum == 0) {
+			if (!opening) {
+				firstGuessItem.setEnabled(false);
+				opening = true;
+			}
 			clearNeighbours(x, y);
 			movesLbl.setText("Moves: " + Integer.toString(moves));
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
