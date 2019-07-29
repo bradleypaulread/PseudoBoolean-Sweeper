@@ -5,52 +5,63 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.sat4j.specs.IVecInt;
 
-public abstract class BoardSolver {
+public abstract class Solver {
 
 	protected boolean quiet;
-	protected boolean doneFirstGuess;
+	protected boolean madeFirstGuess;
 
 	protected Minesweeper game;
 	protected Cell[][] cells;
 	protected AtomicBoolean running;
 
-	public BoardSolver(Minesweeper game) {
+	public Solver(Minesweeper game) {
 		running = new AtomicBoolean(true);
 		quiet = false;
-		doneFirstGuess = false;
+		madeFirstGuess = false;
 		this.game = game;
 		cells = game.getCells();
 	}
 
-	public BoardSolver(Minesweeper game, AtomicBoolean running) {
+	public Solver(Minesweeper game, AtomicBoolean running) {
 		this.running = running;
 		quiet = false;
-		doneFirstGuess = false;
+		madeFirstGuess = false;
 		this.game = game;
 		cells = game.getCells();
 	}
 
-	protected void printConstraint(IVecInt lits, IVecInt coeffs, String type, int degree) {
-		String result = "";
-		for (int i = 0; i < lits.size(); i++) {
-			result += coeffs.get(i) + " x" + lits.get(i) + " + ";
-		}
-		// if (result.length() == 0) {
-		// return;
-		// }
-		// 2 x2 +3 x4 +2 x1 +3 x5 = 5;
-		if (result.length() == 0) {
-			return;
-		}
-		result = result.substring(0, result.length() - 2);
-		result += type + " " + degree;
-		System.out.println(result);
-	}
+	/**
+	 * Highlights a safe/recommended move to the user.
+	 * 
+	 * @return True if a hint (one that has not already been hinted)
+	 * is found. False if no hint is found.
+	 */
+	public abstract boolean hint();
 
+	/**
+	 * Probe a safe/recommended cell.
+	 * 
+	 * @return True if a cell is found and probed. False if no
+	 * cell is found.
+	 */
+	public abstract boolean assist();
+
+	/**
+	 * Probe all safe/recommended cells present on the board.
+	 * Stop when no more safe/recommended moves can be found.
+	 */
+	public abstract void solve();
+
+	/**
+	 * Return the cell on the board that has the best probability
+	 * of revealing an opening. Calculations can be found at 
+	 *   "http://datagenetics.com/blog/june12012/index.html".
+	 * Order of Logic: Corner cell, else edge cell, else centre cell.
+	 * 
+	 * @return Cell that has best chance of revealing an opening
+	 * (a cell with number 0).
+	 */
 	public Cell getFirstGuess() {
-		if (doneFirstGuess) {
-			return null;
-		}
 		cells = game.getCells();
 		
 		Cell cellToProbe;
@@ -70,16 +81,22 @@ public abstract class BoardSolver {
 		return cellToProbe;
 	}
 
+	/**
+	 * Probe the cell with best best probability
+	 * of revealing an opening. See {@link #getFirstGuess()}.
+	 * 
+	 * @return True if an opening was found or if an opening has
+	 * previously been found. False if no opening was found.
+	 */
 	public boolean makeFirstGuess() {
 		if (game.isGameOver()) {
 			return false;
 		}
-		if (doneFirstGuess) {
+		if (madeFirstGuess) {
 			return true;
 		}
 		cells = game.getCells();
-		List<Cell> landCells = getLandCells();
-		int openCellsCount = landCells.size();
+		int openCellsCount = getLandCells().size();
 		Cell cellToProbe = getFirstGuess();
 		if (quiet) {
 			game.quietProbe(cellToProbe.getX(), cellToProbe.getY());
@@ -87,20 +104,27 @@ public abstract class BoardSolver {
 			game.probe(cellToProbe.getX(), cellToProbe.getY());
 		}
 		int newOpenCellsCount = getLandCells().size();
+
+		// If the difference between before and after open cells is more than 1
+		// then an opening was found
 		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
-		if (foundOpening) {
-			doneFirstGuess = true;
-		}
-		// return true if more than 1 square was revealed (an opening was made/probed a
-		// 0)
+
+		madeFirstGuess = foundOpening;
+
 		return foundOpening;
 	}
 
+	/**
+	 * Probe a corner cell. Intended to be used when performing simulations.
+	 * 
+	 * @return True if a corner cell is probed and revealed
+	 * an opening. False otherwise.
+	 */
 	public boolean makeFirstGuessCorner() {
 		if (game.isGameOver()) {
 			return false;
 		}
-		if (doneFirstGuess) {
+		if (madeFirstGuess) {
 			return true;
 		}
 		cells = game.getCells();
@@ -114,14 +138,21 @@ public abstract class BoardSolver {
 		int newOpenCellsCount = getLandCells().size();
 
 		boolean foundOpening = (newOpenCellsCount - openCellsCount) > 1;
+
 		return foundOpening;
 	}
 
+	/**
+	 * Probe an edge cell. Intended to be used when performing simulations.
+	 * 
+	 * @return True if an edge cell is probed and revealed
+	 * an opening. False otherwise.
+	 */
 	public boolean makeFirstGuessEdge() {
 		if (game.isGameOver()) {
 			return false;
 		}
-		if (doneFirstGuess) {
+		if (madeFirstGuess) {
 			return true;
 		}
 		cells = game.getCells();
@@ -142,7 +173,7 @@ public abstract class BoardSolver {
 		if (game.isGameOver()) {
 			return false;
 		}
-		if (doneFirstGuess) {
+		if (madeFirstGuess) {
 			return true;
 		}
 		cells = game.getCells();
@@ -219,23 +250,6 @@ public abstract class BoardSolver {
 			}
 		}
 		return borderCells;
-	}
-
-	public abstract boolean hint();
-
-	public abstract boolean assist();
-
-	public abstract void solve();
-
-	public void printLits(int[] model) {
-		String str = "";
-		for (int i = 0; i < model.length; i++) {
-			str += "" + model[i] + ", ";
-		}
-		System.out.println(str);
-		if (!str.equals("")) {
-			System.out.println();
-		}
 	}
 
 	/**
@@ -315,7 +329,7 @@ public abstract class BoardSolver {
 
 	public List<Cell> getSeaCells() {
 		List<Cell> sea = new ArrayList<>();
-		List<Cell> shoreClosed = getShoreClosedCells();
+		List<Cell> shoreClosed = getClosedShoreCells();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
@@ -327,7 +341,7 @@ public abstract class BoardSolver {
 		return sea;
 	}
 
-	public List<Cell> getShoreClosedCells() {
+	public List<Cell> getClosedShoreCells() {
 		List<Cell> shoreClosed = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -346,7 +360,7 @@ public abstract class BoardSolver {
 		return shoreClosed;
 	}
 
-	public List<Cell> getShoreOpenCells() {
+	public List<Cell> getOpenShoreCells() {
 		List<Cell> shoreOpen = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
@@ -405,10 +419,10 @@ public abstract class BoardSolver {
 		quiet = true;
 	}
 
-	public void selectRandomCell() {
+	public void probeRandomCell() {
 		cells = game.getCells();
 		List<Cell> sea = getSeaCells();
-		List<Cell> shoreClosed = getShoreClosedCells();
+		List<Cell> shoreClosed = getClosedShoreCells();
 		sea.addAll(shoreClosed);
 		sea.removeIf(c -> !c.isBlank());
 

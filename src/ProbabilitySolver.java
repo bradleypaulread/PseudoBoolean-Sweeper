@@ -17,7 +17,7 @@ import org.sat4j.specs.TimeoutException;
 
 import org.apache.commons.math3.fraction.BigFraction;
 
-public class ProbabilitySolver extends BoardSolver {
+public class ProbabilitySolver extends Solver {
 
     public ProbabilitySolver(Minesweeper game) {
         super(game);
@@ -205,7 +205,7 @@ public class ProbabilitySolver extends BoardSolver {
             }
         }
 
-        List<Cell> shore = getShoreClosedCells();
+        List<Cell> shore = getClosedShoreCells();
         for (Cell current : shore) {
             BigInteger currentCellT = cellT.get(current);
             // currentCellT is null when a cell does not appear in any solution
@@ -298,7 +298,7 @@ public class ProbabilitySolver extends BoardSolver {
 
     private void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
         cells = game.getCells();
-        List<Cell> closedShore = getShoreClosedCells();
+        List<Cell> closedShore = getClosedShoreCells();
         List<Cell> seaCells = getSeaCells();
         int seaSize = seaCells.size();
         List<Cell> landCells = getLandCells();
@@ -334,7 +334,8 @@ public class ProbabilitySolver extends BoardSolver {
             pbSolver.addExactly(landLits, landCoeffs, 0);
             landLits.clear();
             landCoeffs.clear();
-
+            String s = "";
+            // s.
             List<Cell> neighbours = getNeighbours(current);
             for (Cell c : neighbours) {
                 lits.push(encodeCellId(c));
@@ -349,7 +350,7 @@ public class ProbabilitySolver extends BoardSolver {
         coeffs.clear();
 
         int limit = 0;
-        for (Cell c : getShoreOpenCells()) {
+        for (Cell c : getOpenShoreCells()) {
             limit += c.getNumber();
         }
 

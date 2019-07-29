@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class SinglePointSolver extends BoardSolver {
+public class SinglePointSolver extends Solver {
 
     public SinglePointSolver(Minesweeper game) {
         super(game);

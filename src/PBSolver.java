@@ -11,7 +11,7 @@ import org.sat4j.specs.IConstr;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
-public class PBSolver extends BoardSolver {
+public class PBSolver extends Solver {
 
 	public PBSolver(Minesweeper game) {
 		super(game);
@@ -150,7 +150,7 @@ public class PBSolver extends BoardSolver {
 
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
-		List<Cell> closedShore = getShoreClosedCells();
+		List<Cell> closedShore = getClosedShoreCells();
 		List<Cell> sea = getSeaCells();
 
 		try {

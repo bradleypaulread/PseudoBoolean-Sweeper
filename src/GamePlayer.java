@@ -108,13 +108,13 @@ public class GamePlayer implements Runnable {
 				sp = new SinglePointSolver(game);
 				sp.setQuiet();
 				startTime = System.nanoTime();
-				sp.selectRandomCell();
+				sp.probeRandomCell();
 			} while (game.isGameOver());
 		}
 
 		while (!game.isGameOver()) {
 			if (!sp.assist()) {
-				sp.selectRandomCell();
+				sp.probeRandomCell();
 				guessCount++;
 			}
 		}
@@ -144,7 +144,7 @@ public class GamePlayer implements Runnable {
 				pb = new PBSolver(game);
 				pb.setQuiet();
 				startTime = System.nanoTime();
-				pb.selectRandomCell();
+				pb.probeRandomCell();
 			} while (game.isGameOver());
 		}
 
@@ -153,7 +153,7 @@ public class GamePlayer implements Runnable {
 
 		while (!game.isGameOver()) {
 			if (!pb.assist()) {
-				pb.selectRandomCell();
+				pb.probeRandomCell();
 				guessCount++;
 			}
 		}
@@ -188,7 +188,7 @@ public class GamePlayer implements Runnable {
 				sp.setQuiet();
 				pb.setQuiet();
 				startTime = System.nanoTime();
-				sp.selectRandomCell();
+				sp.probeRandomCell();
 			} while (game.isGameOver());
 		}
 
@@ -198,7 +198,7 @@ public class GamePlayer implements Runnable {
 		while (!game.isGameOver()) {
 			if (!sp.assist()) {
 				if (!pb.assist()) {
-					pb.selectRandomCell();
+					pb.probeRandomCell();
 					guessCount++;
 				}
 			}

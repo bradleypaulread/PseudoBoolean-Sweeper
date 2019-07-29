@@ -254,13 +254,13 @@ public class StrategySimulator {
 						sp = new SinglePointSolver(game);
 						sp.setQuiet();
 						startTime = System.nanoTime();
-						sp.selectRandomCell();
+						sp.probeRandomCell();
 					} while (game.isGameOver());
 				}
 				currentGuessCount++; // First move
 				while (!game.isGameOver()) {
 					if (!sp.assist()) {
-						sp.selectRandomCell();
+						sp.probeRandomCell();
 						currentGuessCount++;
 					}
 				}
