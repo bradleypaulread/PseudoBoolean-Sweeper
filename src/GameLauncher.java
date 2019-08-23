@@ -12,9 +12,9 @@ public class GameLauncher {
 		// Note: no dimentions or number of mines stored (just essentially a 2D array of
 		// booleans; true = mine)
 		// dimentions and mine count need to be passed manually
-		String mineFeildJson = "{\"field\":[[false,false,false,false,true,false,false,false,false],[false,false,false,false,false,false,false,false,false],[false,false,true,false,false,false,true,false,false],[false,false,false,true,false,false,false,false,true],[false,false,false,false,false,true,false,false,true],[false,false,false,false,false,false,false,false,false],[false,false,false,false,false,true,false,false,false],[false,false,false,false,false,false,true,false,false],[false,false,false,false,false,false,false,false,true]],\"exploded\":false,\"opened\":false}";
+		final String mineFieldJson = "{\"field\":[[false,false,false,false,true,false,false,false,false],[false,false,false,false,false,false,false,false,false],[false,false,true,false,false,false,true,false,false],[false,false,false,true,false,false,false,false,true],[false,false,false,false,false,true,false,false,true],[false,false,false,false,false,false,false,false,false],[false,false,false,false,false,true,false,false,false],[false,false,false,false,false,false,true,false,false],[false,false,false,false,false,false,false,false,true]],\"exploded\":false,\"opened\":false}";
 
-		new Minesweeper(); // Default beginner board
+		new Minesweeper(mineFieldJson); // Default beginner board
 
 		// Example of how load a game with a pre-generated MineField JSON
 		// new Minesweeper(9, 9, 10, mineFeildJson);
