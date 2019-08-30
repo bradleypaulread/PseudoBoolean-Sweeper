@@ -18,6 +18,8 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.Reader;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -42,6 +44,10 @@ import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Minesweeper extends JFrame {
 
@@ -118,6 +124,32 @@ public class Minesweeper extends JFrame {
 	}
 
 	/**
+	 * Constructor for Minesweeper class that only takes a MineField json string in.
+	 */
+	public Minesweeper(String mf) {
+		final String mfCopy = new String(mf);
+
+		final JSONObject jsonObj = new JSONObject(mfCopy);
+
+		final JSONArray mfJsonArr = jsonObj.getJSONArray("field");
+		int mineCount = 0;
+		int width = 0;
+		int height = mfJsonArr.length();
+		for (int i = 0; i < mfJsonArr.length(); i++) {
+			final JSONArray row = mfJsonArr.getJSONArray(i);
+			width = row.length();
+			for (int j = 0; j < row.length(); j++) {
+				final Boolean isMine = row.getBoolean(j);
+				if (isMine)
+					mineCount++;
+			}
+		}
+		Gson gson = new Gson();
+		MineField mfObj = gson.fromJson(mf, MineField.class);
+		setup(width, height, mineCount, mfObj);
+	}
+
+	/**
 	 * Constructor for Minesweeper class that uses a percentage difficulty of mines.
 	 * Number is casted down to integer amount
 	 * 
@@ -132,7 +164,7 @@ public class Minesweeper extends JFrame {
 		int noOfMines = (int) ((width * height) * mineDistribution);
 		setup(width, height, noOfMines);
 	}
-
+	
 	/**
 	 * Constructor for Minesweeper class that uses a pre-specified mine field.
 	 * 
