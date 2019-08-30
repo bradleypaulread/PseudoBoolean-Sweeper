@@ -1,9 +1,9 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.sat4j.specs.IVecInt;
 
 public abstract class Solver {
 
@@ -329,7 +329,7 @@ public abstract class Solver {
 
 	public List<Cell> getSeaCells() {
 		List<Cell> sea = new ArrayList<>();
-		List<Cell> shoreClosed = getClosedShoreCells();
+		Set<Cell> shoreClosed = new HashSet<>(getClosedShoreCells());
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				Cell current = cells[i][j];
