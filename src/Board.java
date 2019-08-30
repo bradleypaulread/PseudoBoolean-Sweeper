@@ -97,7 +97,7 @@ public class Board extends JPanel {
 
 				// For flagged cells
 				if (current.isFlagged()) {
-					if (game.isFinished()) {
+					if (game.isGameOver()) {
 						// If the game has finished and a mine has been
 						// correctly flagged
 						// set colour to Orange with a 'X' pattern

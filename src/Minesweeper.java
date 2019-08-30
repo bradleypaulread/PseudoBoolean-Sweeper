@@ -21,7 +21,9 @@ import java.awt.event.ActionListener;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -49,34 +51,34 @@ public class Minesweeper extends JFrame {
 	private final String PASSWORD = "hello";
 
 	// Swing components (buttons etc.)
-	private JButton resetBtn = new JButton("Reset");
-	private JButton stopBtn = new JButton("Stop");
+	private JButton resetBtn;
+	private JButton stopBtn;
 
-	private JButton hintBtn = new JButton("Hint");
-	private JButton assistBtn = new JButton("Assist");
-	private JButton solveBtn = new JButton("Solve");
-	private JButton showProbBtn = new JButton("Show Probabilities");
+	private JButton hintBtn;
+	private JButton assistBtn;
+	private JButton solveBtn;
+	private JButton showProbBtn;
 
-	private JLabel movesLbl = new JLabel();
-	private JLabel minesLbl = new JLabel();
-	private JLabel detailsLbl = new JLabel();
+	private JLabel movesLbl;
+	private JLabel minesLbl;
+	private JLabel detailsLbl;
 
-	private JCheckBoxMenuItem debugCb = new JCheckBoxMenuItem("Debug Mode");
-	private JRadioButtonMenuItem diffEasyRb = new JRadioButtonMenuItem("Beginner");
-	private JRadioButtonMenuItem diffMediumRb = new JRadioButtonMenuItem("Intermediate");
-	private JRadioButtonMenuItem diffHardRb = new JRadioButtonMenuItem("Expert");
+	private JCheckBoxMenuItem debugCb;
+	private JRadioButtonMenuItem diffEasyRb;
+	private JRadioButtonMenuItem diffMediumRb;
+	private JRadioButtonMenuItem diffHardRb;
 
-	private JCheckBoxMenuItem singlePointCb = new JCheckBoxMenuItem("Single Point");
-	private JCheckBoxMenuItem pbCb = new JCheckBoxMenuItem("Pseudo-Boolean/SAT");
-	private JCheckBoxMenuItem stratCb = new JCheckBoxMenuItem("Strategy");
+	private JCheckBoxMenuItem singlePointCb;
+	private JCheckBoxMenuItem pbCb;
+	private JCheckBoxMenuItem stratCb;
 
-	private JMenuItem customGameItem = new JMenuItem("Custom Game");
-	private JMenuItem changeCellSizeItem = new JMenuItem("Change Cell Size");
-	private JMenuItem firstGuessItem = new JMenuItem("Make First Guess");
+	private JMenuItem customGameItem;
+	private JMenuItem changeCellSizeItem;
+	private JMenuItem firstGuessItem;
 
-	private JMenuBar menuBar = new JMenuBar();
-	private JMenu menu = new JMenu("Options");
-	private JMenu helpMenu = new JMenu("Help");
+	private JMenuBar menuBar;;
+	private JMenu menu;
+	private JMenu helpMenu;
 
 	SolverThreadWrapper thread = new SolverThreadWrapper(this);
 
@@ -84,7 +86,7 @@ public class Minesweeper extends JFrame {
 	private int width, height; // Width and Height of board (number of cells =
 								// width*height)
 	private Cell[][] cells; // 2D array to store all cells
-	private List<Cell> hintCells = new ArrayList<Cell>(); //
+	private Set<Cell> hintCells = new HashSet<Cell>(); //
 	private int noOfMines; // Number of mines
 	private Board board; // Board instance, where cells appearance is processed
 	private boolean isGameOver; // True if the game has been lost or won
@@ -95,140 +97,158 @@ public class Minesweeper extends JFrame {
 	private boolean gameWon;
 	private boolean opening;
 
-	public Minesweeper(int x, int y, double d) {
-		// Cast number of mines down to integer value
-		setup(x, y, (int) ((x * y) * d));
-	}
-
-	public Minesweeper(int x, int y, int d) {
-		setup(x, y, d);
-	}
-
-	public Minesweeper(int x, int y, int d, String m) {
-		Gson gson = new Gson();
-		MineField mf = gson.fromJson(m, MineField.class);
-		setup(x, y, d, mf);
-	}
-
-	public Minesweeper(Difficulty diff) {
-		int x, y, d;
-		switch (diff) {
-		case BEGINNER:
-			x = 9;
-			y = 9;
-			d = 10;
-			break;
-		case INTERMEDIATE:
-			x = 16;
-			y = 16;
-			d = 40;
-			break;
-		case EXPERT:
-			x = 30;
-			y = 16;
-			d = 99;
-			break;
-		default:
-			x = 9;
-			y = 9;
-			d = 10;
-			break;
-		}
-		setup(x, y, d);
-	}
-
+	/**
+	 * Default constructor for Minesweeper class. Initiates the board to beginner
+	 * difficulty.
+	 */
 	public Minesweeper() {
 		this(Difficulty.BEGINNER);
 	}
 
-	// For use when no GUI is wanted
-	public Minesweeper(Difficulty d, MineField mf) {
-		switch (d) {
-		case BEGINNER:
-			width = 9;
-			height = 9;
-			noOfMines = 10;
-			minesLeft = 10;
-			break;
-		case INTERMEDIATE:
-			width = 16;
-			height = 16;
-			noOfMines = 40;
-			minesLeft = 40;
-			break;
-		case EXPERT:
-			width = 30;
-			height = 16;
-			noOfMines = 99;
-			minesLeft = 99;
-			break;
-		default:
-			break;
-		}
-		isGameOver = false;
-		moves = 0;
-		minesLeft = noOfMines;
-		cells = new Cell[width][height];
-
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				cells[i][j] = new Cell(i, j);
-			}
-		}
-		gameWon = false;
-		// Reset board to a fresh setting
-		mineField = mf;
+	/**
+	 * Constructor for Minesweeper class.
+	 * 
+	 * @param width     boards width. That is the number of cells in a row.
+	 * @param height    boards height. That is the number of cells in a column.
+	 * @param noOfMines number of mines present on the board. Must be less than the
+	 *                  area of the board.
+	 */
+	public Minesweeper(int width, int height, int noOfMines) {
+		setup(width, height, noOfMines);
 	}
 
-	private void setup(int x, int y, int d) {
-		width = x;
-		height = y;
-		noOfMines = d;
-		minesLeft = d;
+	/**
+	 * Constructor for Minesweeper class that uses a percentage difficulty of mines.
+	 * Number is casted down to integer amount
+	 * 
+	 * @param width            boards width. That is the number of cells in a row.
+	 * @param height           boards height. That is the number of cells in a
+	 *                         column.
+	 * @param mineDistribution percent number of mines present on the board. Should
+	 *                         be in the form 0.0 <= mineDistribution <= 1.0.
+	 */
+	public Minesweeper(int width, int height, double mineDistribution) {
+		// Cast number of mines down to integer value
+		int noOfMines = (int) ((width * height) * mineDistribution);
+		setup(width, height, noOfMines);
+	}
+
+	/**
+	 * Constructor for Minesweeper class that uses a pre-specified mine field.
+	 * 
+	 * @param width            boards width. That is the number of cells in a row.
+	 * @param height           boards height. That is the number of cells in a
+	 *                         column.
+	 * @param noOfMines        number of mines present on the board. Must be less
+	 *                         than the area of the board.
+	 * @param jsonMineFieldStr string representation of the json representation of a
+	 *                         minefield.
+	 */
+	public Minesweeper(int width, int height, int noOfMines, String jsonMineFieldStr) {
+		Gson gson = new Gson();
+		MineField mf = gson.fromJson(jsonMineFieldStr, MineField.class);
+		setup(width, height, noOfMines, mf);
+	}
+
+	/**
+	 * Constructor for Minesweeper class that uses difficulty settings (enums). Uses
+	 * the classic Minesweeper game difficulty parameters.
+	 * 
+	 * @param difficulty enum difficulty of the board.
+	 */
+	public Minesweeper(Difficulty difficulty) {
+		setup(difficulty.width, difficulty.height, difficulty.noOfMines);
+	}
+
+	/**
+	 * Constructor for Minesweeper class that uses a difficulty setting (enum) and a
+	 * pre-specified MineField. Uses the classic Minesweeper game difficulty
+	 * parameters.
+	 * 
+	 * @param difficulty enum difficulty of the board.
+	 */
+	public Minesweeper(Difficulty difficulty, MineField mf) {
+		setup(difficulty.width, difficulty.height, difficulty.noOfMines, mf);
+	}
+
+	/**
+	 * Sets private variables (e.g. widht/height, noOfMines, board, etc.). Also
+	 * resets the game values (e.g. game time, is game won, etc.).
+	 * 
+	 * @param width     boards width. That is the number of cells in a row.
+	 * @param height    boards height. That is the number of cells in a column.
+	 * @param noOfMines number of mines present on the board. Must be less than the
+	 *                  area of the board.
+	 */
+	private void setup(int width, int height, int noOfMines) {
+		this.width = width;
+		this.height = height;
+		this.noOfMines = noOfMines;
+		this.minesLeft = noOfMines;
 
 		// Load interface components
-		board = new Board(this, x, y);
+		board = new Board(this, width, height);
+
+		resetGame();
+	}
+
+	/**
+	 * Same as {@link #setup(int, int, int) setup} method but sets the minefield to
+	 * the specficed one afterwards.
+	 * 
+	 * @param width     boards width. That is the number of cells in a row.
+	 * @param height    boards height. That is the number of cells in a column.
+	 * @param noOfMines number of mines present on the board. Must be less than the
+	 *                  area of the board.
+	 * 
+	 */
+	private void setup(int width, int height, int noOfMines, MineField mf) {
+		setup(width, height, noOfMines);
+		this.mineField = mf;
+	}
+
+	/**
+	 * Initialises and displays all the GUI.
+	 */
+	public void buildGUI() {
+		resetBtn = new JButton("Reset");
+		stopBtn = new JButton("Stop");
+
+		hintBtn = new JButton("Hint");
+		assistBtn = new JButton("Assist");
+		solveBtn = new JButton("Solve");
+		showProbBtn = new JButton("Show Probabilities");
+
+		movesLbl = new JLabel();
+		minesLbl = new JLabel();
+		detailsLbl = new JLabel();
+
+		debugCb = new JCheckBoxMenuItem("Debug Mode");
+		diffEasyRb = new JRadioButtonMenuItem("Beginner");
+		diffMediumRb = new JRadioButtonMenuItem("Intermediate");
+		diffHardRb = new JRadioButtonMenuItem("Expert");
+
+		singlePointCb = new JCheckBoxMenuItem("Single Point");
+		pbCb = new JCheckBoxMenuItem("Pseudo-Boolean/SAT");
+		stratCb = new JCheckBoxMenuItem("Strategy");
+
+		customGameItem = new JMenuItem("Custom Game");
+		changeCellSizeItem = new JMenuItem("Change Cell Size");
+		firstGuessItem = new JMenuItem("Make First Guess");
+
+		menuBar = new JMenuBar();
+		menu = new JMenu("Options");
+		helpMenu = new JMenu("Help");
+
 		loadUI();
 		loadFileMenu();
-
+		resetUIDetails();
 		// Centres minefield
 		Container fl = new Container();
 		fl.add(board);
 		fl.setLayout(new FlowLayout());
 		add(fl, BorderLayout.CENTER);
 
-		// Reset board to a fresh setting
-		reset();
-
-		setTitle("Minesweeper");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setResizable(false);
-		pack();
-		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
-		setVisible(true);
-	}
-
-	private void setup(int x, int y, int d, MineField m) {
-		width = x;
-		height = y;
-		noOfMines = d;
-		minesLeft = d;
-
-		// Load interface components
-		board = new Board(this, x, y);
-		loadUI();
-		loadFileMenu();
-
-		// Centres minefield
-		Container fl = new Container();
-		fl.add(board);
-		fl.setLayout(new FlowLayout());
-		add(fl, BorderLayout.CENTER);
-
-		// Reset board to a fresh setting
-		reset();
-		this.mineField = m;
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
@@ -317,7 +337,10 @@ public class Minesweeper extends JFrame {
 		icons.add(img4);
 		this.setIconImages(icons);
 
-		resetBtn.addActionListener(e -> reset());
+		resetBtn.addActionListener(e -> {
+			resetGame();
+			resetUIDetails();
+		});
 
 		hintBtn.addActionListener(e -> {
 			disableAllBtns();
@@ -361,7 +384,7 @@ public class Minesweeper extends JFrame {
 	}
 
 	/**
-	 * Load the File menu component options and add each option's action listener
+	 * Load the File menu component options and adds each option's action listener
 	 * code.
 	 */
 	private void loadFileMenu() {
@@ -376,7 +399,6 @@ public class Minesweeper extends JFrame {
 			JOptionPane.showMessageDialog(this, helpText);
 		});
 		helpMenu.add(helpMenuItem);
-
 
 		ButtonGroup diffRdGroup = new ButtonGroup();
 		// When option selected invert the debug variable.
@@ -519,6 +541,11 @@ public class Minesweeper extends JFrame {
 		this.setJMenuBar(menuBar);
 	}
 
+	/**
+	 * Copies settings (difficulty, strategy, etc.) of one game over to another.
+	 * 
+	 * @param game game that the settings of are going to be copied.
+	 */
 	private void copySettings(Minesweeper game) {
 		diffEasyRb.setSelected(game.isEasy());
 		diffEasyRb.setEnabled(!game.isEasy());
@@ -533,10 +560,12 @@ public class Minesweeper extends JFrame {
 		changeCellSize(game.getBoard().getCellWidth());
 	}
 
-	private Board getBoard() {
-		return this.board;
-	}
-
+	/**
+	 * Sets the desired options of the solver depending on what settings the user
+	 * has selected.
+	 * 
+	 * @param solver the solver object that options will be changed.
+	 */
 	private void configureSolver(SolverThreadWrapper solver) {
 		solver.reset();
 		boolean doSinglePoint = singlePointCb.isSelected();
@@ -546,9 +575,9 @@ public class Minesweeper extends JFrame {
 		solver.setPB(doPB);
 		solver.setStrat(doStrat);
 	}
-	
+
 	/**
-	 * Redraw the board, updating all cells appearance and behaviour.
+	 * Redraws the board, updating all cells appearance and behaviour.
 	 */
 	public void refresh() {
 		board.repaint(10);
@@ -556,7 +585,8 @@ public class Minesweeper extends JFrame {
 
 	/**
 	 * Called when a cell is wished to be cleared. Will not affect flagged cells.
-	 * Clears hint cells and
+	 * Clears hint cells and probabilities. Increments move count. Checks if game is
+	 * won or lost.
 	 * 
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
@@ -574,10 +604,6 @@ public class Minesweeper extends JFrame {
 
 		// Reset probabilies
 		resetProbs();
-
-		if (debugCb.isSelected()) {
-			debug(x, y);
-		}
 
 		incrementMoves();
 
@@ -622,6 +648,13 @@ public class Minesweeper extends JFrame {
 		refresh();
 	}
 
+	/**
+	 * Same as {@link #probe(int, int) probe} but does not update any UI elements.
+	 * Used when performing simulations.
+	 * 
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
+	 */
 	public void quietProbe(int x, int y) {
 		// Dont perform any behaviour if cell is flagged or game has already been
 		// won/lost
@@ -660,19 +693,34 @@ public class Minesweeper extends JFrame {
 		}
 	}
 
+	/**
+	 * Changes each cells size.
+	 * 
+	 * @param size what size the cells should be changed to. Should be more than 0.
+	 */
 	private void changeCellSize(int size) {
 		// Bug where screen would stop adjusting size if tried to set
 		// the size as current size (not sure why)
-		if (size == board.getCellWidth() || size < 1) {
+		if (size == board.getCellWidth() || size <= 0) {
 			return;
 		}
 		this.board.setCellSize(size);
 		refresh();
+		// Repack all components so that JFrame is modelled correctly
 		this.pack();
+		// Reposition the JFrame into the centre of the screen.
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
 	}
 
+	/**
+	 * Clear the neightbouring cells around a cell. Used when a cell with number 0
+	 * is probed. Originally also used when performing a double click action but
+	 * this encounted various bugs so was abandoned.
+	 * 
+	 * @param x X-axis coordinate of cell which neighbours should be cleared.
+	 * @param y Y-axis coordinate of cell which neighbours should be cleared.
+	 */
 	public void clearNeighbours(int x, int y) {
 		List<Cell> neighbours = getNeighbours(x, y); // Reuse code thats in solver class
 		for (Cell c : neighbours) {
@@ -685,14 +733,16 @@ public class Minesweeper extends JFrame {
 	}
 
 	/**
-	 * Called when the game has been won or lost.
+	 * Called when the game has been won or lost. Changes UI, stops game timer and
+	 * "unlocks" the minefield so that all cells true behaviour is revealed (mine,
+	 * number, etc.).
 	 */
 	private void endGame() {
 		thread.end();
 		isGameOver = true;
 		gameTimer.stop();
 		try {
-			openAllCells();
+			openAllCells(PASSWORD);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -700,31 +750,30 @@ public class Minesweeper extends JFrame {
 		refresh();
 	}
 
-	public void setCells(Cell[][] cells) {
-		int width = cells.length;
-		int height = cells[0].length;
-		this.cells = new Cell[width][height];
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				this.cells[i][j] = cells[i][j];
-			}
-		}
+	/**
+	 * Resets all the UI elements to their default text.
+	 */
+	public void resetUIDetails() {
+		firstGuessItem.setEnabled(true);
+		setDetail("...");
+		movesLbl.setText("Moves: " + Integer.toString(moves));
+		minesLbl.setText("~ Mines Left: " + Integer.toString(minesLeft));
+		enableAllBtns();
+		gameTimer.start();
 	}
 
 	/**
 	 * Generate a fresh board and a new minefield.
 	 */
-	public void reset() {
+	public void resetGame() {
 		thread.end();
 		opening = false;
+		gameWon = false;
 		isGameOver = false;
 		currentGameTime = 0;
 		moves = 0;
-		firstGuessItem.setEnabled(true);
-		setDetail("...");
-		movesLbl.setText("Moves: " + Integer.toString(moves));
+
 		minesLeft = noOfMines;
-		minesLbl.setText("~ Mines Left: " + Integer.toString(minesLeft));
 		mineField = new MineField(height, width, noOfMines);
 		cells = new Cell[width][height];
 		for (int i = 0; i < width; i++) {
@@ -732,31 +781,35 @@ public class Minesweeper extends JFrame {
 				cells[i][j] = new Cell(i, j);
 			}
 		}
-		enableAllBtns();
-		gameTimer.start();
 		refresh();
 	}
 
 	/**
 	 * Opens all remaining closed on the board.
 	 * 
-	 * @throws NoSuchAlgorithmException
+	 * @param password the password that will be used to unlock the minefield.
+	 * 
+	 * @throws NoSuchAlgorithmException when passed password is incorrect.
 	 */
-	private void openAllCells() throws NoSuchAlgorithmException {
-		// Unlock the minefield
-		mineField.open(PASSWORD);
-		// Open/Select every closed cell
+	public void openAllCells(String password) throws NoSuchAlgorithmException {
+		// Unlock the minefield with the passed password
+		// Throws NoSuchAlgorithmException if password is wrong
+		mineField.open(password);
+
+		// Open/probe every remaining closed cell
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				if (cells[i][j].isClosed()) {
+				Cell current = cells[i][j];
+				if (current.isClosed()) {
 					// (j, i) as MineField.java takes (height, width), not
 					// (width, height)
 					int cellNum = mineField.uncover(j, i);
-					cells[i][j].setNumber(cellNum);
-					cells[i][j].open();
+					current.setNumber(cellNum);
+					current.open();
 				}
 			}
 		}
+		// Refeash the appeance of the board, revealing all cells
 		refresh();
 	}
 
@@ -776,28 +829,16 @@ public class Minesweeper extends JFrame {
 			}
 		}
 		// If the number of covered cells left is equal to the number of mines,
-		// game is
-		// won
+		// the game is won
 		return (closedCount == noOfMines);
 	}
 
 	/**
-	 * Print information about a cell to console.
+	 * Returns a list of of the neighbouring cells around the specified cell.
 	 * 
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
 	 */
-	private void debug(int x, int y) {
-		// System.out.println("=======================");
-		// System.out.println("Cell info = " + cells[x][y]);
-		// System.out.println("Set of neighbors = " + solver.getNeighbours(x, y));
-		// System.out.println("Num of uncovered neighbors = " +
-		// solver.calcClosedNeighbours(x, y));
-		// System.out.println("Num of flagged neighbors = " +
-		// solver.calcFlaggedNeighbours(x, y));
-		// System.out.println("=======================");
-	}
-
 	private List<Cell> getNeighbours(int x, int y) {
 		List<Cell> neighbours = new ArrayList<Cell>();
 		for (int i = x - 1; i <= x + 1; ++i) {
@@ -810,6 +851,9 @@ public class Minesweeper extends JFrame {
 		return neighbours;
 	}
 
+	/**
+	 * Disables all UI buttons.
+	 */
 	private void disableAllBtns() {
 		firstGuessItem.setEnabled(false);
 		hintBtn.setEnabled(false);
@@ -818,6 +862,9 @@ public class Minesweeper extends JFrame {
 		showProbBtn.setEnabled(false);
 	}
 
+	/**
+	 * Enables all UI buttons.
+	 */
 	public void enableAllBtns() {
 		hintBtn.setEnabled(true);
 		assistBtn.setEnabled(true);
@@ -831,31 +878,49 @@ public class Minesweeper extends JFrame {
 		return i >= 0 && i < cells.length && j >= 0 && j < cells[i].length;
 	}
 
+	/**
+	 * Increment moves and update the moves label.
+	 */
 	public void incrementMoves() {
 		movesLbl.setText("Moves: " + Integer.toString(++moves));
 	}
 
+	/**
+	 * Decrement mines left and update the mines left label.
+	 */
 	public void decrementMines() {
 		minesLbl.setText("~ Mines Left: " + Integer.toString(--minesLeft));
 	}
 
+	/**
+	 * Increment mines left and update the mines left label.
+	 */
 	public void incrementMines() {
 		minesLbl.setText("~ Mines Left: " + Integer.toString(++minesLeft));
 	}
 
 	/* Getters/Setters */
+	private Board getBoard() {
+		return this.board;
+	}
+
+	/**
+	 * Returns the specified cell.
+	 * 
+	 * @param x X-axis coordinate of cell.
+	 * @param y Y-axis coordinate of cell.
+	 */
 	public Cell getCell(int x, int y) {
 		return cells[x][y];
 	}
 
-	public boolean isFinished() {
-		return isGameOver;
-	}
-
-	public List<Cell> getHintCells() {
+	public Set<Cell> getHintCells() {
 		return hintCells;
 	}
 
+	/**
+	 * Reset all hint cells back to normal cells.
+	 */
 	public void resetHints() {
 		for (Cell cell : hintCells) {
 			cell.resetHint();
@@ -899,6 +964,9 @@ public class Minesweeper extends JFrame {
 		return stopBtn;
 	}
 
+	/**
+	 * Reset all cells probablities.
+	 */
 	public void resetProbs() {
 		for (Cell[] col : cells) {
 			for (Cell c : col) {
@@ -916,6 +984,11 @@ public class Minesweeper extends JFrame {
 		return moves;
 	}
 
+	/**
+	 * Sets the detail message in the details label to the specified string.
+	 * 
+	 * @param detail the detail string to display.
+	 */
 	public void setDetail(String detail) {
 		this.detailsLbl.setText(detail + ".");
 	}

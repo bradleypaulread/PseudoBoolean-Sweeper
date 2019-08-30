@@ -25,6 +25,11 @@ public class Cell {
 	private Double prob; // Percentage of cell being a mine
 	private boolean bestCell; // If cell has the lowest prob of being a mine
 
+	/**
+	* Constructor for Cell class.
+	* @param x cell's x-axis position
+	* @param y cell's y-axis position
+	*/
 	public Cell(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -187,49 +192,6 @@ public class Cell {
 		marked = !marked;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (fail ? 1231 : 1237);
-		result = prime * result + (flagged ? 1231 : 1237);
-		result = prime * result + (mineHint ? 1231 : 1237);
-		result = prime * result + number;
-		result = prime * result + (open ? 1231 : 1237);
-		result = prime * result + (safeHint ? 1231 : 1237);
-		result = prime * result + x;
-		result = prime * result + y;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Cell other = (Cell) obj;
-		if (fail != other.fail)
-			return false;
-		if (flagged != other.flagged)
-			return false;
-		if (mineHint != other.mineHint)
-			return false;
-		if (number != other.number)
-			return false;
-		if (open != other.open)
-			return false;
-		if (safeHint != other.safeHint)
-			return false;
-		if (x != other.x)
-			return false;
-		if (y != other.y)
-			return false;
-		return true;
-	}
-
 	/**
 	 * @param x the x to set
 	 */
@@ -305,5 +267,54 @@ public class Cell {
 	 */
 	public void setBestCell(boolean bestCell) {
 		this.bestCell = bestCell;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (bestCell ? 1231 : 1237);
+		result = prime * result + (fail ? 1231 : 1237);
+		result = prime * result + (flagged ? 1231 : 1237);
+		result = prime * result + (marked ? 1231 : 1237);
+		result = prime * result + (mineHint ? 1231 : 1237);
+		result = prime * result + number;
+		result = prime * result + (open ? 1231 : 1237);
+		result = prime * result + (safeHint ? 1231 : 1237);
+		result = prime * result + x;
+		result = prime * result + y;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Cell other = (Cell) obj;
+		if (bestCell != other.bestCell)
+			return false;
+		if (fail != other.fail)
+			return false;
+		if (flagged != other.flagged)
+			return false;
+		if (marked != other.marked)
+			return false;
+		if (mineHint != other.mineHint)
+			return false;
+		if (number != other.number)
+			return false;
+		if (open != other.open)
+			return false;
+		if (safeHint != other.safeHint)
+			return false;
+		if (x != other.x)
+			return false;
+		if (y != other.y)
+			return false;
+		return true;
 	}
 }
