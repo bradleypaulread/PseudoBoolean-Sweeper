@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SolverThreadWrapper implements Runnable {
@@ -6,14 +8,25 @@ public class SolverThreadWrapper implements Runnable {
     private static int threadID = 0;
 
     private volatile AtomicBoolean running = new AtomicBoolean(true);
-    Minesweeper game;
-    boolean quiet, hint, loop, singlePoint, pb, showProb, strat;
+    private Minesweeper game;
+    private boolean hint;
+    private boolean loop;
+    private boolean singlePoint;
+    private boolean pb;
+    private boolean showProb;
+    private boolean strat;
 
     private volatile Thread thread;
 
+    /**
+     * List of the solvers to use. If a new solver is created simply add it into the
+     * {@link #selectSolvers() selectSovlers method}.
+     */
+    private List<Solver> solvers;
+
     public SolverThreadWrapper(Minesweeper g) {
         game = g;
-
+        solvers = new ArrayList<>();
         reset();
     }
 
@@ -31,7 +44,6 @@ public class SolverThreadWrapper implements Runnable {
 
     public void reset() {
         this.strat = false;
-        this.quiet = false;
         this.loop = false;
         this.hint = false;
         this.singlePoint = false;
@@ -39,82 +51,54 @@ public class SolverThreadWrapper implements Runnable {
         this.showProb = false;
     }
 
-    public void setHint() {
-        this.hint = true;
-    }
-
-    public void setSinglePoint(boolean singlePoint) {
-        this.singlePoint = singlePoint;
-    }
-
-    public void setPB(boolean pb) {
-        this.pb = pb;
-    }
-
-    public void setStrat(boolean strat) {
-        this.strat = strat;
-    }
-
-    public void setLoop() {
-        this.loop = true;
-    }
-
-    public void setProb() {
-        this.showProb = true;
+    private void selectSolvers() {
+        solvers.clear();
+        if (singlePoint) {
+            solvers.add(new SinglePointSolver(game));
+        }
+        if (pb) {
+            solvers.add(new PBSolver(game, running));
+        }
+        if (strat) {
+            solvers.add(new ProbabilitySolver(game, running));
+        }
     }
 
     @Override
     public void run() {
-        if (hint) {
-            if (singlePoint && pb && strat) {
-                fullHint();
-            } else if (singlePoint && pb) {
-                singlePointPBHint();
-            } else if (pb && strat) {
-                pbStratHint();
-            } else if (singlePoint && strat) {
-                singlePointStratHint();
-            } else if (singlePoint) {
-                singlePointHint();
-            } else if (pb) {
-                pbHint();
-            } else if (strat) {
-                stratHint();
-            }
-        } else if (showProb) {
+        if (showProb) {
             ProbabilitySolver probS = new ProbabilitySolver(game, running);
             probS.displayProb();
-        } else if (loop) {
-            if (singlePoint && pb && strat) {
-                fullSolve();
-            } else if (singlePoint && pb) {
-                singlePointPBSolve();
-            } else if (pb && strat) {
-                pbStratSolve();
-            } else if (singlePoint && strat) {
-                singlePointStratSolve();
-            } else if (singlePoint) {
-                singlePointSolve();
-            } else if (pb) {
-                pbSolve();
-            } else if (strat) {
-                stratSolve();
-            }
-        } else { // Just Assist
-            if (singlePoint && pb && strat) {
-                jointStrat();
-            } else if (singlePoint && pb) {
-                singlePointPB();
-            } else if (pb && strat) {
-                pbStrat();
-            } else if (singlePoint && strat) {
-                singlePointStrat();
-            } else if (singlePoint) {
-                new SinglePointSolver(game).assist();
-            } else if (pb) {
-                new PBSolver(game, running).assist();
-            } else if (strat) {
-                new ProbabilitySolver(game, running).assist();
+        } else {
+            selectSolvers();
+            if (hint) {
+                for (Solver solver : solvers) {
+                    if (solver.hint()) {
+                        break;
+                    }
+                }
+            } else if (loop) { // Continuous solves
+                Thread thisThread = Thread.currentThread();
+                while (thisThread == thread && running.get() && !game.isGameOver()) {
+                    boolean didBreak = false;
+                    for (Solver solver : solvers) {
+                        if (!running.get() || solver.assist()) {
+                            didBreak = true;
+                            break;
+                        }
+                    }
+                    // If not a single move was made by any solver then no moves could be found so
+                    // stop looping
+                    if (!didBreak) {
+                        break;
+                    }
+                }
+            } else { // Just a single assist
+                for (Solver solver : solvers) {
+                    if (!running.get() || solver.assist()) {
+                        break;
+                    }
+                }
             }
         }
         game.getStopBtn().setEnabled(false);
@@ -123,125 +107,27 @@ public class SolverThreadWrapper implements Runnable {
         }
     }
 
-    private void stratSolve() {
-        Thread thisThread = Thread.currentThread();
-        ProbabilitySolver prob = new ProbabilitySolver(game, running);
-        while (thisThread == thread && running.get() && !game.isGameOver() && prob.assist())
-            ;
+    public void setHint(boolean hint) {
+        this.hint = hint;
     }
 
-    private void singlePointSolve() {
-        Thread thisThread = Thread.currentThread();
-        SinglePointSolver sp = new SinglePointSolver(game);
-        while (thisThread == thread && running.get() && !game.isGameOver() && sp.assist())
-            ;
+    public void setLoop(boolean loop) {
+        this.loop = loop;
     }
 
-    private void pbSolve() {
-        Thread thisThread = Thread.currentThread();
-        PBSolver pb = new PBSolver(game, running);
-        while (thisThread == thread && running.get() && !game.isGameOver() && pb.assist())
-            ;
+    public void setPb(boolean pb) {
+        this.pb = pb;
     }
 
-    private void singlePointPB() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        PBSolver pb = new PBSolver(game, running);
-        if (!sp.assist()) {
-            pb.assist();
-        }
+    public void setShowProb(boolean showProb) {
+        this.showProb = showProb;
     }
 
-    private void singlePointPBSolve() {
-        Thread thisThread = Thread.currentThread();
-        SinglePointSolver sp = new SinglePointSolver(game);
-        PBSolver pb = new PBSolver(game, running);
-        while (thisThread == thread && running.get() && !game.isGameOver() && (sp.assist() || pb.assist()))
-            ;
+    public void setSinglePoint(boolean singlePoint) {
+        this.singlePoint = singlePoint;
     }
 
-    private void singlePointStrat() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        if (!sp.assist()) {
-            ProbabilitySolver probS = new ProbabilitySolver(game, running);
-            probS.assist();
-        }
+    public void setStrat(boolean strat) {
+        this.strat = strat;
     }
-
-    private void pbStrat() {
-        PBSolver pb = new PBSolver(game, running);
-        if (!pb.assist()) {
-            ProbabilitySolver probS = new ProbabilitySolver(game, running);
-            probS.assist();
-        }
-    }
-
-    private void jointStrat() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        PBSolver pb = new PBSolver(game, running);
-        if (!sp.assist() && !pb.assist()) {
-            ProbabilitySolver probS = new ProbabilitySolver(game, running);
-            probS.assist();
-        }
-    }
-
-    private void singlePointStratSolve() {
-        while (!game.isGameOver()) {
-            singlePointStrat();
-        }
-    }
-
-    private void pbStratSolve() {
-        while (!game.isGameOver()) {
-            pbStrat();
-        }
-    }
-
-    private void fullSolve() {
-        while (!game.isGameOver()) {
-            jointStrat();
-        }
-    }
-
-    private boolean singlePointHint() {
-        SinglePointSolver sp = new SinglePointSolver(game);
-        return sp.hint();
-    }
-
-    private boolean pbHint() {
-        PBSolver pb = new PBSolver(game, running);
-        return pb.hint();
-    }
-
-    private boolean stratHint() {
-        ProbabilitySolver prob = new ProbabilitySolver(game, running);
-        return prob.hint();
-    }
-
-    private void singlePointStratHint() {
-        if (!singlePointHint()) {
-            stratHint();
-        }
-    }
-
-    private void pbStratHint() {
-        if (!pbHint()) {
-            stratHint();
-        }
-    }
-
-    private void singlePointPBHint() {
-        if (!singlePointHint()) {
-            pbHint();
-        }
-    }
-
-    private void fullHint() {
-        if (!singlePointHint()) {
-            if (!pbHint()) {
-                stratHint();
-            }
-        }
-    }
-
 }

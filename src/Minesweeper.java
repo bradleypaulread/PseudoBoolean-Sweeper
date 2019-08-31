@@ -280,7 +280,7 @@ public class Minesweeper extends JFrame {
 		fl.add(board);
 		fl.setLayout(new FlowLayout());
 		add(fl, BorderLayout.CENTER);
-
+		refresh();
 		setTitle("Minesweeper");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
@@ -378,7 +378,7 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			configureSolver(thread);
-			thread.setHint();
+			thread.setHint(true);
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
@@ -395,7 +395,7 @@ public class Minesweeper extends JFrame {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
 			configureSolver(thread);
-			thread.setLoop();
+			thread.setLoop(true);
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
@@ -403,7 +403,7 @@ public class Minesweeper extends JFrame {
 		showProbBtn.addActionListener(e -> {
 			disableAllBtns();
 			thread = new SolverThreadWrapper(this);
-			thread.setProb();
+			thread.setShowProb(true);
 			thread.start();
 			stopBtn.setEnabled(true);
 		});
@@ -604,7 +604,7 @@ public class Minesweeper extends JFrame {
 		boolean doPB = pbCb.isSelected();
 		boolean doStrat = stratCb.isSelected();
 		solver.setSinglePoint(doSinglePoint);
-		solver.setPB(doPB);
+		solver.setPb(doPB);
 		solver.setStrat(doStrat);
 	}
 
@@ -965,11 +965,11 @@ public class Minesweeper extends JFrame {
 		return mineField;
 	}
 
-	public int getWidth() {
+	public int getx() {
 		return width;
 	}
 
-	public int getHeight() {
+	public int gety() {
 		return height;
 	}
 

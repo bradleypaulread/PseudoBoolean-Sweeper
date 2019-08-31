@@ -14,7 +14,7 @@ public class GameLauncher {
 		// dimentions and mine count need to be passed manually
 		String mineFieldJson = "{\"field\":[[true,false,false,false,false,false,false,false,false],[false,false,false,false,false,false,false,false,false],[false,false,true,false,false,false,true,false,false],[false,false,false,true,false,false,false,false,true],[false,false,false,false,false,true,false,false,true],[false,false,false,false,false,false,false,false,false],[false,false,false,false,false,true,false,false,false],[false,false,false,false,false,false,true,false,false],[false,false,false,false,false,false,false,false,true]],\"exploded\":false,\"opened\":false}";
 
-		new Minesweeper(mineFieldJson); // Default beginner board
+		// new Minesweeper(mineFieldJson); // Default beginner board
 
 		Minesweeper game = new Minesweeper(); // Default beginner board
 		game.buildGUI();
