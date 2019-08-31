@@ -101,6 +101,8 @@ public class SolverThreadWrapper implements Runnable {
                 }
             }
         }
+        // Stop all solvers performing a solve
+        solvers.forEach(s -> s.stopSolver());
         game.getStopBtn().setEnabled(false);
         if (!game.isGameOver()) {
             game.enableAllBtns();

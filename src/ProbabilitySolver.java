@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.sat4j.core.VecInt;
-import org.sat4j.pb.IPBSolver;
-import org.sat4j.pb.SolverFactory;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
@@ -147,7 +145,6 @@ public class ProbabilitySolver extends Solver {
      * @return a mapping of cells to the probability value of being a mine.
      */
     private Map<Cell, BigFraction> calcAllCellsProb() {
-        IPBSolver pbSolver = SolverFactory.newDefault();
         cells = game.getCells();
         // Key = Cell
         // Value = Cell appearance as mine count
@@ -163,14 +160,14 @@ public class ProbabilitySolver extends Solver {
         int seaSize = getSeaCells().size();
 
         try {
-            genBinaryConstraints(pbSolver);
+            genBinaryConstraints();
         } catch (ContradictionException e3) {
         }
 
         try {
-            while (pbSolver.isSatisfiable() && running.get()) {
+            while (solver.isSatisfiable() && running.get()) {
                 List<Cell> currentSol = new ArrayList<>();
-                int[] model = pbSolver.model();
+                int[] model = solver.model();
                 int noOfMines = 0;
                 for (int i : model) {
                     boolean mine = i < 0 ? false : true;
@@ -215,14 +212,14 @@ public class ProbabilitySolver extends Solver {
                 }
                 IVecInt block = new VecInt(model);
 
-                pbSolver.addBlockingClause(block);
+                solver.addBlockingClause(block);
             }
         } catch (TimeoutException e) {
-            pbSolver.reset();
+            solver.reset();
         } catch (ContradictionException e) {
-            pbSolver.reset();
+            solver.reset();
         }
-        pbSolver.reset();
+        solver.reset();
         if (!running.get()) {
             return null;
         }
@@ -248,7 +245,7 @@ public class ProbabilitySolver extends Solver {
             BigFraction cellProb = new BigFraction(currentCellT, T);
             probs.put(current, cellProb);
         }
-        pbSolver.reset();
+        solver.reset();
 
         return probs;
     }
@@ -359,12 +356,12 @@ public class ProbabilitySolver extends Solver {
     /**
      * Generates the binary constraints for the problem set.
      * 
-     * @param pbSolver the solver to add the constraints to.
+     * @param solver the solver to add the constraints to.
      * 
      * @throws ContradictionException when a contraint is added that directly
      *                                contradicts an already existing constraint.
      */
-    private void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
+    private void genBinaryConstraints() throws ContradictionException {
         cells = game.getCells();
         List<Cell> closedShore = getClosedShoreCells();
         List<Cell> seaCells = getSeaCells();
@@ -381,14 +378,14 @@ public class ProbabilitySolver extends Solver {
             lits.push(encodeLit(i));
             coeffs.push(square);
         }
-        pbSolver.addAtMost(lits, coeffs, seaSize);
+        solver.addAtMost(lits, coeffs, seaSize);
 
         for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
             Cell current = closedShore.get(i);
             lits.push(encodeCellId(current));
             coeffs.push(1);
         }
-        pbSolver.addExactly(lits, coeffs, noOfMines);
+        solver.addExactly(lits, coeffs, noOfMines);
 
         lits.clear();
         coeffs.clear();
@@ -399,17 +396,15 @@ public class ProbabilitySolver extends Solver {
         for (Cell current : landCells) {
             landLits.push(encodeCellId(current));
             landCoeffs.push(1);
-            pbSolver.addExactly(landLits, landCoeffs, 0);
+            solver.addExactly(landLits, landCoeffs, 0);
             landLits.clear();
             landCoeffs.clear();
-            String s = "";
-            // s.
             List<Cell> neighbours = getNeighbours(current);
             for (Cell c : neighbours) {
                 lits.push(encodeCellId(c));
                 coeffs.push(1);
             }
-            pbSolver.addExactly(lits, coeffs, current.getNumber());
+            solver.addExactly(lits, coeffs, current.getNumber());
             lits.clear();
             coeffs.clear();
         }
@@ -426,7 +421,7 @@ public class ProbabilitySolver extends Solver {
             lits.push(encodeCellId(c));
             coeffs.push(1);
         }
-        pbSolver.addAtMost(lits, coeffs, limit);
+        solver.addAtMost(lits, coeffs, limit);
         lits.clear();
         coeffs.clear();
     }

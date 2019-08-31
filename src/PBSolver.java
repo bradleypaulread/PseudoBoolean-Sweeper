@@ -4,8 +4,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.sat4j.core.VecInt;
-import org.sat4j.pb.IPBSolver;
-import org.sat4j.pb.SolverFactory;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IConstr;
 import org.sat4j.specs.IVecInt;
@@ -41,7 +39,7 @@ public class PBSolver extends Solver {
 	 * @throws ContradictionException when a contraint is added that directly
 	 *                                contradicts an already existing constraint.
 	 */
-	protected void genConstraints(IPBSolver solver) throws ContradictionException {
+	protected void genConstraints() throws ContradictionException {
 
 		IVecInt lits = new VecInt();
 		IVecInt coeffs = new VecInt();
@@ -179,8 +177,7 @@ public class PBSolver extends Solver {
 	 *         is a mine, false means it is safe.
 	 */
 	protected Map<Cell, Boolean> getKnownCells() {
-		IPBSolver pbSolver = SolverFactory.newDefault();
-		pbSolver.reset();
+		solver.reset();
 
 		cells = game.getCells();
 		Map<Cell, Boolean> results = new HashMap<>();
@@ -188,7 +185,7 @@ public class PBSolver extends Solver {
 		List<Cell> sea = getSeaCells();
 
 		try {
-			genConstraints(pbSolver);
+			genConstraints();
 		} catch (ContradictionException e) {
 		}
 
@@ -210,27 +207,27 @@ public class PBSolver extends Solver {
 					lit.push(encodeCellId(current));
 					coeff.push(1);
 					// Safe/Mine
-					atMostConstr = pbSolver.addAtMost(lit, coeff, weight);
-					atLeastConstr = pbSolver.addAtLeast(lit, coeff, weight);
+					atMostConstr = solver.addAtMost(lit, coeff, weight);
+					atLeastConstr = solver.addAtLeast(lit, coeff, weight);
 					// Find if cell is safe or mine
-					if (!pbSolver.isSatisfiable()) {
+					if (!solver.isSatisfiable()) {
 						boolean isMine = weight == 1 ? false : true;
 						results.put(current, isMine);
 						if (atMostConstr != null) {
-							pbSolver.removeConstr(atMostConstr);
+							solver.removeConstr(atMostConstr);
 						}
 						if (atLeastConstr != null) {
-							pbSolver.removeConstr(atLeastConstr);
+							solver.removeConstr(atLeastConstr);
 						}
 						// Break as no need to check if cell is safe,
 						// cell is already proven to be a mine
 						break;
 					}
 					if (atMostConstr != null) {
-						pbSolver.removeConstr(atMostConstr);
+						solver.removeConstr(atMostConstr);
 					}
 					if (atLeastConstr != null) {
-						pbSolver.removeConstr(atLeastConstr);
+						solver.removeConstr(atLeastConstr);
 					}
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
@@ -238,10 +235,10 @@ public class PBSolver extends Solver {
 					boolean isMine = weight == 1 ? false : true;
 					results.put(current, isMine);
 					if (atMostConstr != null) {
-						pbSolver.removeConstr(atMostConstr);
+						solver.removeConstr(atMostConstr);
 					}
 					if (atLeastConstr != null) {
-						pbSolver.removeConstr(atLeastConstr);
+						solver.removeConstr(atLeastConstr);
 					}
 				} catch (TimeoutException te) {
 				}
@@ -261,29 +258,29 @@ public class PBSolver extends Solver {
 					lit.push(encodeCellId(current));
 					coeff.push(1);
 					// Safe/Mine
-					atMostConstr = pbSolver.addAtMost(lit, coeff, weight);
-					atLeastConstr = pbSolver.addAtLeast(lit, coeff, weight);
+					atMostConstr = solver.addAtMost(lit, coeff, weight);
+					atLeastConstr = solver.addAtLeast(lit, coeff, weight);
 					// Find if cell is safe or mine
-					if (!pbSolver.isSatisfiable()) {
+					if (!solver.isSatisfiable()) {
 						boolean isMine = weight == 1 ? false : true;
 						for (Cell c : sea) {
 							results.put(c, isMine);
 						}
 						if (atMostConstr != null) {
-							pbSolver.removeConstr(atMostConstr);
+							solver.removeConstr(atMostConstr);
 						}
 						if (atLeastConstr != null) {
-							pbSolver.removeConstr(atLeastConstr);
+							solver.removeConstr(atLeastConstr);
 						}
 						// Break as no need to check if cell is safe,
 						// cell is already proven to be a mine
 						break;
 					}
 					if (atMostConstr != null) {
-						pbSolver.removeConstr(atMostConstr);
+						solver.removeConstr(atMostConstr);
 					}
 					if (atLeastConstr != null) {
-						pbSolver.removeConstr(atLeastConstr);
+						solver.removeConstr(atLeastConstr);
 					}
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
@@ -291,21 +288,21 @@ public class PBSolver extends Solver {
 					boolean isMine = weight == 1 ? false : true;
 					results.put(current, isMine);
 					if (atMostConstr != null) {
-						pbSolver.removeConstr(atMostConstr);
+						solver.removeConstr(atMostConstr);
 					}
 					if (atLeastConstr != null) {
-						pbSolver.removeConstr(atLeastConstr);
+						solver.removeConstr(atLeastConstr);
 					}
 				} catch (TimeoutException te) {
 				}
 			}
 		}
 
-		pbSolver.reset();
+		solver.reset();
 		if (Thread.interrupted() || !running.get()) {
 			return null;
 		}
-		pbSolver.reset();
+		solver.reset();
 		return results;
 	}
 

@@ -5,11 +5,16 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.sat4j.pb.core.PBSolver;
+import org.sat4j.pb.SolverFactory;
+
 public abstract class Solver {
 
 	protected boolean quiet; // Should the solver make changes to GUI
 	protected boolean madeFirstGuess; // Has a first guess function been called yet
 
+	protected PBSolver solver;
+	
 	protected Minesweeper game;
 	protected Cell[][] cells;
 	protected AtomicBoolean running; // Should the solver be running
@@ -26,6 +31,7 @@ public abstract class Solver {
 		madeFirstGuess = false;
 		this.game = game;
 		cells = game.getCells();
+		solver = SolverFactory.newDefault();
 	}
 
 	/**
@@ -41,6 +47,7 @@ public abstract class Solver {
 		madeFirstGuess = false;
 		this.game = game;
 		cells = game.getCells();
+		solver = SolverFactory.newDefault();
 	}
 
 	/**
@@ -537,5 +544,10 @@ public abstract class Solver {
 			return selectedCell;
 		}
 		return null;
+	}
+
+	public void stopSolver() {
+		solver.stop();
+		solver.reset();
 	}
 }

@@ -9,8 +9,8 @@ public enum Difficulty {
 
     private Difficulty(int width, int height, int noOfMines) {
         this.width = width;
-        this.height = width;
-        this.noOfMines = width;
+        this.height = height;
+        this.noOfMines = noOfMines;
     }
 
 }

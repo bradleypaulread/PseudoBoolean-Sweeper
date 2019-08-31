@@ -445,27 +445,30 @@ public class Minesweeper extends JFrame {
 		diffEasyRb.setEnabled(false);
 		diffEasyRb.addActionListener(e -> {
 			Minesweeper newGame = new Minesweeper(Difficulty.BEGINNER);
-			newGame.copySettings(this);
 			setVisible(false);
 			dispose();
+			newGame.buildGUI();
+			newGame.copySettings(this);
 		});
 		diffRdGroup.add(diffEasyRb);
 		menu.add(diffEasyRb);
 
 		diffMediumRb.addActionListener(e -> {
 			Minesweeper newGame = new Minesweeper(Difficulty.INTERMEDIATE);
-			newGame.copySettings(this);
 			setVisible(false);
 			dispose();
+			newGame.buildGUI();
+			newGame.copySettings(this);
 		});
 		diffRdGroup.add(diffMediumRb);
 		menu.add(diffMediumRb);
 
 		diffHardRb.addActionListener(e -> {
 			Minesweeper newGame = new Minesweeper(Difficulty.EXPERT);
-			newGame.copySettings(this);
 			setVisible(false);
 			dispose();
+			newGame.buildGUI();
+			newGame.copySettings(this);
 		});
 		diffRdGroup.add(diffHardRb);
 
