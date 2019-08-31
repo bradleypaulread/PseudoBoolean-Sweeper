@@ -47,7 +47,7 @@ public class MouseActions implements MouseListener {
 
 			if (game.is_good(x, y) && game.getCell(x, y).isClosed()) {
 				if (e.isControlDown()) {
-					game.getCell(x, y).mark();
+					game.getCell(x, y).setMarked(true);
 				} else {
 					if (!game.getCell(x, y).isFlagged()) {
 						game.decrementMines();

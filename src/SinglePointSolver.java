@@ -3,6 +3,11 @@ import java.util.List;
 
 public class SinglePointSolver extends Solver {
 
+    /**
+     * Constructor for SinglePointSolver.
+     * 
+     * @param game the game that the solver is going to perform moves on.
+     */
     public SinglePointSolver(Minesweeper game) {
         super(game);
     }
@@ -18,7 +23,7 @@ public class SinglePointSolver extends Solver {
                         if (isSinglePointSafe(current)) {
                             for (Cell c : getSinglePointSafe(current)) {
                                 if (c.isBlank() && !c.isHint()) {
-                                    c.setSafeHint();
+                                    c.setSafeHint(true);
                                     game.getHintCells().add(c);
                                     game.refresh();
                                     return true;
@@ -28,7 +33,7 @@ public class SinglePointSolver extends Solver {
                         if (isSinglePointMine(current)) {
                             for (Cell c : getSinglePointMine(current)) {
                                 if (c.isBlank() && !c.isHint()) {
-                                    c.setMineHint();
+                                    c.setMineHint(true);
                                     game.getHintCells().add(c);
                                     game.refresh();
                                     return true;
@@ -67,7 +72,7 @@ public class SinglePointSolver extends Solver {
                         if (isSinglePointMine(current)) {
                             for (Cell c : getSinglePointMine(current)) {
                                 if (c.isBlank()) {
-                                    c.flag();
+                                    c.setFlagged(true);
                                     game.decrementMines();
                                     if (!quiet) {
                                         game.refresh();
@@ -94,16 +99,43 @@ public class SinglePointSolver extends Solver {
             ;
     }
 
+    /**
+     * Checks if the cell is safe using the single point method. If the cell's
+     * number is equal to the number of flagged neighbours then the cell is classed
+     * as safe.
+     * 
+     * @param cell the cell to check using single point.
+     * 
+     * @return if the cell is safe. True if it matches single point and is safe,
+     *         false otherwise.
+     */
     private boolean isSinglePointSafe(Cell cell) {
         int flagsNo = calcFlaggedNeighbours(cell.getX(), cell.getY());
         return cell.getNumber() == flagsNo;
     }
 
+    /**
+     * Checks if the cell is a mine using the single point method. If the cell's
+     * number is equal to the number of closed neighbours then the cell a mine.
+     * 
+     * @param cell the cell to check using single point.
+     * 
+     * @return if the cell is a mine. True if it matches single point and is a mine,
+     *         false otherwise.
+     */
     private boolean isSinglePointMine(Cell cell) {
         int closedNo = calcClosedNeighbours(cell.getX(), cell.getY());
         return cell.getNumber() == closedNo;
     }
 
+    /**
+     * Fetch a list of all the safe cells surround a cell. Should only be called
+     * after {@link #isSinglePointSafe(Cell) isSinglePointSafe} is checked.
+     * 
+     * @param cell the cell to fetch the safe surround cells.
+     * 
+     * @return the list of all safe cells surrounding the passed cell.
+     */
     private List<Cell> getSinglePointSafe(Cell cell) {
         List<Cell> safeCells = new ArrayList<>();
         // No. of flagged neighbours
@@ -118,6 +150,14 @@ public class SinglePointSolver extends Solver {
         return safeCells;
     }
 
+    /**
+     * Fetch a list of all the mines surrounding a cell. Should only be called
+     * after {@link #isSinglePointMine(Cell) isSinglePointMine} is checked.
+     * 
+     * @param cell the cell to fetch the surrounding mines.
+     * 
+     * @return the list of all surrounding mines of the passed cell.
+     */
     private List<Cell> getSinglePointMine(Cell cell) {
         List<Cell> mineCells = new ArrayList<>();
         // No. of closed neighbours

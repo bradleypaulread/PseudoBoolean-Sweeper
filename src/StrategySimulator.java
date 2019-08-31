@@ -240,7 +240,7 @@ public class StrategySimulator {
 					MineField mineField = new Gson().fromJson(fieldJson, MineField.class);
 					game = new Minesweeper(diff, mineField);
 					sp = new SinglePointSolver(game);
-					sp.setQuiet();
+					sp.setQuiet(true);
 					startTime = System.nanoTime();
 					opening = sp.makeFirstGuess();
 					while (!opening && !game.isGameOver()) {
@@ -252,7 +252,7 @@ public class StrategySimulator {
 						MineField mineField = new Gson().fromJson(fieldJson, MineField.class);
 						game = new Minesweeper(diff, mineField);
 						sp = new SinglePointSolver(game);
-						sp.setQuiet();
+						sp.setQuiet(true);
 						startTime = System.nanoTime();
 						sp.probeRandomCell();
 					} while (game.isGameOver());
@@ -643,7 +643,7 @@ public class StrategySimulator {
 				}
 				Minesweeper game = new Minesweeper(d, mf);
 				SinglePointSolver solver = new SinglePointSolver(game);
-				solver.setQuiet();
+				solver.setQuiet(true);
 				boolean opening = solver.makeFirstGuessCorner();
 				if (game.isGameOver() && game.getNoOfMoves() == 1) {
 					continue;
@@ -676,7 +676,7 @@ public class StrategySimulator {
 				}
 				Minesweeper game = new Minesweeper(d, mf);
 				SinglePointSolver solver = new SinglePointSolver(game);
-				solver.setQuiet();
+				solver.setQuiet(true);
 				boolean opening = solver.makeFirstGuessEdge();
 				if (game.isGameOver() && game.getNoOfMoves() == 1) {
 					continue;
@@ -709,7 +709,7 @@ public class StrategySimulator {
 				}
 				Minesweeper game = new Minesweeper(d, mf);
 				SinglePointSolver solver = new SinglePointSolver(game);
-				solver.setQuiet();
+				solver.setQuiet(true);
 				boolean opening = solver.makeFirstGuessCentre();
 				if (game.isGameOver() && game.getNoOfMoves() == 1) {
 					continue;

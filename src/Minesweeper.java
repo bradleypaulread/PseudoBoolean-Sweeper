@@ -18,8 +18,6 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.Reader;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -44,7 +42,6 @@ import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -97,11 +94,14 @@ public class Minesweeper extends JFrame {
 	private Board board; // Board instance, where cells appearance is processed
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves; // Number if moves made by the player.
-	private int currentGameTime;
-	private Timer gameTimer;
+	private int currentGameTime;	// The current game elapsed time (in seconds)
+	private Timer gameTimer;	// Timer that ticks every second
 	private int minesLeft;
 	private boolean gameWon;
-	private boolean opening;
+
+	// If an opening has been found in the game yet (a cell with number 0)
+	// used for the first guess function in the file menu
+	private boolean opening;	
 
 	/**
 	 * Default constructor for Minesweeper class. Initiates the board to beginner
@@ -645,7 +645,7 @@ public class Minesweeper extends JFrame {
 		int cellNum = mineField.uncover(y, x);
 
 		cells[x][y].setNumber(cellNum);
-		cells[x][y].open();
+		cells[x][y].setOpen(true);
 
 		// If there are 0 neighbouring mines then recursively open neighbouring
 		// cells
@@ -657,7 +657,7 @@ public class Minesweeper extends JFrame {
 			clearNeighbours(x, y);
 			movesLbl.setText("Moves: " + Integer.toString(moves));
 		} else if (cellNum == -1) { // If cell is a mine (-1), game is lost
-			cells[x][y].setFail();
+			cells[x][y].setFail(true);
 			endGame();
 			setDetail("Game Lost!!! :( . Lost on Cell " + cells[x][y]);
 			return;
@@ -669,7 +669,7 @@ public class Minesweeper extends JFrame {
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
 					if (cells[i][j].isBlank()) {
-						cells[i][j].flag();
+						cells[i][j].setFlagged(true);
 						decrementMines();
 					}
 				}
@@ -694,13 +694,14 @@ public class Minesweeper extends JFrame {
 			return;
 		}
 		moves++;
+		
 		// How many mines are around the cell
 		// x and y has to be reversed as MineField.java takes parameters
 		// (height, width) not (width, height).
 		int cellNum = mineField.uncover(y, x);
 
 		cells[x][y].setNumber(cellNum);
-		cells[x][y].open();
+		cells[x][y].setOpen(true);
 
 		// If there are 0 neighbouring mines then recursively open neighbouring
 		// cells
@@ -837,7 +838,7 @@ public class Minesweeper extends JFrame {
 					// (width, height)
 					int cellNum = mineField.uncover(j, i);
 					current.setNumber(cellNum);
-					current.open();
+					current.setOpen(true);
 				}
 			}
 		}
@@ -964,11 +965,11 @@ public class Minesweeper extends JFrame {
 		return mineField;
 	}
 
-	public int getx() {
+	public int getWidth() {
 		return width;
 	}
 
-	public int gety() {
+	public int getHeight() {
 		return height;
 	}
 

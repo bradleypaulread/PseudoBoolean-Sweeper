@@ -19,19 +19,38 @@ import org.apache.commons.math3.fraction.BigFraction;
 
 public class ProbabilitySolver extends Solver {
 
+    /**
+     * Constructor for ProbabilitySolver.
+     * 
+     * @param game the game that the solver is going to perform moves on.
+     */
     public ProbabilitySolver(Minesweeper game) {
         super(game);
     }
 
+    /**
+     * Constructor for ProbabilitySolver. The solver can be stopped by changing the
+     * passed running boolean to false.
+     * 
+     * @param game    the game that the solver is going to perform moves on.
+     * @param running the value that controls whether the solver should
+     *                continue/stop solving.
+     */
     public ProbabilitySolver(Minesweeper game, AtomicBoolean running) {
         super(game, running);
     }
 
+    /**
+     * Perform the best move currently found on the board.
+     */
     private void makeBestMove() {
+        // Get a mapping of each cell to is probabiltiy of being a mine
         Map<Cell, BigFraction> probs = calcAllCellsProb();
         if (probs == null) {
             return;
         }
+        // Get the cell with the best probabilitiy (takes strategy into account if more
+        // than 1 cell has the lowest probabitliy).
         Cell bestCell = getBestMove(probs);
         if (bestCell == null) {
             return;
@@ -59,7 +78,7 @@ public class ProbabilitySolver extends Solver {
         if (probs.get(bestProbCells.get(0)).doubleValue() == 0.0) {
             for (Cell c : bestProbCells) {
                 if (!c.isSafeHint()) {
-                    c.setSafeHint();
+                    c.setSafeHint(true);
                     game.getHintCells().add(c);
                     game.refresh();
                     return true;
@@ -94,6 +113,15 @@ public class ProbabilitySolver extends Solver {
             ;
     }
 
+    /**
+     * Returns the cell with the best move. If more than one cell has the lowest
+     * probabiltiy of being a mine then {@link #getBestStratCell(List, Map)
+     * getBestStratCell} is then used.
+     * 
+     * @param probs a mapping of cells to their probabilties.
+     * 
+     * @return the cell that would be the best move to make.
+     */
     private Cell getBestMove(Map<Cell, BigFraction> probs) {
         List<Cell> cells = getBestProbCells(probs);
         if (cells == null) {
@@ -109,11 +137,15 @@ public class ProbabilitySolver extends Solver {
         return bestCell;
     }
 
-    @SuppressWarnings("unused")
-    private Cell getBestMove() {
-        return getBestMove(calcAllCellsProb());
-    }
-
+    /**
+     * Calculates each cells probabiltiy of being a mine. Esentially iterates
+     * through all shore solutions, counting the occurances of each cell being a
+     * mine and divides this by the total number of solutions. Uses combinatorics to
+     * smallen the problem size by removing the need to include sea cells in the
+     * problem set.
+     * 
+     * @return a mapping of cells to the probability value of being a mine.
+     */
     private Map<Cell, BigFraction> calcAllCellsProb() {
         IPBSolver pbSolver = SolverFactory.newDefault();
         cells = game.getCells();
@@ -221,6 +253,9 @@ public class ProbabilitySolver extends Solver {
         return probs;
     }
 
+    /**
+     * Display the probabiltiies of cells to the GUI.
+     */
     public void displayProb() {
         Map<Cell, BigFraction> probs = calcAllCellsProb();
         if (probs == null) {
@@ -240,6 +275,13 @@ public class ProbabilitySolver extends Solver {
         game.refresh();
     }
 
+    /**
+     * Fetch a list of the cells with the lowest probability or being a mine.
+     * 
+     * @param probs a mapping of cells to their probabilitiy of being a mine.
+     * 
+     * @return a list of the cell(s) with the lowst probabilitiy of being a mine.
+     */
     private List<Cell> getBestProbCells(Map<Cell, BigFraction> probs) {
         List<Cell> cellsWithBestProb = new ArrayList<>();
 
@@ -266,27 +308,45 @@ public class ProbabilitySolver extends Solver {
         return cellsWithBestProb;
     }
 
-     private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
-         if (bestProbCells.isEmpty()) {
-             return null;
-         }
-         List<Cell> bestCells = new ArrayList<>();
-         int lowestClosed = 9;
-         for (Cell c : bestProbCells) {
-             List<Cell> neighbours = getNeighbours(c);
-             neighbours.removeIf(c2 -> c2.isOpen() || c2.isFlagged());
-             int closedCount = neighbours.size();
-             if (closedCount < lowestClosed) {
-                 lowestClosed = closedCount;
-                 bestCells.clear();
-                 bestCells.add(c);
-             } else if (closedCount == lowestClosed) {
-                 bestCells.add(c);
-             }
-         }
-         return bestCells;
-     }
+    /**
+     * Fetch the cells that have the best strategic value from a given list.
+     * 
+     * @param bestProbCells list of cells that have the lowest probabilities
+     * @param probs         a mapping of cells to their probabilitiy of being a
+     *                      mine.
+     * 
+     * @return a list of cells that have the best strategic value.
+     */
+    private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
+        if (bestProbCells.isEmpty()) {
+            return null;
+        }
+        List<Cell> bestCells = new ArrayList<>();
+        int lowestClosed = 9;
+        for (Cell c : bestProbCells) {
+            List<Cell> neighbours = getNeighbours(c);
+            neighbours.removeIf(c2 -> c2.isOpen() || c2.isFlagged());
+            int closedCount = neighbours.size();
+            if (closedCount < lowestClosed) {
+                lowestClosed = closedCount;
+                bestCells.clear();
+                bestCells.add(c);
+            } else if (closedCount == lowestClosed) {
+                bestCells.add(c);
+            }
+        }
+        return bestCells;
+    }
 
+    /**
+     * Fetch a single cell that has the best strategic value from a given list.
+     * 
+     * @param bestProbCells list of cells that have the lowest probabilities
+     * @param probs         a mapping of cells to their probabilitiy of being a
+     *                      mine.
+     * 
+     * @return a cell that has the best strategic value.
+     */
     private Cell getBestStratCell(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
         List<Cell> bestCells = getBestStratCells(bestProbCells, probs);
         if (bestCells.size() > 1) {
@@ -296,6 +356,14 @@ public class ProbabilitySolver extends Solver {
         }
     }
 
+    /**
+     * Generates the binary constraints for the problem set.
+     * 
+     * @param pbSolver the solver to add the constraints to.
+     * 
+     * @throws ContradictionException when a contraint is added that directly
+     *                                contradicts an already existing constraint.
+     */
     private void genBinaryConstraints(IPBSolver pbSolver) throws ContradictionException {
         cells = game.getCells();
         List<Cell> closedShore = getClosedShoreCells();

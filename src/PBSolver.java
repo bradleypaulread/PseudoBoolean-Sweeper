@@ -13,14 +13,34 @@ import org.sat4j.specs.TimeoutException;
 
 public class PBSolver extends Solver {
 
+	/**
+	 * Constructor for PBSolver.
+	 * 
+	 * @param game the game that the solver is going to perform moves on.
+	 */
 	public PBSolver(Minesweeper game) {
 		super(game);
 	}
 
+	/**
+	 * Constructor for PBSolver. The solver can be stopped by changing the
+	 * passed running boolean to false.
+	 * 
+	 * @param game    the game that the solver is going to perform moves on.
+	 * @param running the value that controls whether the solver should
+	 *                continue/stop solving.
+	 */
 	public PBSolver(Minesweeper game, AtomicBoolean running) {
 		super(game, running);
 	}
 
+	/**
+	 * Generates the pseudo-boolean constraints from the board.
+	 * 
+	 * @param solver the solver to add the constraints to
+	 * @throws ContradictionException when a contraint is added that directly
+	 *                                contradicts an already existing constraint.
+	 */
 	protected void genConstraints(IPBSolver solver) throws ContradictionException {
 
 		IVecInt lits = new VecInt();
@@ -67,10 +87,16 @@ public class PBSolver extends Solver {
 
 	public boolean hint() {
 		cells = game.getCells();
+
+		// Retrieve all the cells that the solver has guarenteed the value of
 		Map<Cell, Boolean> known = getKnownCells();
+
+		// if the solver has been told to stop running
 		if (known == null || !running.get()) {
 			return false;
 		}
+
+		// For every found cell
 		for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
 			Cell current = pair.getKey();
 			boolean mine = pair.getValue();
@@ -80,14 +106,14 @@ public class PBSolver extends Solver {
 			}
 			if (mine) {
 				if (current.isBlank()) {
-					current.setMineHint();
+					current.setMineHint(true);
 					game.getHintCells().add(current);
 					game.refresh();
 					return true;
 				}
 			} else {
 				if (current.isBlank()) {
-					current.setSafeHint();
+					current.setSafeHint(true);
 					game.getHintCells().add(current);
 					game.refresh();
 					return true;
@@ -110,7 +136,7 @@ public class PBSolver extends Solver {
 			boolean mine = pair.getValue();
 			if (mine) {
 				if (current.isClosed() && !current.isFlagged()) {
-					current.flag();
+					current.setFlagged(true);
 					game.decrementMines();
 					String detail = "Flagging " + current + " as Cell is a Guarenteed Mine";
 					game.setDetail(detail);
@@ -144,6 +170,14 @@ public class PBSolver extends Solver {
 			;
 	}
 
+	/**
+	 * Runs through the problem set and finds known cells. First adds contraint that
+	 * cell is a safe, if the problem is UNSAT then cell is a mine. Secondly adds
+	 * contraint that cell is a mine, if the problem is UNSAT then cell is safe.
+	 * 
+	 * @return a mapping of cells to their found boolean values. True means the cell
+	 *         is a mine, false means it is safe.
+	 */
 	protected Map<Cell, Boolean> getKnownCells() {
 		IPBSolver pbSolver = SolverFactory.newDefault();
 		pbSolver.reset();
@@ -214,6 +248,7 @@ public class PBSolver extends Solver {
 			}
 		}
 
+		// Test if all the sea cells are a mine or are all safe
 		if (!sea.isEmpty()) {
 			Cell current = sea.get(0);
 			for (int weight = 0; weight <= 1; weight++) {
@@ -275,130 +310,55 @@ public class PBSolver extends Solver {
 	}
 
 	/*
-	Code to retrieve known shore cells using improved PB constraint
-	    algorithm. Still has issues.
-	private Map<Cell, Boolean> getKnownCells() {
-		IPBSolver pbSolver = SolverFactory.newDefault();
-		cells = game.getCells();
-		Map<Cell, Boolean> results = new HashMap<>();
-		List<Cell> closedShore = getShoreClosedCells();
-		List<Cell> seaCells = getSeaCells();
-		try {
-			genConstraints(pbSolver);
-		} catch (ContradictionException e) {
-		}
-		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
-			Cell current = closedShore.get(i);
-			// Generate the known constraints on the board
-			// Find if cell safe (weight=0) or mine (weight=1)
-			IVecInt lit = new VecInt();
-			IVecInt coeff = new VecInt();
-			int cellWeight = 0;
-			IConstr constrShoreCell1 = null;
-			IConstr constrShoreCell2 = null;
-			try {
-				// Create literal for current cell
-				lit.push(encodeCellId(current));
-				coeff.push(1);
-				// Safe/Mine
-				constrShoreCell1 = pbSolver.addAtMost(lit, coeff, cellWeight);
-				constrShoreCell2 = pbSolver.addAtLeast(lit, coeff, cellWeight);
-				// printConstraint(lit, coeff, "=", cellWeight);
-				// Find if cell is a mine
-				if (!pbSolver.isSatisfiable()) {
-					boolean isMine = true;
-					results.put(current, isMine);
-					if (constrShoreCell1 != null) {
-						pbSolver.removeConstr(constrShoreCell1);
-					}
-					if (constrShoreCell2 != null) {
-						pbSolver.removeConstr(constrShoreCell2);
-					}
-					// Continue to next shore cell as no need to check if cell is also safe
-					continue;
-				}
-				if (constrShoreCell1 != null) {
-					pbSolver.removeConstr(constrShoreCell1);
-				}
-				if (constrShoreCell2 != null) {
-					pbSolver.removeConstr(constrShoreCell2);
-				}
-				cellWeight = 1;
-				constrShoreCell1 = pbSolver.addAtLeast(lit, coeff, cellWeight);
-				constrShoreCell2 = pbSolver.addAtMost(lit, coeff, cellWeight);
-				// printConstraint(lit, coeff, "=", cellWeight);
-				// If cell is safe
-				if (!pbSolver.isSatisfiable()) {
-					boolean isMine = false;
-					results.put(current, isMine);
-				}
-				if (constrShoreCell1 != null) {
-					pbSolver.removeConstr(constrShoreCell1);
-				}
-				if (constrShoreCell2 != null) {
-					pbSolver.removeConstr(constrShoreCell2);
-				}
-			} catch (ContradictionException ce) {
-				// Contradiction Exception is thrown when the tested cell is
-				// already known to be safe/a mine.
-				boolean isMine = cellWeight == 0 ? true : false;
-				results.put(current, isMine);
-				if (constrShoreCell1 != null) {
-					pbSolver.removeConstr(constrShoreCell1);
-				}
-				if (constrShoreCell2 != null) {
-					pbSolver.removeConstr(constrShoreCell2);
-				}
-			} catch (TimeoutException te) {
-				pbSolver.reset();
-			}
-		}
-		if (Thread.interrupted() || !running.get()) {
-			pbSolver.reset();
-			return null;
-		}
-		pbSolver.reset();
-		if (!seaCells.isEmpty()) {
-			IVecInt lits = new VecInt();
-			IVecInt coeffs = new VecInt();
-			try {
-				genBinaryConstraints(pbSolver);
-				// Generate the known constraints on the board
-				int noOfLits = Integer.toBinaryString(seaCells.size()).length();
-				for (int i = 0; i < noOfLits; i++) {
-					lits.push(encodeLit(i));
-					coeffs.push((int) Math.pow(2, i));
-				}
-				pbSolver.addAtMost(lits, coeffs, seaCells.size() - 1);
-				// Find if cell is safe or mine
-				if (!pbSolver.isSatisfiable()) {
-					boolean isMine = true;
-					for (Cell c : seaCells) {
-						results.put(c, isMine);
-					}
-				}
-				pbSolver.reset();
-				genBinaryConstraints(pbSolver);
-				pbSolver.addAtLeast(lits, coeffs, 1);
-				// Find if cell is safe or mine
-				if (!pbSolver.isSatisfiable()) {
-					boolean isMine = false;
-					for (Cell c : seaCells) {
-						results.put(c, isMine);
-					}
-				}
-				pbSolver.reset();
-			} catch (ContradictionException ce) {
-			} catch (TimeoutException te) {
-				pbSolver.reset();
-			}
-		}
-		pbSolver.reset();
-		if (Thread.interrupted() || !running.get()) {
-			return null;
-		}
-		return results;
-	}
-	*/
+	 * Code to retrieve known shore cells using improved PB constraint algorithm.
+	 * Still has issues. private Map<Cell, Boolean> getKnownCells() { IPBSolver
+	 * pbSolver = SolverFactory.newDefault(); cells = game.getCells(); Map<Cell,
+	 * Boolean> results = new HashMap<>(); List<Cell> closedShore =
+	 * getShoreClosedCells(); List<Cell> seaCells = getSeaCells(); try {
+	 * genConstraints(pbSolver); } catch (ContradictionException e) { } for (int i =
+	 * 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
+	 * Cell current = closedShore.get(i); // Generate the known constraints on the
+	 * board // Find if cell safe (weight=0) or mine (weight=1) IVecInt lit = new
+	 * VecInt(); IVecInt coeff = new VecInt(); int cellWeight = 0; IConstr
+	 * constrShoreCell1 = null; IConstr constrShoreCell2 = null; try { // Create
+	 * literal for current cell lit.push(encodeCellId(current)); coeff.push(1); //
+	 * Safe/Mine constrShoreCell1 = pbSolver.addAtMost(lit, coeff, cellWeight);
+	 * constrShoreCell2 = pbSolver.addAtLeast(lit, coeff, cellWeight); //
+	 * printConstraint(lit, coeff, "=", cellWeight); // Find if cell is a mine if
+	 * (!pbSolver.isSatisfiable()) { boolean isMine = true; results.put(current,
+	 * isMine); if (constrShoreCell1 != null) {
+	 * pbSolver.removeConstr(constrShoreCell1); } if (constrShoreCell2 != null) {
+	 * pbSolver.removeConstr(constrShoreCell2); } // Continue to next shore cell as
+	 * no need to check if cell is also safe continue; } if (constrShoreCell1 !=
+	 * null) { pbSolver.removeConstr(constrShoreCell1); } if (constrShoreCell2 !=
+	 * null) { pbSolver.removeConstr(constrShoreCell2); } cellWeight = 1;
+	 * constrShoreCell1 = pbSolver.addAtLeast(lit, coeff, cellWeight);
+	 * constrShoreCell2 = pbSolver.addAtMost(lit, coeff, cellWeight); //
+	 * printConstraint(lit, coeff, "=", cellWeight); // If cell is safe if
+	 * (!pbSolver.isSatisfiable()) { boolean isMine = false; results.put(current,
+	 * isMine); } if (constrShoreCell1 != null) {
+	 * pbSolver.removeConstr(constrShoreCell1); } if (constrShoreCell2 != null) {
+	 * pbSolver.removeConstr(constrShoreCell2); } } catch (ContradictionException
+	 * ce) { // Contradiction Exception is thrown when the tested cell is // already
+	 * known to be safe/a mine. boolean isMine = cellWeight == 0 ? true : false;
+	 * results.put(current, isMine); if (constrShoreCell1 != null) {
+	 * pbSolver.removeConstr(constrShoreCell1); } if (constrShoreCell2 != null) {
+	 * pbSolver.removeConstr(constrShoreCell2); } } catch (TimeoutException te) {
+	 * pbSolver.reset(); } } if (Thread.interrupted() || !running.get()) {
+	 * pbSolver.reset(); return null; } pbSolver.reset(); if (!seaCells.isEmpty()) {
+	 * IVecInt lits = new VecInt(); IVecInt coeffs = new VecInt(); try {
+	 * genBinaryConstraints(pbSolver); // Generate the known constraints on the
+	 * board int noOfLits = Integer.toBinaryString(seaCells.size()).length(); for
+	 * (int i = 0; i < noOfLits; i++) { lits.push(encodeLit(i)); coeffs.push((int)
+	 * Math.pow(2, i)); } pbSolver.addAtMost(lits, coeffs, seaCells.size() - 1); //
+	 * Find if cell is safe or mine if (!pbSolver.isSatisfiable()) { boolean isMine
+	 * = true; for (Cell c : seaCells) { results.put(c, isMine); } }
+	 * pbSolver.reset(); genBinaryConstraints(pbSolver); pbSolver.addAtLeast(lits,
+	 * coeffs, 1); // Find if cell is safe or mine if (!pbSolver.isSatisfiable()) {
+	 * boolean isMine = false; for (Cell c : seaCells) { results.put(c, isMine); } }
+	 * pbSolver.reset(); } catch (ContradictionException ce) { } catch
+	 * (TimeoutException te) { pbSolver.reset(); } } pbSolver.reset(); if
+	 * (Thread.interrupted() || !running.get()) { return null; } return results; }
+	 */
 
 }

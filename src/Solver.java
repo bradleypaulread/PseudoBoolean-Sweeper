@@ -7,13 +7,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Solver {
 
-	protected boolean quiet;
-	protected boolean madeFirstGuess;
+	protected boolean quiet; // Should the solver make changes to GUI
+	protected boolean madeFirstGuess; // Has a first guess function been called yet
 
 	protected Minesweeper game;
 	protected Cell[][] cells;
-	protected AtomicBoolean running;
+	protected AtomicBoolean running; // Should the solver be running
 
+	/**
+	 * Constructor for solver. Using this constructor means that the solver can not
+	 * be stopped.
+	 * 
+     * @param game the game that the solver is going to perform moves on.
+	 */
 	public Solver(Minesweeper game) {
 		running = new AtomicBoolean(true);
 		quiet = false;
@@ -22,6 +28,13 @@ public abstract class Solver {
 		cells = game.getCells();
 	}
 
+	/**
+	 * Constuctor for sovler. The solver can be stopped by changing the passed
+	 * running boolean to false.
+	 * 
+     * @param game the game that the solver is going to perform moves on.
+	 * @param running the value that controls whether the solver should continue/stop solving.
+	 */
 	public Solver(Minesweeper game, AtomicBoolean running) {
 		this.running = running;
 		quiet = false;
@@ -33,37 +46,38 @@ public abstract class Solver {
 	/**
 	 * Highlights a safe/recommended move to the user.
 	 * 
-	 * @return True if a hint (one that has not already been hinted)
-	 * is found. False if no hint is found.
+	 * @return True if a hint (one that has not already been hinted) is found. False
+	 *         if no hint or futher hints are found.
 	 */
 	public abstract boolean hint();
 
 	/**
 	 * Probe a safe/recommended cell.
 	 * 
-	 * @return True if a cell is found and probed. False if no
-	 * cell is found.
+	 * @return True if a cell is found and probed. False if no safe cell is found
+	 *         and probed.
 	 */
 	public abstract boolean assist();
 
 	/**
-	 * Probe all safe/recommended cells present on the board.
-	 * Stop when no more safe/recommended moves can be found.
+	 * Probe all safe/recommended cells present on the board. Stop when no more
+	 * safe/recommended moves can be found. Basically repeatably calls the
+	 * {@link #assist() assist} method.
 	 */
 	public abstract void solve();
 
 	/**
-	 * Return the cell on the board that has the best probability
-	 * of revealing an opening. Calculations can be found at 
-	 *   "http://datagenetics.com/blog/june12012/index.html".
-	 * Order of Logic: Corner cell, else edge cell, else centre cell.
+	 * Return the cell on the board that has the best probability of revealing an
+	 * opening. Calculations can be found at
+	 * "http://datagenetics.com/blog/june12012/index.html". Order of Logic: Corner
+	 * cell, else edge cell, else centre cell.
 	 * 
-	 * @return Cell that has best chance of revealing an opening
-	 * (a cell with number 0).
+	 * @return Cell that has best chance of revealing an opening (a cell with number
+	 *         0).
 	 */
 	public Cell getFirstGuess() {
 		cells = game.getCells();
-		
+
 		Cell cellToProbe;
 		List<Cell> cornerCells = getClosedCornerCells();
 
@@ -77,16 +91,16 @@ public abstract class Solver {
 		} else {
 			cellToProbe = getRandomCell(cornerCells);
 		}
-		
+
 		return cellToProbe;
 	}
 
 	/**
-	 * Probe the cell with best best probability
-	 * of revealing an opening. See {@link #getFirstGuess()}.
+	 * Probe the cell with best best probability of revealing an opening. See
+	 * {@link #getFirstGuess()}.
 	 * 
-	 * @return True if an opening was found or if an opening has
-	 * previously been found. False if no opening was found.
+	 * @return True if an opening was found or if an opening has previously been
+	 *         found. False if no opening was found.
 	 */
 	public boolean makeFirstGuess() {
 		if (game.isGameOver()) {
@@ -117,8 +131,8 @@ public abstract class Solver {
 	/**
 	 * Probe a corner cell. Intended to be used when performing simulations.
 	 * 
-	 * @return True if a corner cell is probed and revealed
-	 * an opening. False otherwise.
+	 * @return True if a corner cell is probed and revealed an opening (a cell with
+	 *         number 0). False otherwise.
 	 */
 	public boolean makeFirstGuessCorner() {
 		if (game.isGameOver()) {
@@ -129,7 +143,7 @@ public abstract class Solver {
 		}
 		cells = game.getCells();
 		List<Cell> cornerCells = getClosedCornerCells();
-		
+
 		int openCellsCount = getLandCells().size();
 
 		Cell cellToProbe = getRandomCell(cornerCells);
@@ -145,8 +159,8 @@ public abstract class Solver {
 	/**
 	 * Probe an edge cell. Intended to be used when performing simulations.
 	 * 
-	 * @return True if an edge cell is probed and revealed
-	 * an opening. False otherwise.
+	 * @return True if an edge cell is probed and revealed an opening (a cell with
+	 *         number 0). False otherwise.
 	 */
 	public boolean makeFirstGuessEdge() {
 		if (game.isGameOver()) {
@@ -157,7 +171,7 @@ public abstract class Solver {
 		}
 		cells = game.getCells();
 		List<Cell> edgeCells = getClosedEdgeCells();
-		
+
 		int openCellsCount = getLandCells().size();
 
 		Cell cellToProbe = getRandomCell(edgeCells);
@@ -169,6 +183,12 @@ public abstract class Solver {
 		return foundOpening;
 	}
 
+	/**
+	 * Probe an centre cell. Intended to be used when performing simulations.
+	 * 
+	 * @return True if an centre cell is probed and revealed an opening (a cell with
+	 *         number 0). False otherwise.
+	 */
 	public boolean makeFirstGuessCentre() {
 		if (game.isGameOver()) {
 			return false;
@@ -178,7 +198,7 @@ public abstract class Solver {
 		}
 		cells = game.getCells();
 		List<Cell> centreCells = getClosedCentreCells();
-		
+
 		int openCellsCount = getLandCells().size();
 
 		Cell cellToProbe = getRandomCell(centreCells);
@@ -190,21 +210,32 @@ public abstract class Solver {
 		return foundOpening;
 	}
 
+	/**
+	 * Get a list of all closed centre cells. Note: a centre cell is a cell that
+	 * does not touch any of the edges of the board.
+	 * 
+	 * @return a list of all closed centre cells.
+	 */
 	private List<Cell> getClosedCentreCells() {
 		int width = cells.length;
 		int height = cells[0].length;
 		List<Cell> centreCells = new ArrayList<>();
-		for(int i = 1;i<width-1;i++) {
-			for (int j = 1; j < height-1; j++) {
+		for (int i = 1; i < width - 1; i++) {
+			for (int j = 1; j < height - 1; j++) {
 				Cell c = cells[i][j];
 				if (c.isClosed()) {
 					centreCells.add(c);
 				}
 			}
 		}
-		return centreCells;		
+		return centreCells;
 	}
 
+	/**
+	 * Get a list of all closed corner cells.
+	 * 
+	 * @return a list of all the closed corner cells.
+	 */
 	private List<Cell> getClosedCornerCells() {
 		int width = cells.length;
 		int height = cells[0].length;
@@ -224,12 +255,18 @@ public abstract class Solver {
 		return cornerCells;
 	}
 
+	/**
+	 * Get a list of all closed edge cells. Note: an edge cell is a cell that is on
+	 * the border of the board. DOES NOT INCLUDE CORNER CELLS.
+	 * 
+	 * @return a list of all the closed edge cells.
+	 */
 	public List<Cell> getClosedEdgeCells() {
 		cells = game.getCells();
 		List<Cell> borderCells = new ArrayList<>();
 		int width = cells.length;
 		int height = cells[0].length;
-		for (int i = 1; i < width-1; i++) {
+		for (int i = 1; i < width - 1; i++) {
 			Cell c = cells[i][0];
 			if (c.isClosed()) {
 				borderCells.add(c);
@@ -239,7 +276,7 @@ public abstract class Solver {
 				borderCells.add(c);
 			}
 		}
-		for (int i = 1; i < height-1; i++) {
+		for (int i = 1; i < height - 1; i++) {
 			Cell c = cells[0][i];
 			if (c.isClosed()) {
 				borderCells.add(c);
@@ -283,6 +320,13 @@ public abstract class Solver {
 		return cells[x][y];
 	}
 
+	/**
+	 * Encodes a literal so that it does not colide with any cell literals.
+	 * 
+	 * @param i the ith literal wanting to be encoded.
+	 * 
+	 * @return an encoded literal.
+	 */
 	protected int encodeLit(int i) {
 		return (cells[0].length * cells.length) + cells.length + i;
 	}
@@ -298,10 +342,25 @@ public abstract class Solver {
 		return cells[x][y];
 	}
 
-	public List<Cell> getNeighbours(Cell c) {
-		return getNeighbours(c.getX(), c.getY());
+	/**
+	 * Return the neighbouring cells around a cell.
+	 * 
+	 * @param cell the cell whoses neighbours will be returned.
+	 * 
+	 * @return a list of the neighbouring cells of the passed cell.
+	 */
+	public List<Cell> getNeighbours(Cell cell) {
+		return getNeighbours(cell.getX(), cell.getY());
 	}
 
+	/**
+	 * Return the neighbouring cells around a cell.
+	 * 
+	 * @param x the cell's X coord whoses neighbours will be returned.
+	 * @param y the cell's Y coord whoses neighbours will be returned.]
+	 * 
+	 * @return a list of the neighbouring cells of the passed cell.
+	 */
 	public List<Cell> getNeighbours(int x, int y) {
 		cells = game.getCells();
 		List<Cell> neighbours = new ArrayList<Cell>();
@@ -315,6 +374,12 @@ public abstract class Solver {
 		return neighbours;
 	}
 
+	/**
+	 * Return a list of all the games land cells. Note: a land cell is a cell that
+	 * has been probed (is open).
+	 * 
+	 * @return a list of cells that are classed as land cells.
+	 */
 	public List<Cell> getLandCells() {
 		List<Cell> landCells = new ArrayList<>();
 		for (Cell col[] : cells) {
@@ -327,6 +392,12 @@ public abstract class Solver {
 		return landCells;
 	}
 
+	/**
+	 * Return a list of all the games sea cells. Note: a sea cell is a cell that has
+	 * not been probed and does not touch an open cell.
+	 * 
+	 * @return a list of cells that are classed as sea cells.
+	 */
 	public List<Cell> getSeaCells() {
 		List<Cell> sea = new ArrayList<>();
 		Set<Cell> shoreClosed = new HashSet<>(getClosedShoreCells());
@@ -341,6 +412,13 @@ public abstract class Solver {
 		return sea;
 	}
 
+	/**
+	 * Return a list of all the games closed shore cells. Note: a "closed" shore
+	 * cell is a cell that has not been probed (is closed) and touches both a land
+	 * cell and a sea cell.
+	 * 
+	 * @return a list of cells that are classed as closed shore cells.
+	 */
 	public List<Cell> getClosedShoreCells() {
 		List<Cell> shoreClosed = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
@@ -360,6 +438,12 @@ public abstract class Solver {
 		return shoreClosed;
 	}
 
+	/**
+	 * Return a list of all the games open sore cells. Note: a "open" shore cell is
+	 * a cell that has has been probed (is open) and touches a closed cell.
+	 * 
+	 * @return a list of cells that are classsed as open shore cells.
+	 */
 	public List<Cell> getOpenShoreCells() {
 		List<Cell> shoreOpen = new ArrayList<>();
 		for (int i = 0; i < cells.length; i++) {
@@ -382,11 +466,12 @@ public abstract class Solver {
 	 * 
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
-	 * @return Number of flagged neighbouring cells.
+	 * 
+	 * @return the number of flagged neighbouring cells.
 	 */
 	public int calcFlaggedNeighbours(int x, int y) {
 		int flagCount = 0;
-		// for loop to count how many flagged cells are around a cell
+		// count how many flagged cells are around a cell
 		List<Cell> neighbours = getNeighbours(x, y);
 		for (Cell c : neighbours) {
 			if (c.isFlagged()) {
@@ -401,7 +486,8 @@ public abstract class Solver {
 	 * 
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
-	 * @return Number of closed neighbouring cells.
+	 * 
+	 * @return the number of closed neighbouring cells.
 	 */
 	public int calcClosedNeighbours(int x, int y) {
 		int closedCount = 0;
@@ -415,10 +501,13 @@ public abstract class Solver {
 		return closedCount;
 	}
 
-	public void setQuiet() {
-		quiet = true;
+	public void setQuiet(boolean quiet) {
+		this.quiet = quiet;
 	}
 
+	/**
+	 * Probe a random cell on the board.
+	 */
 	public void probeRandomCell() {
 		cells = game.getCells();
 		List<Cell> sea = getSeaCells();
@@ -434,6 +523,14 @@ public abstract class Solver {
 		}
 	}
 
+	/**
+	 * Get a random cell from a list of cells. Returns null if passed cellList if
+	 * empty.
+	 * 
+	 * @param cellList the list of cells the select a random cell from.
+	 * 
+	 * @return a random cell. Returns null if passed cellList if empty.
+	 */
 	public Cell getRandomCell(List<Cell> cellList) {
 		if (!cellList.isEmpty()) {
 			Cell selectedCell = cellList.get(new Random().nextInt(cellList.size()));

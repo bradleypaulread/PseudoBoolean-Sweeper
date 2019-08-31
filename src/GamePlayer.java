@@ -97,7 +97,7 @@ public class GamePlayer implements Runnable {
 				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 				game = new Minesweeper(gameDifficulty, mineField);
 				sp = new SinglePointSolver(game);
-				sp.setQuiet();
+				sp.setQuiet(true);
 				opening = sp.makeFirstGuess();
 				startTime = System.nanoTime();
 			} while (!opening);
@@ -106,7 +106,7 @@ public class GamePlayer implements Runnable {
 				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 				game = new Minesweeper(gameDifficulty, mineField);
 				sp = new SinglePointSolver(game);
-				sp.setQuiet();
+				sp.setQuiet(true);
 				startTime = System.nanoTime();
 				sp.probeRandomCell();
 			} while (game.isGameOver());
@@ -130,7 +130,7 @@ public class GamePlayer implements Runnable {
 			MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 			game = new Minesweeper(gameDifficulty, mineField);
 			pb = new PBSolver(game);
-			pb.setQuiet();
+			pb.setQuiet(true);
 			startTime = System.nanoTime();
 			opening = pb.makeFirstGuess();
 			while (!opening && !game.isGameOver()) {
@@ -142,7 +142,7 @@ public class GamePlayer implements Runnable {
 				MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 				game = new Minesweeper(gameDifficulty, mineField);
 				pb = new PBSolver(game);
-				pb.setQuiet();
+				pb.setQuiet(true);
 				startTime = System.nanoTime();
 				pb.probeRandomCell();
 			} while (game.isGameOver());
@@ -171,8 +171,8 @@ public class GamePlayer implements Runnable {
 			game = new Minesweeper(gameDifficulty, mineField);
 			sp = new SinglePointSolver(game);
 			pb = new PBSolver(game);
-			sp.setQuiet();
-			pb.setQuiet();
+			sp.setQuiet(true);
+			pb.setQuiet(true);
 			startTime = System.nanoTime();
 			opening = sp.makeFirstGuess();
 			while (!opening && !game.isGameOver()) {
@@ -185,8 +185,8 @@ public class GamePlayer implements Runnable {
 				game = new Minesweeper(gameDifficulty, mineField);
 				sp = new SinglePointSolver(game);
 				pb = new PBSolver(game);
-				sp.setQuiet();
-				pb.setQuiet();
+				sp.setQuiet(true);
+				pb.setQuiet(true);
 				startTime = System.nanoTime();
 				sp.probeRandomCell();
 			} while (game.isGameOver());
@@ -219,9 +219,9 @@ public class GamePlayer implements Runnable {
 		sp = new SinglePointSolver(game);
 		pb = new PBSolver(game);
 		prob = new ProbabilitySolver(game);
-		sp.setQuiet();
-		pb.setQuiet();
-		prob.setQuiet();
+		sp.setQuiet(true);
+		pb.setQuiet(true);
+		prob.setQuiet(true);
 		startTime = System.nanoTime();
 		prob.makeFirstGuess();
 

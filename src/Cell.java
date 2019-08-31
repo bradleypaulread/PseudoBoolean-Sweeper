@@ -7,7 +7,7 @@
  * Heavily modified by Bradley Read
  * Last modified: @date
  */
- 
+
 public class Cell {
 	// ID of cell (cell coordinates)
 	private int x, y;
@@ -16,20 +16,21 @@ public class Cell {
 	private int number;
 
 	// Cell behaviour
-	private boolean flagged;
-	private boolean open;
-	private boolean safeHint;
-	private boolean mineHint;
-	private boolean fail;
+	private boolean flagged; // Cell was flagged by user
+	private boolean open; // Cell was probed by user
+	private boolean safeHint; // Cell is hinted as being safe
+	private boolean mineHint; // Cell is hinted as being a mine
+	private boolean fail; // Cell was the one that lost the user the game
 	private boolean marked; // Used to help deduce moves during a game
 	private Double prob; // Percentage of cell being a mine
 	private boolean bestCell; // If cell has the lowest prob of being a mine
 
 	/**
-	* Constructor for Cell class.
-	* @param x cell's x-axis position
-	* @param y cell's y-axis position
-	*/
+	 * Constructor for Cell class.
+	 * 
+	 * @param x cell's x-axis position
+	 * @param y cell's y-axis position
+	 */
 	public Cell(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -60,7 +61,8 @@ public class Cell {
 	}
 
 	/**
-	 * @return the prob
+	 * @return the probability of the cell being a mine. In the form 0.0 <= prob <=
+	 *         1.0
 	 */
 	public Double getProb() {
 		return prob;
@@ -72,7 +74,7 @@ public class Cell {
 	public void setProb(double prob) {
 		this.prob = prob;
 	}
-	
+
 	public void resetProb() {
 		this.prob = null;
 	}
@@ -84,62 +86,38 @@ public class Cell {
 	public int getY() {
 		return y;
 	}
- 
-	public void flag()
-	{
-		flagged = true;
-	}
- 
-	public void unflag()
-	{
-		flagged = false;
-	}
- 
-	public void open()
-	{
-		open = true;
-	}
- 
-	public void setNumber(int i)
-	{
+
+	public void setNumber(int i) {
 		number = i;
 	}
- 
-	public boolean isFlagged()
-	{
-		return flagged;
-	}
 
-	public void setFail() {
-		fail = true;
+	public boolean isFlagged() {
+		return flagged;
 	}
 
 	public boolean isCellThatLost() {
 		return fail;
 	}
- 
-	public boolean isOpen()
-	{
+
+	public boolean isOpen() {
 		return open;
 	}
-	
-	public boolean isClosed()
-	{
+
+	public boolean isClosed() {
 		return !open;
 	}
- 
-	public int getNumber()
-	{
+
+	public int getNumber() {
 		return number;
 	}
-	
+
 	/**
 	 * @return if number is -1 the cell is a mine
 	 */
 	public boolean isMine() {
 		return (number == -1);
 	}
-	
+
 	public void resetHint() {
 		safeHint = false;
 		mineHint = false;
@@ -148,23 +126,15 @@ public class Cell {
 	public boolean isSafeHint() {
 		return safeHint;
 	}
-	
-	public void setSafeHint() {
-		safeHint = true;
-	}
-	
+
 	public boolean isMineHint() {
 		return mineHint;
 	}
-	
-	public void setMineHint() {
-		mineHint = true;
-	}
-	
+
 	public boolean isHint() {
 		return safeHint || mineHint;
 	}
-	
+
 	/**
 	 * @return If the cell has default values.
 	 */
@@ -186,10 +156,6 @@ public class Cell {
 
 	public boolean isMarked() {
 		return marked;
-	}
-
-	public void mark() {
-		marked = !marked;
 	}
 
 	/**
@@ -249,6 +215,8 @@ public class Cell {
 	}
 
 	/**
+	 * Marks the cell as blue, debugging use only
+	 *
 	 * @param marked the marked to set
 	 */
 	public void setMarked(boolean marked) {
