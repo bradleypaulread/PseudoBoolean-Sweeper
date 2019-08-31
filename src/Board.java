@@ -87,8 +87,8 @@ public class Board extends JPanel {
 		cells = game.getCells();
 		// Clear canvas
 		super.paintComponent(g);
-		for (int i = 0; i < game.getWidth(); ++i) {
-			for (int j = 0; j < game.getHeight(); ++j) {
+		for (int i = 0; i < game.getx(); ++i) {
+			for (int j = 0; j < game.gety(); ++j) {
 				Cell current = cells[i][j];
 
 				// Coord position of cell
@@ -163,12 +163,12 @@ public class Board extends JPanel {
 		}
 		g.setColor(Color.BLACK);
 		// Draw Vertical grid lines
-		for (int i = 0; i < game.getHeight() + 1; ++i) {
-			g.drawLine(0, i * CELL_WIDTH, game.getWidth() * CELL_WIDTH, i * CELL_WIDTH);
+		for (int i = 0; i < game.gety() + 1; ++i) {
+			g.drawLine(0, i * CELL_WIDTH, game.getx() * CELL_WIDTH, i * CELL_WIDTH);
 		}
 		// Draw Horizontal grid lines
-		for (int i = 0; i < game.getWidth() + 1; ++i) {
-			g.drawLine(i * CELL_WIDTH, 0, i * CELL_WIDTH, game.getHeight() * CELL_WIDTH);
+		for (int i = 0; i < game.getx() + 1; ++i) {
+			g.drawLine(i * CELL_WIDTH, 0, i * CELL_WIDTH, game.gety() * CELL_WIDTH);
 		}
 	}
 
