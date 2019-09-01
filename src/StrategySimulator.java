@@ -1,4 +1,3 @@
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -7,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.io.BufferedReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -16,16 +16,13 @@ import com.google.gson.Gson;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.apache.commons.math3.fraction.Fraction;
 
-/*
- * Main.java
+/**
+ * A class that simulates a number of games following a defined strategy. Reports back no. of wins, losses, game time etc.
  * 
- * Created by Potrik
- * Last modified: 07.22.13
- * 
- * Heavily modified by Bradley Read
- * Last modified: @date
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-02-25
  */
-
 public class StrategySimulator {
 
 	private final String EASY_PATH = "resources/easyFields.txt";
@@ -220,6 +217,7 @@ public class StrategySimulator {
 		}
 	}
 
+	// SP is so quick there is no need to multithread it with GamePlayer.java s
 	public void playSinglePoint(Difficulty diff, String path) throws IOException {
 		int winCount = 0;
 		BigInteger winTimes = BigInteger.ZERO;
@@ -636,10 +634,18 @@ public class StrategySimulator {
 			while (gameCount < 1000000) {
 				MineField mf;
 				switch (d) {
-					case BEGINNER: mf = new MineField(9, 9, 10); break;
-					case INTERMEDIATE: mf = new MineField(16, 16, 40); break;
-					case EXPERT: mf = new MineField(16, 30, 99); break;
-					default: mf = new MineField(9, 9, 10); break;
+				case BEGINNER:
+					mf = new MineField(9, 9, 10);
+					break;
+				case INTERMEDIATE:
+					mf = new MineField(16, 16, 40);
+					break;
+				case EXPERT:
+					mf = new MineField(16, 30, 99);
+					break;
+				default:
+					mf = new MineField(9, 9, 10);
+					break;
 				}
 				Minesweeper game = new Minesweeper(d, mf);
 				SinglePointSolver solver = new SinglePointSolver(game);
@@ -669,10 +675,18 @@ public class StrategySimulator {
 			while (gameCount < 1000000) {
 				MineField mf;
 				switch (d) {
-					case BEGINNER: mf = new MineField(9, 9, 10); break;
-					case INTERMEDIATE: mf = new MineField(16, 16, 40); break;
-					case EXPERT: mf = new MineField(16, 30, 99); break;
-					default: mf = new MineField(9, 9, 10); break;
+				case BEGINNER:
+					mf = new MineField(9, 9, 10);
+					break;
+				case INTERMEDIATE:
+					mf = new MineField(16, 16, 40);
+					break;
+				case EXPERT:
+					mf = new MineField(16, 30, 99);
+					break;
+				default:
+					mf = new MineField(9, 9, 10);
+					break;
 				}
 				Minesweeper game = new Minesweeper(d, mf);
 				SinglePointSolver solver = new SinglePointSolver(game);
@@ -702,10 +716,18 @@ public class StrategySimulator {
 			while (gameCount < 1000000) {
 				MineField mf;
 				switch (d) {
-					case BEGINNER: mf = new MineField(9, 9, 10); break;
-					case INTERMEDIATE: mf = new MineField(16, 16, 40); break;
-					case EXPERT: mf = new MineField(16, 30, 99); break;
-					default: mf = new MineField(9, 9, 10); break;
+				case BEGINNER:
+					mf = new MineField(9, 9, 10);
+					break;
+				case INTERMEDIATE:
+					mf = new MineField(16, 16, 40);
+					break;
+				case EXPERT:
+					mf = new MineField(16, 30, 99);
+					break;
+				default:
+					mf = new MineField(9, 9, 10);
+					break;
 				}
 				Minesweeper game = new Minesweeper(d, mf);
 				SinglePointSolver solver = new SinglePointSolver(game);
@@ -726,6 +748,7 @@ public class StrategySimulator {
 					d.toString(), gameCount, openingCount, percent.percentageValue());
 		}
 	}
+
 	public static void main(String[] args) throws IOException, InterruptedException {
 		// Example usage
 		StrategySimulator s = new StrategySimulator(10, "resources/");

@@ -1,20 +1,27 @@
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.math.BigIntegerMath;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-
+import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.VecInt;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
-import org.apache.commons.math3.fraction.BigFraction;
-
+/**
+ * A class that constucts a set of pseudo-Boolean constraints from the current
+ * board configuration and uses SAT4J's PBSolver to iterate over all models and
+ * to calculate accurate probabilities of each cells chance of being a mine.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-03-11
+ */
 public class ProbabilitySolver extends Solver {
 
     /**

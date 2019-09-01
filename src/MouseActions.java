@@ -1,24 +1,21 @@
-
-/*
- * MouseAction.java
- * 
- * Created by Potrik
- * Last modified: 07.22.13
- * 
- * Heavily modified by Bradley Read
- * Last modified: @date
- */
-
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+/**
+ * A class that manages interaction to the board (cells) with the cursor.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-08-30
+ */
 public class MouseActions implements MouseListener {
+	
 	private Minesweeper game;
 	private Board board;
 
-	public MouseActions(Minesweeper m, Board b) {
-		game = m;
-		board = b;
+	public MouseActions(Minesweeper game, Board board) {
+		this.game = game;
+		this.board = board;
 	}
 
 	public void mouseClicked(MouseEvent e) {

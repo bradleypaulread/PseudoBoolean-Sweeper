@@ -9,6 +9,14 @@ import org.sat4j.specs.IConstr;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
+/**
+ * A class that constucts a set of pseudo-Boolean constraints from the current
+ * board configuration and uses SAT4J's PBSolver to solve them.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-03-11
+ */
 public class PBSolver extends Solver {
 
 	/**
@@ -21,8 +29,8 @@ public class PBSolver extends Solver {
 	}
 
 	/**
-	 * Constructor for PBSolver. The solver can be stopped by changing the
-	 * passed running boolean to false.
+	 * Constructor for PBSolver. The solver can be stopped by changing the passed
+	 * running boolean to false.
 	 * 
 	 * @param game    the game that the solver is going to perform moves on.
 	 * @param running the value that controls whether the solver should
@@ -287,11 +295,11 @@ public class PBSolver extends Solver {
 					// already known to be safe/a mine.
 					boolean isMine = weight == 1 ? false : true;
 					results.put(current, isMine);
-					if (atMostConstr != null) {
-						solver.removeConstr(atMostConstr);
-					}
 					if (atLeastConstr != null) {
 						solver.removeConstr(atLeastConstr);
+					}
+					if (atMostConstr != null) {
+						solver.removeConstr(atMostConstr);
 					}
 				} catch (TimeoutException te) {
 				}

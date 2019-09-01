@@ -5,9 +5,17 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.sat4j.pb.core.PBSolver;
 import org.sat4j.pb.SolverFactory;
+import org.sat4j.pb.core.PBSolver;
 
+
+/**
+ * An abstract class for a board solver. Contains many helper methods. 
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-03-11
+ */
 public abstract class Solver {
 
 	protected boolean quiet; // Should the solver make changes to GUI

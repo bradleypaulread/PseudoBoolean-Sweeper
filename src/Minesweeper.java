@@ -1,14 +1,3 @@
-
-/**
- * Minesweeper.java
- * 
- * Created by Potrik
- * Last modified: 22/07/13
- * 
- * Heavily modified by Bradley Read
- * Last modified: 02/05/19
- */
-
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -46,6 +35,14 @@ import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * A class that contains the game and rule logic of minesweeper. Also manages
+ * the GUI interface.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-02-25
+ */
 public class Minesweeper extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -94,14 +91,14 @@ public class Minesweeper extends JFrame {
 	private Board board; // Board instance, where cells appearance is processed
 	private boolean isGameOver; // True if the game has been lost or won
 	private int moves; // Number if moves made by the player.
-	private int currentGameTime;	// The current game elapsed time (in seconds)
-	private Timer gameTimer;	// Timer that ticks every second
+	private int currentGameTime; // The current game elapsed time (in seconds)
+	private Timer gameTimer; // Timer that ticks every second
 	private int minesLeft;
 	private boolean gameWon;
 
 	// If an opening has been found in the game yet (a cell with number 0)
 	// used for the first guess function in the file menu
-	private boolean opening;	
+	private boolean opening;
 
 	/**
 	 * Default constructor for Minesweeper class. Initiates the board to beginner
@@ -164,7 +161,7 @@ public class Minesweeper extends JFrame {
 		int noOfMines = (int) ((width * height) * mineDistribution);
 		setup(width, height, noOfMines);
 	}
-	
+
 	/**
 	 * Constructor for Minesweeper class that uses a pre-specified mine field.
 	 * 
@@ -697,7 +694,7 @@ public class Minesweeper extends JFrame {
 			return;
 		}
 		moves++;
-		
+
 		// How many mines are around the cell
 		// x and y has to be reversed as MineField.java takes parameters
 		// (height, width) not (width, height).

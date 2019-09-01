@@ -1,5 +1,13 @@
 import com.google.gson.Gson;
 
+/**
+ * A class that plays a single game following a defined strategy. Stores start
+ * time, end time, no. of guesses etc.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-02-25
+ */
 public class GamePlayer implements Runnable {
 
 	private Difficulty gameDifficulty;
@@ -27,45 +35,6 @@ public class GamePlayer implements Runnable {
 		mineFieldBackup = fieldJson;
 
 		game = new Minesweeper(gameDifficulty, mineField);
-	}
-
-	public String getFieldBackup() {
-		return mineFieldBackup;
-	}
-
-	public void reset() {
-		singlePoint = false;
-		PB = false;
-		strat = false;
-		firstGuess = false;
-	}
-
-	public void setFirstGuess(boolean firstGuess) {
-		this.firstGuess = firstGuess;
-	}
-
-	/**
-	 * @param patternMatch
-	 *            the patternMatch to set
-	 */
-	public void setSinglePoint(boolean patternMatch) {
-		this.singlePoint = patternMatch;
-	}
-
-	/**
-	 * @param sAT
-	 *            the sAT to set
-	 */
-	public void setPB(boolean SAT) {
-		this.PB = SAT;
-	}
-
-	/**
-	 * @param strat
-	 *            the strat to set
-	 */
-	public void setStrat(boolean strat) {
-		this.strat = strat;
 	}
 
 	@Override
@@ -213,7 +182,7 @@ public class GamePlayer implements Runnable {
 		ProbabilitySolver prob;
 
 		// No need to check until an opening is created as strat algorithm
-		// 	will then take over and dictate  moves
+		// will then take over and dictate moves
 		MineField mineField = new Gson().fromJson(mineFieldBackup, MineField.class);
 		game = new Minesweeper(gameDifficulty, mineField);
 		sp = new SinglePointSolver(game);
@@ -287,6 +256,42 @@ public class GamePlayer implements Runnable {
 	 */
 	public Minesweeper getGame() {
 		return game;
+	}
+
+	public String getFieldBackup() {
+		return mineFieldBackup;
+	}
+
+	public void reset() {
+		singlePoint = false;
+		PB = false;
+		strat = false;
+		firstGuess = false;
+	}
+
+	public void setFirstGuess(boolean firstGuess) {
+		this.firstGuess = firstGuess;
+	}
+
+	/**
+	 * @param patternMatch the patternMatch to set
+	 */
+	public void setSinglePoint(boolean patternMatch) {
+		this.singlePoint = patternMatch;
+	}
+
+	/**
+	 * @param SAT the SAT to set
+	 */
+	public void setPB(boolean SAT) {
+		this.PB = SAT;
+	}
+
+	/**
+	 * @param strat the strat to set
+	 */
+	public void setStrat(boolean strat) {
+		this.strat = strat;
 	}
 
 }

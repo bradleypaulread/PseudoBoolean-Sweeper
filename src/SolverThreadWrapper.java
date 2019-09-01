@@ -2,6 +2,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * A wrapper class for solvers so that multiple sovlers can be used at once and
+ * that the GUI can be updated concurrently.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-02-25
+ */
 public class SolverThreadWrapper implements Runnable {
 
     @SuppressWarnings("unused")

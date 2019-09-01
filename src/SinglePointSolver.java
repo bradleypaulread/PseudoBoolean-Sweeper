@@ -1,6 +1,15 @@
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A class that uses the single point algorithm, see
+ * {@link #isSinglePointSafe(Cell) isSingePointSafe} and
+ * {@link #isSinglePointMine(Cell) isSinglePointMine} methods.
+ * 
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-03-11
+ */
 public class SinglePointSolver extends Solver {
 
     /**
@@ -151,8 +160,8 @@ public class SinglePointSolver extends Solver {
     }
 
     /**
-     * Fetch a list of all the mines surrounding a cell. Should only be called
-     * after {@link #isSinglePointMine(Cell) isSinglePointMine} is checked.
+     * Fetch a list of all the mines surrounding a cell. Should only be called after
+     * {@link #isSinglePointMine(Cell) isSinglePointMine} is checked.
      * 
      * @param cell the cell to fetch the surrounding mines.
      * 

@@ -1,13 +1,11 @@
-/*
- * Cell.java
+/**
+ * A class that stores a cell's attributes. (E.g. its number, if it has been
+ * flagged, if its a mine, its probabiltiy etc.).
  * 
- * Created by Potrik
- * Last modified: 07.22.13
- * 
- * Heavily modified by Bradley Read
- * Last modified: @date
+ * @author Bradley Read
+ * @version 1.0
+ * @since 2019-01-28
  */
-
 public class Cell {
 	// ID of cell (cell coordinates)
 	private int x, y;
