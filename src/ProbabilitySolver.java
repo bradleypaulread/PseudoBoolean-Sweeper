@@ -98,7 +98,7 @@ public class ProbabilitySolver extends Solver {
         }
         Cell bestCell = getRandomCell(bestCells);
         bestCell.setProb(probs.get(bestCell).doubleValue());
-        bestCell.setBestCell();
+        bestCell.setBestCell(true);
         game.refresh();
         return true;
     }
@@ -274,7 +274,7 @@ public class ProbabilitySolver extends Solver {
 
         List<Cell> bestProbCells = getBestProbCells(probs);
         for (Cell c : bestProbCells) {
-            c.setBestCell();
+            c.setBestCell(true);
         }
         game.refresh();
     }
@@ -282,9 +282,9 @@ public class ProbabilitySolver extends Solver {
     /**
      * Fetch a list of the cells with the lowest probability or being a mine.
      * 
-     * @param probs a mapping of cells to their probabilitiy of being a mine.
+     * @param probs a mapping of cells to their probability of being a mine.
      * 
-     * @return a list of the cell(s) with the lowst probabilitiy of being a mine.
+     * @return a list of the cell(s) with the lowest probability of being a mine.
      */
     private List<Cell> getBestProbCells(Map<Cell, BigFraction> probs) {
         List<Cell> cellsWithBestProb = new ArrayList<>();
@@ -362,8 +362,6 @@ public class ProbabilitySolver extends Solver {
 
     /**
      * Generates the binary constraints for the problem set.
-     * 
-     * @param solver the solver to add the constraints to.
      * 
      * @throws ContradictionException when a contraint is added that directly
      *                                contradicts an already existing constraint.

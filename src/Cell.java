@@ -1,6 +1,6 @@
 /**
  * A class that stores a cell's attributes. (E.g. its number, if it has been
- * flagged, if its a mine, its probabiltiy etc.).
+ * flagged, if its a mine, its probability etc.).
  * 
  * @author Bradley Read
  * @version 1.0
@@ -45,13 +45,6 @@ public class Cell {
 	 */
 	public boolean isBestCell() {
 		return bestCell;
-	}
-
-	/**
-	 * @param bestCell the bestCell to set
-	 */
-	public void setBestCell() {
-		this.bestCell = true;
 	}
 
 	public void resetBestCell() {

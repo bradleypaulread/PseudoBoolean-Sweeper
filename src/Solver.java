@@ -305,13 +305,12 @@ public abstract class Solver {
 	}
 
 	/**
-	 * When passed a cell and a board, create a unique identifier (a single integer)
-	 * for that cell. To be used for creating litrals
+	 * When passed a cell, create a unique identifier (a single integer)
+	 * for that cell. To be used for creating literals.
 	 * 
-	 * @param c     Cell to encode.
-	 * @param board Board the cell is present in, used to get the width of the
-	 *              board.
-	 * @return Unique integer identifier for given cell.
+	 * @param c     cell to encode.
+	 * 
+	 * @return a unique integer identifier for given cell.
 	 */
 	protected int encodeCellId(Cell c) {
 		return (c.getY() * cells.length + c.getX()) + 1;
@@ -320,10 +319,9 @@ public abstract class Solver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id    Unique encoded identity id.
-	 * @param board Board the cell would be present in, used to get the width of the
-	 *              board.
-	 * @return Cell that the id refers to.
+	 * @param id    Unique encoded identity id literal.
+	 * 
+	 * @return the cell that the id refers to.
 	 */
 	public Cell decodeCellId(int id) {
 		int posId = id < 0 ? id * -1 : id;

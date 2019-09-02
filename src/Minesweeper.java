@@ -122,6 +122,8 @@ public class Minesweeper extends JFrame {
 
 	/**
 	 * Constructor for Minesweeper class that only takes a MineField json string in.
+	 * 
+	 * @param mf a JSON string representation of a mine field. Used to construct a MineField object.
 	 */
 	public Minesweeper(String mf) {
 		final String mfCopy = new String(mf);
@@ -195,6 +197,7 @@ public class Minesweeper extends JFrame {
 	 * parameters.
 	 * 
 	 * @param difficulty enum difficulty of the board.
+	 * @param mf the passed MineField to set the current games mine field as.
 	 */
 	public Minesweeper(Difficulty difficulty, MineField mf) {
 		setup(difficulty.width, difficulty.height, difficulty.noOfMines, mf);
@@ -229,6 +232,7 @@ public class Minesweeper extends JFrame {
 	 * @param height    boards height. That is the number of cells in a column.
 	 * @param noOfMines number of mines present on the board. Must be less than the
 	 *                  area of the board.
+	 * @param mf 		the passed MineField object to set the current games mine field as.
 	 * 
 	 */
 	private void setup(int width, int height, int noOfMines, MineField mf) {
@@ -871,6 +875,8 @@ public class Minesweeper extends JFrame {
 	 * 
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
+	 * 
+	 * @return a list of neighbouring cells.
 	 */
 	private List<Cell> getNeighbours(int x, int y) {
 		List<Cell> neighbours = new ArrayList<Cell>();
@@ -942,6 +948,8 @@ public class Minesweeper extends JFrame {
 	 * 
 	 * @param x X-axis coordinate of cell.
 	 * @param y Y-axis coordinate of cell.
+	 * 
+	 * @return the specified cell on the board.
 	 */
 	public Cell getCell(int x, int y) {
 		return cells[x][y];

@@ -43,7 +43,6 @@ public class PBSolver extends Solver {
 	/**
 	 * Generates the pseudo-boolean constraints from the board.
 	 * 
-	 * @param solver the solver to add the constraints to
 	 * @throws ContradictionException when a contraint is added that directly
 	 *                                contradicts an already existing constraint.
 	 */
@@ -177,9 +176,9 @@ public class PBSolver extends Solver {
 	}
 
 	/**
-	 * Runs through the problem set and finds known cells. First adds contraint that
+	 * Runs through the problem set and finds known cells. First adds constraint that
 	 * cell is a safe, if the problem is UNSAT then cell is a mine. Secondly adds
-	 * contraint that cell is a mine, if the problem is UNSAT then cell is safe.
+	 * constraint that cell is a mine, if the problem is UNSAT then cell is safe.
 	 * 
 	 * @return a mapping of cells to their found boolean values. True means the cell
 	 *         is a mine, false means it is safe.

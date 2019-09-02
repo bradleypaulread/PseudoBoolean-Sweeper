@@ -57,7 +57,7 @@ public class Board extends JPanel {
 	}
 
 	/**
-	 * Over ridden tooltip maker so that it displays the probabiltiy of a cell and
+	 * Over ridden tooltip maker so that it displays the probability of a cell and
 	 * only changes text when the mouse hovers over a different cell.
 	 */
 	@Override
