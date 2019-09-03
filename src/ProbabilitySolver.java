@@ -152,17 +152,19 @@ public class ProbabilitySolver extends Solver {
      * @return a mapping of cells to the probability value of being a mine.
      */
     private Map<Cell, BigFraction> calcAllCellsProb() {
+        solver.reset();
         cells = game.getCells();
         // Key = Cell
         // Value = Cell appearance as mine count
-        Map<Cell, BigInteger> cellT = new HashMap<>();
+        Map<Cell, BigInteger> cellMineCount = new HashMap<>();
 
         // Key = Cell
         // Value = Cell's final probabiltiy of being a mine
         Map<Cell, BigFraction> probs = new HashMap<>();
 
-        BigInteger T = BigInteger.ZERO;
-        BigFraction seaT = BigFraction.ZERO;
+        BigInteger totalModels = BigInteger.ZERO;
+        BigFraction seaModels = BigFraction.ZERO;
+
         int totalMines = game.getNoOfMines();
         int seaSize = getSeaCells().size();
 
@@ -173,45 +175,53 @@ public class ProbabilitySolver extends Solver {
 
         try {
             while (solver.isSatisfiable() && running.get()) {
-                List<Cell> currentSol = new ArrayList<>();
                 int[] model = solver.model();
-                int noOfMines = 0;
+                List<Cell> shoreMines = new ArrayList<>();
                 for (int i : model) {
-                    boolean mine = i < 0 ? false : true;
-                    Cell testForCell = decodeCellId(i);
-                    if (testForCell != null && mine) {
-                        currentSol.add(testForCell);
-                        noOfMines++;
+                    boolean isMine = i < 0 ? false : true;
+
+                    // if isCellNotLiteral returns null, the literal is a binary lit and not a cell
+                    // lit
+                    Cell isCellNotLiteral = decodeCellId(i);
+                    if (isCellNotLiteral != null && isMine) {
+                        shoreMines.add(isCellNotLiteral);
                     }
                 }
 
-                int remainingMines = totalMines - noOfMines;
+                // Number of mines that are in the sea
+                int remainingMines = totalMines - shoreMines.size();
 
-                BigInteger toAdd = BigInteger.ONE;
+                // The number of additional models the current model has added
+                // Initiated to 1 as atleast 1 model has to be found to execute the code
+                BigInteger noOfPossibleModels = BigInteger.ONE;
+
+                // Add the models made possible by how many the mines are remaining in the sea
                 if (seaSize > 0) {
-                    toAdd = BigIntegerMath.binomial(seaSize, remainingMines);
+                    noOfPossibleModels = BigIntegerMath.binomial(seaSize, remainingMines);
                 }
-                // Increment T
-                T = T.add(toAdd);
 
-                for (Cell c : currentSol) {
-                    BigInteger testForNull = cellT.get(c);
+                totalModels = totalModels.add(noOfPossibleModels);
+
+                // Increment each cells appearance as a mine
+                for (Cell c : shoreMines) {
+                    BigInteger testForNull = cellMineCount.get(c);
                     if (testForNull == null) {
-                        cellT.put(c, toAdd);
+                        cellMineCount.put(c, noOfPossibleModels);
                     } else {
-                        testForNull = testForNull.add(toAdd);
-                        cellT.put(c, testForNull);
+                        testForNull = testForNull.add(noOfPossibleModels);
+                        cellMineCount.put(c, testForNull);
                     }
                 }
 
+                // Update the sea probability avg.
                 BigFraction seaFrac = BigFraction.ZERO;
                 if (seaSize > 0) {
                     seaFrac = new BigFraction(remainingMines, seaSize);
                 }
-                BigFraction toAddFraction = new BigFraction(toAdd, BigInteger.ONE);
+                BigFraction toAddFraction = new BigFraction(noOfPossibleModels, BigInteger.ONE);
                 BigFraction both = seaFrac.multiply(toAddFraction);
 
-                seaT = seaT.add(both);
+                seaModels = seaModels.add(both);
 
                 // Find another solution
                 for (int i = 0; i < model.length; i++) {
@@ -219,37 +229,40 @@ public class ProbabilitySolver extends Solver {
                 }
                 IVecInt block = new VecInt(model);
 
+                // Block finding an already evaluated model
                 solver.addBlockingClause(block);
             }
         } catch (TimeoutException e) {
-            solver.reset();
         } catch (ContradictionException e) {
+        } finally {
             solver.reset();
         }
-        solver.reset();
+
         if (!running.get()) {
             return null;
         }
 
+        // If there are sea cells, apply the calculated sea probability to each sea cell
         if (seaSize > 0) {
-            seaT = seaT.reduce();
-            BigFraction TFrac = new BigFraction(T);
-            BigFraction seaProb = seaT.divide(TFrac).reduce();
+            seaModels = seaModels.reduce();
+            BigFraction TFrac = new BigFraction(totalModels);
+            BigFraction seaProb = seaModels.divide(TFrac).reduce();
             List<Cell> seaCells = getSeaCells();
             for (Cell c : seaCells) {
                 probs.put(c, seaProb);
             }
         }
 
+        // Apply each cells calculated probability
         List<Cell> shore = getClosedShoreCells();
         for (Cell current : shore) {
-            BigInteger currentCellT = cellT.get(current);
+            BigInteger currentCellT = cellMineCount.get(current);
             // currentCellT is null when a cell does not appear in any solution
             // and is therefore safe, meaning 0.0 prob of being a mine
             if (currentCellT == null) {
                 currentCellT = BigInteger.ZERO;
             }
-            BigFraction cellProb = new BigFraction(currentCellT, T);
+            BigFraction cellProb = new BigFraction(currentCellT, totalModels);
             probs.put(current, cellProb);
         }
         solver.reset();

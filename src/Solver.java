@@ -8,9 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.sat4j.pb.SolverFactory;
 import org.sat4j.pb.core.PBSolver;
 
-
 /**
- * An abstract class for a board solver. Contains many helper methods. 
+ * An abstract class for a board solver. Contains many helper methods.
  * 
  * @author Bradley Read
  * @version 1.0
@@ -22,7 +21,7 @@ public abstract class Solver {
 	protected boolean madeFirstGuess; // Has a first guess function been called yet
 
 	protected PBSolver solver;
-	
+
 	protected Minesweeper game;
 	protected Cell[][] cells;
 	protected AtomicBoolean running; // Should the solver be running
@@ -31,7 +30,7 @@ public abstract class Solver {
 	 * Constructor for solver. Using this constructor means that the solver can not
 	 * be stopped.
 	 * 
-     * @param game the game that the solver is going to perform moves on.
+	 * @param game the game that the solver is going to perform moves on.
 	 */
 	public Solver(Minesweeper game) {
 		running = new AtomicBoolean(true);
@@ -46,8 +45,9 @@ public abstract class Solver {
 	 * Constuctor for sovler. The solver can be stopped by changing the passed
 	 * running boolean to false.
 	 * 
-     * @param game the game that the solver is going to perform moves on.
-	 * @param running the value that controls whether the solver should continue/stop solving.
+	 * @param game    the game that the solver is going to perform moves on.
+	 * @param running the value that controls whether the solver should
+	 *                continue/stop solving.
 	 */
 	public Solver(Minesweeper game, AtomicBoolean running) {
 		this.running = running;
@@ -305,10 +305,10 @@ public abstract class Solver {
 	}
 
 	/**
-	 * When passed a cell, create a unique identifier (a single integer)
-	 * for that cell. To be used for creating literals.
+	 * When passed a cell, create a unique identifier (a single integer) for that
+	 * cell. To be used for creating literals.
 	 * 
-	 * @param c     cell to encode.
+	 * @param c cell to encode.
 	 * 
 	 * @return a unique integer identifier for given cell.
 	 */
@@ -319,9 +319,10 @@ public abstract class Solver {
 	/**
 	 * When passed an identity, decode and return the cell it is referring to.
 	 * 
-	 * @param id    Unique encoded identity id literal.
+	 * @param id Unique encoded identity id literal.
 	 * 
-	 * @return the cell that the id refers to.
+	 * @return the cell that the id refers to. Null if it is impossible for the
+	 *         passed id to be a cell.
 	 */
 	public Cell decodeCellId(int id) {
 		int posId = id < 0 ? id * -1 : id;

@@ -21,7 +21,7 @@ public class Board extends JPanel {
 	private Minesweeper game;
 	private Cell[][] cells;
 	// Width of a cell
-	private int CELL_WIDTH = 35;
+	private int CELL_WIDTH = 10;
 	private int width;
 	private int height;
 

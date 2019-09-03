@@ -9,10 +9,10 @@ public class GameLauncher {
 
 	public static void main(String[] args) {
 
-		int x = 9; // Width of the board
-		int y = 9; // Height of the board
+		int x = 118; // Width of the board
+		int y = 58; // Height of the board
 		double diff = 0.2; // The difficulty of the game (percent of cells that are mines)
-		int mines = 2; // Integer number of mines on the board
+		int mines = 1412; // Integer number of mines on the board
 
 		// Example of the JSON format needed to create a MineField
 		// Note: no dimensions or number of mines stored (just essentially a 2D array of
@@ -22,7 +22,7 @@ public class GameLauncher {
 
 		// new Minesweeper(mineFieldJson); // Default beginner board
 
-		Minesweeper game = new Minesweeper(); // Default beginner board
+		Minesweeper game = new Minesweeper(x, y, mines); // Default beginner board
 		game.buildGUI();
 		// Example of how load a game with a pre-generated MineField JSON
 		// new Minesweeper(9, 9, 10, mineFieldJson);
