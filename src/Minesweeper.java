@@ -768,6 +768,9 @@ public class Minesweeper extends JFrame {
      * Resets all the UI elements to their default text.
      */
     private void resetUIDetails() {
+        if (thread != null) {
+            thread.end();
+        }
         firstGuessItem.setEnabled(true);
         setDetail("...");
         movesLbl.setText("Moves: " + moves);
