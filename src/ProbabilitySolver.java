@@ -1,23 +1,23 @@
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.google.common.math.BigIntegerMath;
-
 import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.VecInt;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 /**
  * A class that constucts a set of pseudo-Boolean constraints from the current
  * board configuration and uses SAT4J's PBSolver to iterate over all models and
  * to calculate accurate probabilities of each cells chance of being a mine.
- * 
+ *
  * @author Bradley Read
  * @version 1.0
  * @since 2019-03-11
@@ -26,7 +26,7 @@ public class ProbabilitySolver extends Solver {
 
     /**
      * Constructor for ProbabilitySolver.
-     * 
+     *
      * @param game the game that the solver is going to perform moves on.
      */
     public ProbabilitySolver(Minesweeper game) {
@@ -36,7 +36,7 @@ public class ProbabilitySolver extends Solver {
     /**
      * Constructor for ProbabilitySolver. The solver can be stopped by changing the
      * passed running boolean to false.
-     * 
+     *
      * @param game    the game that the solver is going to perform moves on.
      * @param running the value that controls whether the solver should
      *                continue/stop solving.
@@ -64,7 +64,8 @@ public class ProbabilitySolver extends Solver {
             game.quietProbe(bestCell.getX(), bestCell.getY());
         } else {
             String detail = "Strategically Selecting Cell " + bestCell + " with prob. "
-                    + probs.get(bestCell).doubleValue();
+                    + probs.get(bestCell)
+                    .doubleValue();
             game.setDetail(detail);
             game.probe(bestCell.getX(), bestCell.getY());
         }
@@ -80,11 +81,13 @@ public class ProbabilitySolver extends Solver {
         if (bestProbCells.isEmpty()) {
             return false;
         }
-        if (probs.get(bestProbCells.get(0)).doubleValue() == 0.0) {
+        if (probs.get(bestProbCells.get(0))
+                .doubleValue() == 0.0) {
             for (Cell c : bestProbCells) {
                 if (!c.isSafeHint()) {
                     c.setSafeHint(true);
-                    game.getHintCells().add(c);
+                    game.getHintCells()
+                            .add(c);
                     game.refresh();
                     return true;
                 }
@@ -92,12 +95,15 @@ public class ProbabilitySolver extends Solver {
             return false;
         }
         List<Cell> bestCells = getBestStratCells(bestProbCells, probs);
-        bestCells.removeIf(c -> c.isBestCell());
-        if (bestCells == null || bestCells.isEmpty()) {
+        bestCells = bestCells.stream()
+                .filter(Cell::isBestCell)
+                .collect(Collectors.toList());
+        if (bestCells.isEmpty()) {
             return false;
         }
         Cell bestCell = getRandomCell(bestCells);
-        bestCell.setProb(probs.get(bestCell).doubleValue());
+        bestCell.setProb(probs.get(bestCell)
+                .doubleValue());
         bestCell.setBestCell(true);
         game.refresh();
         return true;
@@ -122,9 +128,8 @@ public class ProbabilitySolver extends Solver {
      * Returns the cell with the best move. If more than one cell has the lowest
      * probabiltiy of being a mine then {@link #getBestStratCell(List, Map)
      * getBestStratCell} is then used.
-     * 
+     *
      * @param probs a mapping of cells to their probabilties.
-     * 
      * @return the cell that would be the best move to make.
      */
     private Cell getBestMove(Map<Cell, BigFraction> probs) {
@@ -148,7 +153,7 @@ public class ProbabilitySolver extends Solver {
      * mine and divides this by the total number of solutions. Uses combinatorics to
      * smallen the problem size by removing the need to include sea cells in the
      * problem set.
-     * 
+     *
      * @return a mapping of cells to the probability value of being a mine.
      */
     private Map<Cell, BigFraction> calcAllCellsProb() {
@@ -178,7 +183,7 @@ public class ProbabilitySolver extends Solver {
                 int[] model = solver.model();
                 List<Cell> shoreMines = new ArrayList<>();
                 for (int i : model) {
-                    boolean isMine = i < 0 ? false : true;
+                    boolean isMine = i >= 0;
 
                     // if isCellNotLiteral returns null, the literal is a binary lit and not a cell
                     // lit
@@ -232,8 +237,7 @@ public class ProbabilitySolver extends Solver {
                 // Block finding an already evaluated model
                 solver.addBlockingClause(block);
             }
-        } catch (TimeoutException e) {
-        } catch (ContradictionException e) {
+        } catch (TimeoutException | ContradictionException e) {
         } finally {
             solver.reset();
         }
@@ -246,7 +250,8 @@ public class ProbabilitySolver extends Solver {
         if (seaSize > 0) {
             seaModels = seaModels.reduce();
             BigFraction TFrac = new BigFraction(totalModels);
-            BigFraction seaProb = seaModels.divide(TFrac).reduce();
+            BigFraction seaProb = seaModels.divide(TFrac)
+                    .reduce();
             List<Cell> seaCells = getSeaCells();
             for (Cell c : seaCells) {
                 probs.put(c, seaProb);
@@ -294,9 +299,8 @@ public class ProbabilitySolver extends Solver {
 
     /**
      * Fetch a list of the cells with the lowest probability or being a mine.
-     * 
+     *
      * @param probs a mapping of cells to their probability of being a mine.
-     * 
      * @return a list of the cell(s) with the lowest probability of being a mine.
      */
     private List<Cell> getBestProbCells(Map<Cell, BigFraction> probs) {
@@ -327,18 +331,17 @@ public class ProbabilitySolver extends Solver {
 
     /**
      * Fetch the cells that have the best strategic value from a given list.
-     * 
+     *
      * @param bestProbCells list of cells that have the lowest probabilities
-     * @param probs         a mapping of cells to their probabilitiy of being a
+     * @param probs         a mapping of cells to their probability of being a
      *                      mine.
-     * 
      * @return a list of cells that have the best strategic value.
      */
     private List<Cell> getBestStratCells(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
-        if (bestProbCells.isEmpty()) {
-            return null;
-        }
         List<Cell> bestCells = new ArrayList<>();
+        if (bestProbCells.isEmpty()) {
+            return bestCells;
+        }
         int lowestClosed = 9;
         for (Cell c : bestProbCells) {
             List<Cell> neighbours = getNeighbours(c);
@@ -357,11 +360,10 @@ public class ProbabilitySolver extends Solver {
 
     /**
      * Fetch a single cell that has the best strategic value from a given list.
-     * 
+     *
      * @param bestProbCells list of cells that have the lowest probabilities
      * @param probs         a mapping of cells to their probabilitiy of being a
      *                      mine.
-     * 
      * @return a cell that has the best strategic value.
      */
     private Cell getBestStratCell(List<Cell> bestProbCells, Map<Cell, BigFraction> probs) {
@@ -375,7 +377,7 @@ public class ProbabilitySolver extends Solver {
 
     /**
      * Generates the binary constraints for the problem set.
-     * 
+     *
      * @throws ContradictionException when a contraint is added that directly
      *                                contradicts an already existing constraint.
      */
@@ -387,7 +389,8 @@ public class ProbabilitySolver extends Solver {
         List<Cell> landCells = getLandCells();
 
         int noOfMines = game.getNoOfMines();
-        int noOfLits = Integer.toBinaryString(seaCells.size()).length();
+        int noOfLits = Integer.toBinaryString(seaCells.size())
+                .length();
         IVecInt lits = new VecInt();
         IVecInt coeffs = new VecInt();
 

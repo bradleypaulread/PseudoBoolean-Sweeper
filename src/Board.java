@@ -1,12 +1,6 @@
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Point;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
-
-import javax.swing.JPanel;
-import javax.swing.ToolTipManager;
 
 /**
  * A class that stores where a games board (the mine cells). Also manages
@@ -21,7 +15,7 @@ public class Board extends JPanel {
 	private Minesweeper game;
 	private Cell[][] cells;
 	// Width of a cell
-	private int CELL_WIDTH = 10;
+	private int CELL_WIDTH = 35;
 	private int width;
 	private int height;
 
@@ -237,9 +231,9 @@ public class Board extends JPanel {
 			g.fillRect(x, y, CELL_WIDTH, CELL_WIDTH);
 		}
 		if (game.isDebug()) {
-			g.setFont(new Font("", Font.BOLD, (int) (CELL_WIDTH / 3)));
+			g.setFont(new Font("", Font.BOLD, (CELL_WIDTH / 3)));
 			g.setColor(Color.BLACK);
-			g.drawString("" + (x / CELL_WIDTH) + "," + (y / CELL_WIDTH), x + 2, y + ((int) (CELL_WIDTH / 3)));
+			g.drawString("" + (x / CELL_WIDTH) + "," + (y / CELL_WIDTH), x + 2, y + CELL_WIDTH / 3);
 			game.refresh();
 		}
 	}

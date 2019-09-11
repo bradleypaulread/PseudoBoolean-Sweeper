@@ -1,20 +1,15 @@
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import com.google.gson.Gson;
+import org.apache.commons.math3.fraction.BigFraction;
+import org.apache.commons.math3.fraction.Fraction;
+
+import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.io.BufferedReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
-
-import com.google.gson.Gson;
-
-import org.apache.commons.math3.fraction.BigFraction;
-import org.apache.commons.math3.fraction.Fraction;
 
 /**
  * A class that simulates a number of games following a defined strategy. Reports back no. of wins, losses, game time etc.
@@ -36,10 +31,10 @@ public class StrategySimulator {
 	private final String JOINT_NAME = "Joint-Results.csv";
 	private final String JOINT_NAME_FIRSTGUESS = "JointFirstGuess-Results.csv";
 	private final String FULL_NAME = "Prob-Results.csv";
-	private int startLine;
+	private final int startLine;
 
 	private String RESULT_DIR;
-	private int noOfGames;
+	private final int noOfGames;
 	private StringBuilder resultString;
 	private boolean firstGuess;
 
@@ -65,7 +60,7 @@ public class StrategySimulator {
 		this.startLine = startLine;
 	}
 
-	public void resetScores() {
+	private void resetScores() {
 		winCount = 0;
 		guessCount = 0;
 		winGuessCount = 0;
@@ -75,7 +70,7 @@ public class StrategySimulator {
 
 	// Start a simulation of games being solved using SinglePoint algorithm
 	// No need to perfrom multithreading as quick enough asynchronous
-	public void startSPSim() {
+	private void startSPSim() {
 		try {
 			writeTitle();
 			System.out.println("Pattern Match Easy");
@@ -218,7 +213,7 @@ public class StrategySimulator {
 	}
 
 	// SP is so quick there is no need to multithread it with GamePlayer.java s
-	public void playSinglePoint(Difficulty diff, String path) throws IOException {
+	private void playSinglePoint(Difficulty diff, String path) throws IOException {
 		int winCount = 0;
 		BigInteger winTimes = BigInteger.ZERO;
 		int guessCount = 0;
@@ -287,7 +282,7 @@ public class StrategySimulator {
 		}
 	}
 
-	public void playPB(Difficulty diff, String path) throws IOException {
+	private void playPB(Difficulty diff, String path) throws IOException {
 		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
@@ -353,7 +348,7 @@ public class StrategySimulator {
 		}
 	}
 
-	public void playSinglePointPB(Difficulty diff, String path) throws IOException {
+	private void playSinglePointPB(Difficulty diff, String path) throws IOException {
 		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
@@ -415,7 +410,7 @@ public class StrategySimulator {
 		writeLine(diff.toString(), winCount, winTimes, guessCount, winGuessCount, totalTime, gamesLostOnFirstMove);
 	}
 
-	public void playFull(Difficulty diff, String path) throws IOException {
+	private void playFull(Difficulty diff, String path) throws IOException {
 		int gamesLostOnFirstMove = 0;
 		int noOfThreads = Runtime.getRuntime().availableProcessors();
 		int batch;
@@ -481,13 +476,13 @@ public class StrategySimulator {
 		}
 	}
 
-	public void writeResults(String fileName) throws FileNotFoundException {
+	private void writeResults(String fileName) throws FileNotFoundException {
 		try (PrintWriter writer = new PrintWriter(RESULT_DIR + fileName)) {
 			writer.write(resultString.toString());
 		}
 	}
 
-	public void writeTitle() {
+	private void writeTitle() {
 		resultString.append("difficulty");
 		resultString.append(",");
 		resultString.append("no. of games");
@@ -509,8 +504,8 @@ public class StrategySimulator {
 		resultString.append("\n");
 	}
 
-	public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int winGuessCount,
-			BigInteger totalElapsedTime) {
+	private void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int winGuessCount,
+						   BigInteger totalElapsedTime) {
 		resultString.append(diff);
 		resultString.append(",");
 		resultString.append(noOfGames);
@@ -551,8 +546,8 @@ public class StrategySimulator {
 		resultString.append("\n");
 	}
 
-	public void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int winGuessCount,
-			BigInteger totalElapsedTime, int gamesLostOnFirstMove) {
+	private void writeLine(String diff, int winCount, BigInteger gameTime, int guessCount, int winGuessCount,
+						   BigInteger totalElapsedTime, int gamesLostOnFirstMove) {
 		resultString.append(diff);
 		resultString.append(",");
 		int playedGames = noOfGames - gamesLostOnFirstMove;
@@ -598,7 +593,7 @@ public class StrategySimulator {
 		resultString.append("\n");
 	}
 
-	public void resetResults() {
+	private void resetResults() {
 		resultString = new StringBuilder();
 	}
 

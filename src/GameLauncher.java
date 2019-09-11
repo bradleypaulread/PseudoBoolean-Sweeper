@@ -1,3 +1,7 @@
+import java.util.Calendar;
+import java.util.Date;
+import java.util.stream.Collectors;
+
 /**
  * A launcher class for a game of PseudoBoolean-Sweeper.
  * 
@@ -22,7 +26,7 @@ public class GameLauncher {
 
 		// new Minesweeper(mineFieldJson); // Default beginner board
 
-		Minesweeper game = new Minesweeper(x, y, mines); // Default beginner board
+		Minesweeper game = new Minesweeper(); // Default beginner board
 		game.buildGUI();
 		// Example of how load a game with a pre-generated MineField JSON
 		// new Minesweeper(9, 9, 10, mineFieldJson);

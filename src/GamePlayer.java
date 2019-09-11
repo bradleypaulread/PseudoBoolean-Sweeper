@@ -10,9 +10,8 @@ import com.google.gson.Gson;
  */
 public class GamePlayer implements Runnable {
 
-	private Difficulty gameDifficulty;
-	private MineField mineField;
-	private String mineFieldBackup;
+	private final Difficulty gameDifficulty;
+	private final String mineFieldBackup;
 
 	private Minesweeper game;
 
@@ -31,7 +30,7 @@ public class GamePlayer implements Runnable {
 
 		Gson gson = new Gson();
 
-		mineField = gson.fromJson(fieldJson, MineField.class);
+		MineField mineField = gson.fromJson(fieldJson, MineField.class);
 		mineFieldBackup = fieldJson;
 
 		game = new Minesweeper(gameDifficulty, mineField);

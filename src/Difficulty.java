@@ -20,7 +20,7 @@ public enum Difficulty {
      * @param height number of rows
      * @param noOfMines number for mines present in this difficulty
      */
-    private Difficulty(int width, int height, int noOfMines) {
+    Difficulty(int width, int height, int noOfMines) {
         this.width = width;
         this.height = height;
         this.noOfMines = noOfMines;

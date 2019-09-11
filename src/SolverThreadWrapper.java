@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * A wrapper class for solvers so that multiple sovlers can be used at once and
  * that the GUI can be updated concurrently.
- * 
+ *
  * @author Bradley Read
  * @version 1.0
  * @since 2019-02-25
@@ -45,8 +45,7 @@ public class SolverThreadWrapper implements Runnable {
 
     public void end() {
         running.set(false);
-        if (thread != null)
-            thread.interrupt();
+        if (thread != null) thread.interrupt();
         thread = null;
     }
 
@@ -110,8 +109,9 @@ public class SolverThreadWrapper implements Runnable {
             }
         }
         // Stop all solvers performing a solve
-        solvers.forEach(s -> s.stopSolver());
-        game.getStopBtn().setEnabled(false);
+        solvers.forEach(Solver::stopSolver);
+        game.getStopBtn()
+                .setEnabled(false);
         if (!game.isGameOver()) {
             game.enableAllBtns();
         }

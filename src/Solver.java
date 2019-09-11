@@ -1,12 +1,8 @@
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.sat4j.pb.SolverFactory;
 import org.sat4j.pb.core.PBSolver;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An abstract class for a board solver. Contains many helper methods.
@@ -377,7 +373,7 @@ public abstract class Solver {
 	 */
 	public List<Cell> getNeighbours(int x, int y) {
 		cells = game.getCells();
-		List<Cell> neighbours = new ArrayList<Cell>();
+		List<Cell> neighbours = new ArrayList<>();
 		for (int i = x - 1; i <= x + 1; ++i) {
 			for (int j = y - 1; j <= y + 1; ++j) {
 				if (i >= 0 && i < cells.length && j >= 0 && j < cells[i].length && !(i == x && j == y)) {
@@ -396,7 +392,7 @@ public abstract class Solver {
 	 */
 	public List<Cell> getLandCells() {
 		List<Cell> landCells = new ArrayList<>();
-		for (Cell col[] : cells) {
+		for (Cell[] col : cells) {
 			for (Cell c : col) {
 				if (c.isOpen()) {
 					landCells.add(c);
@@ -441,7 +437,7 @@ public abstract class Solver {
 				if (current.isClosed()) {
 					List<Cell> neighbours = getNeighbours(current);
 					int noOfNeighbours = neighbours.size();
-					neighbours.removeIf(c -> c.isOpen());
+					neighbours.removeIf(Cell::isOpen);
 					int noOfClosedNeighbours = neighbours.size();
 					if (noOfClosedNeighbours < noOfNeighbours) {
 						shoreClosed.add(current);
@@ -465,7 +461,7 @@ public abstract class Solver {
 				Cell current = cells[i][j];
 				if (current.isOpen()) {
 					List<Cell> neighbours = getNeighbours(current);
-					neighbours.removeIf(cell -> cell.isOpen());
+					neighbours.removeIf(Cell::isOpen);
 					if (!neighbours.isEmpty()) {
 						shoreOpen.add(current);
 					}

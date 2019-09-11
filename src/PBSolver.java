@@ -1,13 +1,13 @@
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.sat4j.core.VecInt;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IConstr;
 import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A class that constucts a set of pseudo-Boolean constraints from the current
@@ -218,7 +218,7 @@ public class PBSolver extends Solver {
 					atLeastConstr = solver.addAtLeast(lit, coeff, weight);
 					// Find if cell is safe or mine
 					if (!solver.isSatisfiable()) {
-						boolean isMine = weight == 1 ? false : true;
+						boolean isMine = weight != 1;
 						results.put(current, isMine);
 						if (atMostConstr != null) {
 							solver.removeConstr(atMostConstr);
@@ -239,7 +239,7 @@ public class PBSolver extends Solver {
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
 					// already known to be safe/a mine.
-					boolean isMine = weight == 1 ? false : true;
+					boolean isMine = weight != 1;
 					results.put(current, isMine);
 					if (atMostConstr != null) {
 						solver.removeConstr(atMostConstr);
@@ -269,7 +269,7 @@ public class PBSolver extends Solver {
 					atLeastConstr = solver.addAtLeast(lit, coeff, weight);
 					// Find if cell is safe or mine
 					if (!solver.isSatisfiable()) {
-						boolean isMine = weight == 1 ? false : true;
+						boolean isMine = weight != 1;
 						for (Cell c : sea) {
 							results.put(c, isMine);
 						}
@@ -292,7 +292,7 @@ public class PBSolver extends Solver {
 				} catch (ContradictionException ce) {
 					// Contradiction Exception is thrown when the tested cell is
 					// already known to be safe/a mine.
-					boolean isMine = weight == 1 ? false : true;
+					boolean isMine = weight != 1;
 					results.put(current, isMine);
 					if (atLeastConstr != null) {
 						solver.removeConstr(atLeastConstr);

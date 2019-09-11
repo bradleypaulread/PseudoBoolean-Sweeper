@@ -1,6 +1,6 @@
-import java.util.Random;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 /**
  * A blackbox minefield implementation. Distributes mines randomly and uniformly
@@ -125,4 +125,4 @@ class MineField {
 	// System.out.print(mf.open("oops"));
 	// System.out.print(mf.open("hello"));
 	// }
-};
+}
