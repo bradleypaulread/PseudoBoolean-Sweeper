@@ -1,1 +1,8 @@
-/target/
+target/
+.idea/
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+.env
