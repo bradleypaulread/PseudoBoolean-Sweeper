@@ -199,8 +199,8 @@
 //		}
 //
 //		for (int i = 0; i < closedShore.size() && running.get() && !Thread.interrupted(); i++) {
-//			Cell current = closedShore.get(i);
-//			if (current.isFlagged()) {
+//			Cell cell = closedShore.get(i);
+//			if (cell.isFlagged()) {
 //				continue;
 //			}
 //			// Find if cell safe (weight=0) or mine (weight=1)
@@ -213,7 +213,7 @@
 //					// Generate the known constraints on the board
 //
 //					// Create literal for current cell
-//					lit.push(encodeCellId(current));
+//					lit.push(encodeCellId(cell));
 //					coeff.push(1);
 //					// Safe/Mine
 //					atMostConstr = solver.addAtMost(lit, coeff, weight);
@@ -221,7 +221,7 @@
 //					// Find if cell is safe or mine
 //					if (!solver.isSatisfiable()) {
 //						boolean isMine = weight != 1;
-//						results.put(current, isMine);
+//						results.put(cell, isMine);
 //						if (atMostConstr != null) {
 //							solver.removeConstr(atMostConstr);
 //						}
@@ -242,7 +242,7 @@
 //					// Contradiction Exception is thrown when the tested cell is
 //					// already known to be safe/a mine.
 //					boolean isMine = weight != 1;
-//					results.put(current, isMine);
+//					results.put(cell, isMine);
 //					if (atMostConstr != null) {
 //						solver.removeConstr(atMostConstr);
 //					}

@@ -43,6 +43,10 @@ public class Board {
         return neighbours;
     }
 
+    public Cell[][] getCells() {
+        return this.cells;
+    }
+
     public Cell unveil(int x, int y) {
         int num = field.uncover(x, y);
         Cell cell = getCell(x, y);
