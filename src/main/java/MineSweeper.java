@@ -7,11 +7,12 @@ public class MineSweeper {
 
     private final String PASSWORD = "hello";
 
-    private int width, height, mines;
+    private final int width;
+    private final int height;
+    private final int mines;
+    private final Board board;
     private int openCells;
-
     private GameState gameState;
-    private Board board;
 
     public MineSweeper(Difficulty diff) {
         this(diff.width, diff.height, diff.mines);

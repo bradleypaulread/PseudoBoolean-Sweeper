@@ -29,7 +29,7 @@ public class BoardGUI extends JPanel {
         });
     }
 
-    public static void refreshBoard() {
+    public static void refreshOpenings() {
         for (CellGUI cell : cells) {
             if (game.getGameState() != GameState.RUNNING) {
                 cell.openCell();

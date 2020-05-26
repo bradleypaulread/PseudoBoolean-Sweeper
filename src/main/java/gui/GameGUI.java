@@ -18,13 +18,6 @@ public class GameGUI extends JFrame {
         this.boardGUI = new BoardGUI(this.game);
     }
 
-    public static void main(String[] args) {
-        System.out.println("Started");
-        MineSweeper game = new MineSweeper(9, 9, 10);
-        GameGUI gameGUI = new GameGUI(game);
-        gameGUI.buildGUI();
-    }
-
     private void resetBoard() {
         this.game = new MineSweeper(game.getWidth(), game.getHeight(), game.getMines());
         this.boardGUI = new BoardGUI(this.game);

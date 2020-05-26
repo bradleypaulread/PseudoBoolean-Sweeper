@@ -1,6 +1,7 @@
 package main.java.gui;
 
 import main.java.Cell;
+import main.java.DisplayState;
 import main.java.MineSweeper;
 
 import javax.swing.*;
@@ -11,29 +12,34 @@ import java.awt.event.MouseEvent;
 
 public class CellGUI extends JButton {
 
-    private static final Color NORMAL_COLOUR = null;  // new Color(238, 238, 238);
-    private static final Color FLAGGED_COLOUR = new Color(233, 237, 149);
-    private static final Color HINT_COLOUR = Color.YELLOW;
-
     private static int cellWidth = 50;
-    private Cell cell;
+    private final Cell cell;
+    private final MineSweeper game;
     private boolean clicked;
-    private MineSweeper game;
-    private boolean flagged;
+    private DisplayState displayState;
 
 
     public CellGUI(Cell cell, MineSweeper game) {
+        this.setFont(new Font("", Font.BOLD, (cellWidth / 3)));
         this.cell = cell;
-        this.flagged = false;
         this.clicked = false;
         this.setPreferredSize(new Dimension(cellWidth, cellWidth));
         this.game = game;
+        this.displayState = DisplayState.NORMAL;
         addActionListeners();
         addMouseListeners();
     }
 
     public static void setCellWidth(int newCellWidth) {
         cellWidth = newCellWidth;
+    }
+
+    public DisplayState getDisplayState() {
+        return displayState;
+    }
+
+    public void setDisplayState(DisplayState displayState) {
+        this.displayState = displayState;
     }
 
     private void addMouseListeners() {
@@ -50,33 +56,30 @@ public class CellGUI extends JButton {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
+                // Do nothing if cell has been clicked
+                if (isClicked()) {
+                    return;
+                }
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    if (isClicked()) {
-                        return;
-                    }
-                    if (flagged) {
-                        button.setBackground(NORMAL_COLOUR);
-                        flagged = false;
-                    } else {
-                        flagged = true;
-                        button.setBackground(FLAGGED_COLOUR);
-                    }
-                    button.setEnabled(!flagged);
+                    boolean flagged = cell.isFlagged();
+                    cell.setFlagged(!flagged);
+                    displayState = displayState != DisplayState.FLAG ? DisplayState.FLAG : DisplayState.NORMAL;
+                    updateCell();
                 }
             }
         });
     }
 
     private void clickedCell() {
+        System.out.println("Clicked " + this.cell);
         game.openCell(this.cell.getX(), this.cell.getY());  // Go through game so win/loss conditions are checked
         openCell();
-        BoardGUI.refreshBoard();
+        BoardGUI.refreshOpenings();  // Refresh whole board as a 0 could have been clicked and opened more cells
     }
 
     public void openCell() {
         this.clicked = true;
-        drawText();
-        this.setEnabled(false);
+        updateCell();
     }
 
     private void drawText() {
@@ -93,6 +96,19 @@ public class CellGUI extends JButton {
         this.setText(text);
     }
 
+    public void updateCell() {
+        switch (this.displayState) {
+            case FLAG -> this.setEnabled(false);
+            default -> {
+                if (this.clicked) {
+                    drawText();
+                }
+                this.setEnabled(!this.clicked);
+            }
+        }
+        this.setBackground(this.displayState.colour);
+    }
+
     @Override
     public Color getForeground() {
         //workaround
@@ -106,15 +122,11 @@ public class CellGUI extends JButton {
         return this.clicked;
     }
 
-    public String getReadableCell() {
-        return "(" + cell.getX() + ", " + cell.getY() + ")";
-    }
-
     public Cell getCell() {
         return cell;
     }
 
-    public Color getTextColour() {
+    private Color getTextColour() {
         return switch (this.cell.getNumber()) {
             case 1 -> new Color(0, 0, 255);    // Blue
             case 2 -> new Color(0, 130, 0);    // Green
