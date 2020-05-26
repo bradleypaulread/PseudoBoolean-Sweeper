@@ -27,6 +27,10 @@ public class MineSweeper {
         this.board = new Board(width, height, mines);
     }
 
+    public Cell[][] getCells() {
+        return this.board.getCells();
+    }
+
     public int getWidth() {
         return width;
     }

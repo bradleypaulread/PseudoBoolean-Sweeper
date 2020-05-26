@@ -1,5 +1,6 @@
 package main.java.gui;
 
+import main.java.DisplayState;
 import main.java.GameState;
 import main.java.MineSweeper;
 
@@ -29,12 +30,19 @@ public class BoardGUI extends JPanel {
         });
     }
 
-    public static void refreshOpenings() {
+    public static void refreshCellGUIs() {
+        if (game.getGameState() != GameState.RUNNING) {
+            for (CellGUI cell : cells) {
+                cell.openCell();
+            }
+            return;
+        }
         for (CellGUI cell : cells) {
-            if (game.getGameState() != GameState.RUNNING) {
+            if (!cell.isClicked() && cell.getCell().isOpen()) {
                 cell.openCell();
-            } else if (!cell.isClicked() && cell.getCell().isOpen()) {
-                cell.openCell();
+            } else if (cell.getCell().isFlagged() && cell.getDisplayState() != DisplayState.FLAG) {
+                cell.setDisplayState(DisplayState.FLAG);
+                cell.updateCell();
             }
         }
     }

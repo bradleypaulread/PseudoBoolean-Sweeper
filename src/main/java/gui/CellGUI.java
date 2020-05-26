@@ -18,9 +18,7 @@ public class CellGUI extends JButton {
     private boolean clicked;
     private DisplayState displayState;
 
-
     public CellGUI(Cell cell, MineSweeper game) {
-        this.setFont(new Font("", Font.BOLD, (cellWidth / 3)));
         this.cell = cell;
         this.clicked = false;
         this.setPreferredSize(new Dimension(cellWidth, cellWidth));
@@ -28,6 +26,8 @@ public class CellGUI extends JButton {
         this.displayState = DisplayState.NORMAL;
         addActionListeners();
         addMouseListeners();
+        this.setFont(new Font("", Font.PLAIN, cellWidth / 6));
+        this.setText("" + this.cell);
     }
 
     public static void setCellWidth(int newCellWidth) {
@@ -74,7 +74,7 @@ public class CellGUI extends JButton {
         System.out.println("Clicked " + this.cell);
         game.openCell(this.cell.getX(), this.cell.getY());  // Go through game so win/loss conditions are checked
         openCell();
-        BoardGUI.refreshOpenings();  // Refresh whole board as a 0 could have been clicked and opened more cells
+        BoardGUI.refreshCellGUIs();  // Refresh whole board as a 0 could have been clicked and opened more cells
     }
 
     public void openCell() {
@@ -83,6 +83,7 @@ public class CellGUI extends JButton {
     }
 
     private void drawText() {
+        this.setFont(new Font("", Font.BOLD, (cellWidth / 3)));
         String text = switch (this.cell.getNumber()) {
             case -1 -> "X";
             case 0 -> "";
