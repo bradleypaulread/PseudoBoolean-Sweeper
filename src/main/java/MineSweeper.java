@@ -71,7 +71,7 @@ public class MineSweeper {
     private void openNeighbours(int x, int y) {
         List<Cell> neighbours = board.getNeighbours(x, y);
         for (Cell c : neighbours) {
-            if (c.isClosed() && !c.isFlagged()) {
+            if (!c.isOpen() && !c.isFlagged()) {
                 openCell(c.getX(), c.getY());
             }
         }

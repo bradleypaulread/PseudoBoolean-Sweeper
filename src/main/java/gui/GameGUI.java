@@ -26,9 +26,8 @@ public class GameGUI extends JFrame {
     }
 
     private void resetBoard() {
-        this.game = new MineSweeper(Difficulty.BEGINNER);
+        this.game = new MineSweeper(game.getWidth(), game.getHeight(), game.getMines());
         this.boardGUI = new BoardGUI(this.game);
-
     }
 
     private void resetGUI() {

@@ -24,8 +24,8 @@ public class GameLauncher {
 
 		// new main.java.Minesweeper(mineFieldJson); // Default beginner board
 
-		MineSweeper game = new MineSweeper(Difficulty.BEGINNER); // Default beginner board
-
+		System.out.println("Started");
+		MineSweeper game = new MineSweeper(Difficulty.EXPERT); // Default beginner board
 		GameGUI gui = new GameGUI(game);
 		gui.buildGUI();
 

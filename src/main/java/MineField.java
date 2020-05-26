@@ -37,7 +37,7 @@ public class MineField {
 		assert number_of_mines >= 0 && number_of_mines <= height * width;
 
 		// field's entries are initialised to false by default
-		field = new boolean[height][width];
+		field = new boolean[width][height];
 		// plant mines as follows:
 		// iterate through the squares of the minefield,
 		// and plant a mine in a particular square with the
@@ -47,8 +47,8 @@ public class MineField {
 		// the resulting distribution is close to uniform
 		Random gen = new Random(); // random number generator
 		int remaining_positions = height * width; // number of positions that have not been considered yet
-		for (int i = 0; i < height; ++i) {
-			for (int j = 0; j < width; ++j) {
+		for (int i = 0; i < width; ++i) {
+			for (int j = 0; j < height; ++j) {
 				if (gen.nextInt(remaining_positions) < number_of_mines) {
 					field[i][j] = true;
 					--number_of_mines;
@@ -63,8 +63,8 @@ public class MineField {
 	// mines around this square is returned (this number is in the range 0..8);
 	// otherwise -1 is returned, and the class should never be called again
 	// (its behaviour becomes undefined)
-	public int uncover(int h, int w) {
-		assert is_good(h, w);
+	public int uncover(int w, int h) {
+		assert is_good(w, h);
 		if (!opened) {
 			assert !exploded;
 			// in case the assertions are switched off, hang if exploded
@@ -73,17 +73,17 @@ public class MineField {
 		}
 
 		// check if exploded this time
-		if (field[h][w]) {
+		if (field[w][h]) {
 			exploded = true;
 			return -1;
 		}
 
 		// count the number of mines around this cell;
-		// note that field[h][w] is false, so we can count it
-		assert !field[h][w];
+		// note that field[w][h] is false, so we can count it
+		assert !field[w][h];
 		int counter = 0;
-		for (int i = h - 1; i <= h + 1; ++i) {
-			for (int j = w - 1; j <= w + 1; ++j) {
+		for (int i = w - 1; i <= w + 1; ++i) {
+			for (int j = h - 1; j <= h + 1; ++j) {
 				if (is_good(i, j) && field[i][j])
 					++counter;
 			}

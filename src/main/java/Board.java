@@ -6,9 +6,11 @@ import java.util.List;
 
 public class Board {
 
-    private int width, height, mines;
-    private Cell[][] cells;
-    private MineField field;
+    private final int width;
+    private final int height;
+    private final int mines;
+    private final Cell[][] cells;
+    private final MineField field;
 
     public Board(int width, int height, int mines) {
         this.width = width;
@@ -31,9 +33,9 @@ public class Board {
      */
     public List<Cell> getNeighbours(int x, int y) {
         List<Cell> neighbours = new ArrayList<>();
-        for (int i = x - 1; i <= x + 1; ++i) {
-            for (int j = y - 1; j <= y + 1; ++j) {
-                if (i >= 0 && i < cells.length && j >= 0 && j < cells[i].length && !(i == x && j == y)) {
+        for (int i = x - 1; i <= x + 1; i++) {
+            for (int j = y - 1; j <= y + 1; j++) {
+                if (i >= 0 && i < width && j >= 0 && j < height && !(i == x && j == y)) {
                     neighbours.add(cells[i][j]);
                 }
             }
@@ -42,7 +44,7 @@ public class Board {
     }
 
     public Cell unveil(int x, int y) {
-        int num = field.uncover(y, x);
+        int num = field.uncover(x, y);
         Cell cell = getCell(x, y);
         cell.setNumber(num);
         cell.setOpen(true);
@@ -61,11 +63,11 @@ public class Board {
 
     public void openAllCells(final String PASSWORD) throws NoSuchAlgorithmException {
         this.field.open(PASSWORD);
-        for (int i = 0; i < this.cells.length; i++) {
-            for (int j = 0; j < this.cells[i].length; j++) {
+        for (int i = 0; i < this.width; i++) {
+            for (int j = 0; j < this.height; j++) {
                 Cell cell = this.cells[i][j];
-                if (cell.isClosed()) {
-                    int num = this.field.uncover(j, i);
+                if (!cell.isOpen()) {
+                    int num = this.field.uncover(i, j);
                     cell.setNumber(num);
                     cell.setOpen(true);
                 }
