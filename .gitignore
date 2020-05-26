@@ -6,3 +6,5 @@ bin/
 .classpath
 .project
 .env
+*.iml
+stale_outputs_checked
