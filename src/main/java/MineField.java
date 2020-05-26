@@ -1,3 +1,5 @@
+package main.java;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -14,7 +16,7 @@ import java.util.Random;
  * @version 1.0
  * @since 2014-08-17
  */
-class MineField {
+public class MineField {
 	private boolean[][] field;
 	private boolean exploded = false;
 	private boolean opened = false;
@@ -115,7 +117,7 @@ class MineField {
 	}
 
 	// public static void main(String[] args) throws NoSuchAlgorithmException{
-	// MineField mf=new MineField(10,15,20);
+	// main.java.MineField mf=new main.java.MineField(10,15,20);
 	// for(int i=0;i<mf.field.length;++i){
 	// System.out.println();
 	// for(int j=0;j<mf.field[i].length;++j){

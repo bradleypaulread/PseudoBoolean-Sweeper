@@ -1,6 +1,8 @@
+package main.java;
+
 /**
  * An Enum that specifies the dificulty of a game.
- * 
+ *
  * @author Bradley Read
  * @version 1.0
  * @since 2019-08-30
@@ -11,19 +13,19 @@ public enum Difficulty {
 
     public final int width;
     public final int height;
-    public final int noOfMines;
+    public final int mines;
 
     /**
-     * Constructor for a Difficulty.
-     * 
-     * @param width number of columns
+     * Constructor for a main.java.Difficulty.
+     *
+     * @param width  number of columns
      * @param height number of rows
-     * @param noOfMines number for mines present in this difficulty
+     * @param mines  number for mines present in this difficulty
      */
-    Difficulty(int width, int height, int noOfMines) {
+    Difficulty(int width, int height, int mines) {
         this.width = width;
         this.height = height;
-        this.noOfMines = noOfMines;
+        this.mines = mines;
     }
 
 }

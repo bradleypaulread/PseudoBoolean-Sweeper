@@ -1,3 +1,5 @@
+package main.java;
+
 /**
  * A class that stores a cell's attributes. (E.g. its number, if it has been
  * flagged, if its a mine, its probability etc.).
@@ -14,17 +16,17 @@ public class Cell {
 	private int number;
 
 	// Cell behaviour
-	private boolean flagged; // Cell was flagged by user
-	private boolean open; // Cell was probed by user
-	private boolean safeHint; // Cell is hinted as being safe
-	private boolean mineHint; // Cell is hinted as being a mine
-	private boolean fail; // Cell was the one that lost the user the game
+	private boolean flagged; // main.java.Cell was flagged by user
+	private boolean open; // main.java.Cell was probed by user
+	private boolean safeHint; // main.java.Cell is hinted as being safe
+	private boolean mineHint; // main.java.Cell is hinted as being a mine
+	private boolean fail; // main.java.Cell was the one that lost the user the game
 	private boolean marked; // Used to help deduce moves during a game
 	private Double prob; // Percentage of cell being a mine
 	private boolean bestCell; // If cell has the lowest prob of being a mine
 
 	/**
-	 * Constructor for Cell class.
+	 * Constructor for main.java.Cell class.
 	 * 
 	 * @param x cell's x-axis position
 	 * @param y cell's y-axis position
