@@ -3,9 +3,11 @@ package main.java.gui;
 import main.java.Cell;
 import main.java.MineSweeper;
 import main.java.MyPBSolver;
+import main.java.SolverSwingWorker;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameGUI extends JFrame {
@@ -14,6 +16,7 @@ public class GameGUI extends JFrame {
     // not great programming but it will do
     private MineSweeper game;
     private BoardGUI boardGUI;
+    private SolverSwingWorker worker;
 
     public GameGUI(MineSweeper game) {
         this.game = game;
@@ -42,6 +45,14 @@ public class GameGUI extends JFrame {
         });
         topFrame.add("Temp Btn", tmpBtn);
 
+        JButton stopBtn = new JButton("Stop");
+        stopBtn.addActionListener(e -> {
+            if (worker != null) {
+                worker.stop();
+            }
+        });
+        topFrame.add("Stop Button", stopBtn);
+
         JButton pbMines = new JButton("Mines");
         pbMines.addActionListener(e -> {
             MyPBSolver p = new MyPBSolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines());
@@ -59,27 +70,15 @@ public class GameGUI extends JFrame {
 
         JButton solveBtn = new JButton("Solve");
         solveBtn.addActionListener(e -> {
-            boolean somethingChanged = true;
-            while (somethingChanged) {
-                MyPBSolver p = new MyPBSolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines());
-                List<Cell> mines = p.getMineCells();
-                List<Cell> safe = p.getSafeCells();
-                somethingChanged = false;
-                for (Cell cell : mines) {
-                    if (!cell.isFlagged()) {
-                        somethingChanged = true;
-                        cell.setFlagged(true);
-                    }
-                }
-
-                for (Cell cell : safe) {
-                    if (!cell.isOpen()) {
-                        somethingChanged = true;
-                        game.openCell(cell.getX(), cell.getY());
-                    }
-                }
-                boardGUI.refreshCellGUIs();
-            }
+            MyPBSolver p = new MyPBSolver(game.getCells(), game.getWidth(),
+                    game.getHeight(), game.getMines());
+            List<JComponent> disableBtns = new ArrayList<>();
+            disableBtns.add(tmpBtn);
+            disableBtns.add(solveBtn);
+            disableBtns.add(pbMines);
+            disableBtns.add(boardGUI);
+            this.worker = new SolverSwingWorker(disableBtns, p, this.game);
+            this.worker.execute();
         });
         topFrame.add("Solve", solveBtn);
 

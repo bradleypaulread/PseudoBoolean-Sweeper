@@ -47,6 +47,25 @@ public class BoardGUI extends JPanel {
         }
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        if (!enabled) {
+            for (CellGUI cell : cells) {
+                if (!cell.getCell().isOpen() && !cell.getCell().isFlagged()) {
+                    cell.setBackground(Color.LIGHT_GRAY);
+                }
+                cell.setEnabled(false);
+            }
+        } else {
+            for (CellGUI cell : cells) {
+                if (!cell.getCell().isOpen() && !cell.getCell().isFlagged()) {
+                    cell.setBackground(null);
+                    cell.setEnabled(true);
+                }
+            }
+        }
+    }
+
     private void setupGrid() {
         for (int i = 0; i < game.getWidth(); i++) {
             for (int j = 0; j < game.getHeight(); j++) {
