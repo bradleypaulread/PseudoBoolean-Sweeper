@@ -1,9 +1,6 @@
 package main.java;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -19,7 +16,20 @@ public class SinglePointSolver extends AbstractSolver {
         super(cells, width, height, mines);
     }
 
-    @Override
+    public Map<Cell, Boolean> getKnownCells() {
+        Map<Cell, Boolean> results = new HashMap<>();
+
+        for (Cell cell : getMineCells()) {
+            results.put(cell, true);
+        }
+
+        for (Cell cell : getSafeCells()) {
+            results.put(cell, false);
+        }
+
+        return results;
+    }
+
     public List<Cell> getMineCells() {
         List<Cell> haveSurroundingMineCells = cellMatrixToStream()
                 .filter(Cell::isOpen)
@@ -30,7 +40,6 @@ public class SinglePointSolver extends AbstractSolver {
         return getAllNeighbouringClosedCells(cells, haveSurroundingMineCells);
     }
 
-    @Override
     public List<Cell> getSafeCells() {
         List<Cell> haveSurroundingSafeCells = cellMatrixToStream()
                 .filter(cell -> hasSinglePointSafePattern(cell))

@@ -35,7 +35,8 @@ public class MyPBSolver extends AbstractSolver {
         return solver;
     }
 
-    private void addBoardConstraint(PBSolver solver) throws ContradictionException {
+    private void addBoardConstraint(PBSolver solver)
+            throws ContradictionException {
         IVecInt lits = new VecInt();
         IVecInt coeffs = new VecInt();
 
@@ -58,7 +59,8 @@ public class MyPBSolver extends AbstractSolver {
         coeffs.clear();
     }
 
-    private void addOpenCellConstraint(PBSolver solver) throws ContradictionException {
+    private void addOpenCellConstraint(PBSolver solver)
+            throws ContradictionException {
         IVecInt lits = new VecInt();
         IVecInt coeffs = new VecInt();
 
@@ -93,17 +95,37 @@ public class MyPBSolver extends AbstractSolver {
         }
     }
 
-    private Map<Cell, Boolean> getKnownCells() {
+    public Map<Cell, Boolean> getKnownCells() {
         Map<Cell, Boolean> results = new HashMap<>();
 
         PBSolver solver = generateBaseConstraints();
 
         List<Cell> shoreCells = getClosedShoreCells();
+
+        // Test all shore cells
         for (Cell cell : shoreCells) {
             for (int weight = 0; weight <= 1; weight++) {
-                Optional<Boolean> isMine = checkCellWithWeight(solver, cell, weight);
+                Optional<Boolean> isMine =
+                        checkCellWithWeight(solver, cell, weight);
                 if (isMine.isPresent()) {
                     results.put(cell, isMine.get());
+                    break;
+                }
+            }
+        }
+
+        // Test a sea cell
+        List<Cell> seaCells = getSeaCells();
+        if (!seaCells.isEmpty()) {
+            // if one sea cell is safe/a mine than all sea cells are safe/a mine
+            Cell cell = seaCells.get(0);
+            for (int weight = 0; weight <= 1; weight++) {
+                Optional<Boolean> isMine =
+                        checkCellWithWeight(solver, cell, weight);
+                if (isMine.isPresent()) {
+                    for (Cell c : seaCells) {
+                        results.put(c, isMine.get());
+                    }
                     break;
                 }
             }
@@ -148,7 +170,6 @@ public class MyPBSolver extends AbstractSolver {
         return result;
     }
 
-    @Override
     public List<Cell> getMineCells() {
         return getKnownCells().entrySet().stream()
                 .filter(entry -> entry.getValue())
@@ -156,7 +177,6 @@ public class MyPBSolver extends AbstractSolver {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public List<Cell> getSafeCells() {
         return getKnownCells().entrySet().stream()
                 .filter(entry -> !entry.getValue())

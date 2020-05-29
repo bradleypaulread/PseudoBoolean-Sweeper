@@ -1,6 +1,6 @@
 package main.java;
 
-import java.util.List;
+import java.util.Map;
 
 public interface Solver {
     /**
@@ -9,7 +9,7 @@ public interface Solver {
      * @return True if a hint (one that has not already been hinted) is found. False
      * if no hint or futher hints are found.
      */
-    List<Cell> getMineCells();
+    // List<Cell> getMineCells();
 
     /**
      * Probe a safe/recommended cell.
@@ -17,5 +17,14 @@ public interface Solver {
      * @return True if a cell is found and probed. False if no safe cell is found
      * and probed.
      */
-    List<Cell> getSafeCells();
+    // List<Cell> getSafeCells();
+
+    /**
+     * Return a mapping of cells to if they are a mine.
+     * <p>
+     * Only known cells are return.
+     *
+     * @return Mapping of cell to Boolean, true means mine and false means safe.
+     */
+    Map<Cell, Boolean> getKnownCells();
 }
