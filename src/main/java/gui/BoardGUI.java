@@ -31,7 +31,7 @@ public class BoardGUI extends JPanel {
     }
 
     public static void refreshCellGUIs() {
-        if (game.getGameState() != GameState.RUNNING) {
+        if (game.getState() != GameState.RUNNING) {
             for (CellGUI cell : cells) {
                 cell.openCell();
             }
