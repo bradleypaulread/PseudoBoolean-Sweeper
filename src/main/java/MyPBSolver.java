@@ -20,11 +20,11 @@ public class MyPBSolver extends AbstractSolver {
         constraintLog = new ArrayList<>();
     }
 
-    private void logConstraint(String lits, int value, String ex) {
+    protected void logConstraint(String lits, int value, String ex) {
         this.constraintLog.add("" + lits + " " + ex + " " + value);
     }
 
-    private PBSolver generateBaseConstraints() {
+    protected PBSolver generateBaseConstraints() {
         constraintLog.clear();
         PBSolver solver = SolverFactory.newDefault();
         try {
@@ -35,7 +35,7 @@ public class MyPBSolver extends AbstractSolver {
         return solver;
     }
 
-    private void addBoardConstraint(PBSolver solver)
+    protected void addBoardConstraint(PBSolver solver)
             throws ContradictionException {
         IVecInt lits = new VecInt();
         IVecInt coeffs = new VecInt();
@@ -59,7 +59,7 @@ public class MyPBSolver extends AbstractSolver {
         coeffs.clear();
     }
 
-    private void addOpenCellConstraint(PBSolver solver)
+    protected void addOpenCellConstraint(PBSolver solver)
             throws ContradictionException {
         IVecInt lits = new VecInt();
         IVecInt coeffs = new VecInt();
