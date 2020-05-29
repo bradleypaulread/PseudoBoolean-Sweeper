@@ -69,7 +69,7 @@ public class MineSweeper {
         }
     }
 
-    public GameState getGameState() {
+    public GameState getState() {
         return this.gameState;
     }
 
@@ -103,5 +103,9 @@ public class MineSweeper {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+    }
+
+    public Board getBoard() {
+        return this.board;
     }
 }

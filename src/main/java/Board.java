@@ -20,6 +20,10 @@ public class Board {
         this.cells = createCells();
     }
 
+    public MineField getField() {
+        return this.field;
+    }
+
     public Cell getCell(int x, int y) {
         return this.cells[x][y];
     }
