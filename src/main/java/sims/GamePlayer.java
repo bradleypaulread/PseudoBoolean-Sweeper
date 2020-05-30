@@ -1,6 +1,7 @@
 package main.java.sims;
 
 import main.java.Cell;
+import main.java.CellState;
 import main.java.GameState;
 import main.java.MineSweeper;
 import main.java.solvers.Solver;
@@ -35,12 +36,12 @@ public class GamePlayer {
             for (Map.Entry<Cell, Boolean> pair : known.entrySet()) {
                 Cell cell = pair.getKey();
                 if (pair.getValue()) {
-                    if (cell.isFlagged()) {
-                        cell.setFlagged(true);
+                    if (cell.getState() == CellState.CLOSED) {
+                        cell.setState(CellState.FLAGGED);
                         change = true;
                     }
                 } else {
-                    if (!cell.isOpen()) {
+                    if (cell.getState() == CellState.CLOSED) {
                         game.openCell(cell.getX(), cell.getY());
                         change = true;
                     }

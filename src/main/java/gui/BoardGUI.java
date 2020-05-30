@@ -1,5 +1,6 @@
 package main.java.gui;
 
+import main.java.CellState;
 import main.java.DisplayState;
 import main.java.GameState;
 import main.java.MineSweeper;
@@ -14,15 +15,13 @@ import java.util.List;
 public class BoardGUI extends JPanel {
 
     private static List<CellGUI> cells;
-    private GridLayout grid;
-
     private static MineSweeper game;
 
     public BoardGUI(MineSweeper game) {
         super();
         cells = new ArrayList<>();
-        this.game = game;
-        grid = new GridLayout(game.getHeight(), game.getWidth());
+        BoardGUI.game = game;
+        GridLayout grid = new GridLayout(game.getHeight(), game.getWidth());
         this.setLayout(grid);
         setupGrid();
         cells.forEach(c -> {
@@ -38,9 +37,9 @@ public class BoardGUI extends JPanel {
             return;
         }
         for (CellGUI cell : cells) {
-            if (!cell.isClicked() && cell.getCell().isOpen()) {
+            if (!cell.isClicked() && cell.getCell().getState() == CellState.OPEN) {
                 cell.openCell();
-            } else if (cell.getCell().isFlagged() && cell.getDisplayState() != DisplayState.FLAG) {
+            } else if (cell.getCell().getState() == CellState.FLAGGED) {
                 cell.setDisplayState(DisplayState.FLAG);
                 cell.updateCell();
             }
@@ -49,19 +48,19 @@ public class BoardGUI extends JPanel {
 
     @Override
     public void setEnabled(boolean enabled) {
-        if (!enabled) {
+        if (enabled) {
             for (CellGUI cell : cells) {
-                if (!cell.getCell().isOpen() && !cell.getCell().isFlagged()) {
-                    cell.setBackground(Color.LIGHT_GRAY);
-                }
-                cell.setEnabled(false);
-            }
-        } else {
-            for (CellGUI cell : cells) {
-                if (!cell.getCell().isOpen() && !cell.getCell().isFlagged()) {
+                if (cell.getCell().getState() == CellState.CLOSED) {
                     cell.setBackground(null);
                     cell.setEnabled(true);
                 }
+            }
+        } else {
+            for (CellGUI cell : cells) {
+                if (cell.getCell().getState() == CellState.CLOSED) {
+                    cell.setBackground(Color.LIGHT_GRAY);
+                }
+                cell.setEnabled(false);
             }
         }
     }
@@ -73,15 +72,8 @@ public class BoardGUI extends JPanel {
             }
         }
 
-        Collections.sort(cells, new Comparator<CellGUI>() {
-            public int compare(CellGUI a, CellGUI b) {
-                int result = Integer.compare(a.getCell().getY(), b.getCell().getY());
-                if (result == 0) {
-                    result = Integer.compare(a.getCell().getX(), b.getCell().getX());
-                }
-                return result;
-            }
-        });
+        Collections.sort(cells, Comparator.comparingInt((CellGUI a) -> a.getCell().getY())
+                .thenComparingInt(a -> a.getCell().getX()));
     }
 
 }

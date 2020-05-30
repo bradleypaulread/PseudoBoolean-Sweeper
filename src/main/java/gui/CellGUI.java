@@ -1,6 +1,7 @@
 package main.java.gui;
 
 import main.java.Cell;
+import main.java.CellState;
 import main.java.DisplayState;
 import main.java.MineSweeper;
 
@@ -61,8 +62,11 @@ public class CellGUI extends JButton {
                     return;
                 }
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    boolean flagged = cell.isFlagged();
-                    cell.setFlagged(!flagged);
+                    if (cell.getState() == CellState.FLAGGED) {
+                        cell.setState(CellState.CLOSED);
+                    } else {
+                        cell.setState(CellState.FLAGGED);
+                    }
                     displayState = displayState != DisplayState.FLAG ? DisplayState.FLAG : DisplayState.NORMAL;
                     updateCell();
                 }
@@ -98,14 +102,13 @@ public class CellGUI extends JButton {
     }
 
     public void updateCell() {
-        switch (this.displayState) {
-            case FLAG -> this.setEnabled(false);
-            default -> {
-                if (this.clicked) {
-                    drawText();
-                }
-                this.setEnabled(!this.clicked);
+        if (this.displayState == DisplayState.FLAG) {
+            this.setEnabled(false);
+        } else {
+            if (this.clicked) {
+                drawText();
             }
+            this.setEnabled(!this.clicked);
         }
         this.setBackground(this.displayState.colour);
     }

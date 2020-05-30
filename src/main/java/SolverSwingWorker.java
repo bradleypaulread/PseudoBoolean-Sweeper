@@ -48,12 +48,13 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
                 Cell cell = pair.getKey();
                 boolean isMine = pair.getValue();
                 if (isMine) {
-                    if (!cell.isFlagged()) {
+                    if (cell.getState() == CellState.CLOSED) {
                         somethingChanged = true;
-                        cell.setFlagged(true);
+                        cell.setState(CellState.FLAGGED);
                     }
                 } else {
-                    if (!cell.isOpen()) {
+                    // Goes by the assumption that user's flagged cells are correct
+                    if (cell.getState() == CellState.CLOSED) {
                         somethingChanged = true;
                         game.openCell(cell.getX(), cell.getY());
                     }

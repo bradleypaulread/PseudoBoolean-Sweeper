@@ -1,6 +1,7 @@
 package main.java.solvers;
 
 import main.java.Cell;
+import main.java.CellState;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ public class SinglePointSolver extends AbstractSolver {
 
     public List<Cell> getMineCells() {
         List<Cell> haveSurroundingMineCells = cellMatrixToStream()
-                .filter(Cell::isOpen)
+                .filter(c -> c.getState() == CellState.OPEN)
                 .filter(cell -> hasSinglePointMinePattern(cell))
                 .collect(Collectors.toList());
 
@@ -56,7 +57,7 @@ public class SinglePointSolver extends AbstractSolver {
         for (Cell cell : knownCells) {
             safeCells.addAll(
                     getNeighbours(cell.getX(), cell.getY()).stream()
-                            .filter(c -> !c.isOpen())
+                            .filter(c -> c.getState() != CellState.OPEN)
                             .collect(Collectors.toList())
             );
         }

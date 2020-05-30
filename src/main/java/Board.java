@@ -55,7 +55,7 @@ public class Board {
         int num = field.uncover(x, y);
         Cell cell = getCell(x, y);
         cell.setNumber(num);
-        cell.setOpen(true);
+        cell.setState(CellState.OPEN);
         return cell;
     }
 
@@ -74,10 +74,10 @@ public class Board {
         for (int i = 0; i < this.width; i++) {
             for (int j = 0; j < this.height; j++) {
                 Cell cell = this.cells[i][j];
-                if (!cell.isOpen()) {
+                if (cell.getState() == CellState.CLOSED) {
                     int num = this.field.uncover(i, j);
                     cell.setNumber(num);
-                    cell.setOpen(true);
+                    cell.setState(CellState.OPEN);
                 }
             }
         }

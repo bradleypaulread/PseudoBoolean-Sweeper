@@ -17,8 +17,7 @@ public class Cell {
     // Surrounding mines
     private int number;
 
-    private boolean open; // Cell was probed by user
-    private boolean flagged;
+    private CellState state;
 
     /**
      * Constructor for main.java.Cell class.
@@ -29,16 +28,15 @@ public class Cell {
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
-        open = false;
-        flagged = false;
+        this.state = CellState.CLOSED;
     }
 
-    public boolean isFlagged() {
-        return flagged;
+    public CellState getState() {
+        return state;
     }
 
-    public void setFlagged(boolean flagged) {
-        this.flagged = flagged;
+    public void setState(CellState state) {
+        this.state = state;
     }
 
     public int getX() {
@@ -61,17 +59,6 @@ public class Cell {
      */
     public void setY(int y) {
         this.y = y;
-    }
-
-    public boolean isOpen() {
-        return open;
-    }
-
-    /**
-     * @param open the open to set
-     */
-    public void setOpen(boolean open) {
-        this.open = open;
     }
 
     public int getNumber() {
@@ -102,11 +89,11 @@ public class Cell {
         return x == cell.x &&
                 y == cell.y &&
                 number == cell.number &&
-                open == cell.open;
+                state == cell.state;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, number, open);
+        return Objects.hash(x, y, number, state);
     }
 }
