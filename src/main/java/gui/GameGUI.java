@@ -1,6 +1,9 @@
 package main.java.gui;
 
 import main.java.*;
+import main.java.solvers.MyPBSolver;
+import main.java.solvers.ProbabilitySolver;
+import main.java.solvers.Solver;
 
 import javax.swing.*;
 import java.awt.*;

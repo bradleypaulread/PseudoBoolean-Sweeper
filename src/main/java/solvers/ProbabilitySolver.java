@@ -1,5 +1,6 @@
-package main.java;
+package main.java.solvers;
 
+import main.java.Cell;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.core.PBSolver;
 import org.sat4j.specs.ContradictionException;

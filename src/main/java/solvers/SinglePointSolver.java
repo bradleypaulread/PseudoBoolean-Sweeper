@@ -1,4 +1,6 @@
-package main.java;
+package main.java.solvers;
+
+import main.java.Cell;
 
 import java.util.*;
 import java.util.stream.Collectors;

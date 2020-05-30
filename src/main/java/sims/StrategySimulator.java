@@ -217,7 +217,7 @@
 //		}
 //	}
 //
-//	// SP is so quick there is no need to multithread it with main.java.sims.GamePlayer.java s
+//	// SP is so quick there is no need to multithread it with main.java.sims.OldGamePlayer.java s
 //	private void playSinglePoint(Difficulty diff, String path) throws IOException {
 //		int winCount = 0;
 //		BigInteger winTimes = BigInteger.ZERO;

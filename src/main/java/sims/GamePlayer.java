@@ -3,7 +3,7 @@ package main.java.sims;
 import main.java.Cell;
 import main.java.GameState;
 import main.java.MineSweeper;
-import main.java.Solver;
+import main.java.solvers.Solver;
 
 import java.util.Map;
 import java.util.Random;

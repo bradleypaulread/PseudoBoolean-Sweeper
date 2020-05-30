@@ -1,6 +1,7 @@
 package main.java;
 
 import main.java.gui.BoardGUI;
+import main.java.solvers.Solver;
 
 import javax.swing.*;
 import java.util.List;

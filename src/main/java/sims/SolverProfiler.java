@@ -1,6 +1,8 @@
 package main.java.sims;
 
 import main.java.*;
+import main.java.solvers.MyPBSolver;
+import main.java.solvers.ProbabilitySolver;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
