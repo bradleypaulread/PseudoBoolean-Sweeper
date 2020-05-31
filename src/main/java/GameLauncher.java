@@ -1,6 +1,6 @@
 package main.java;
 
-import main.java.gui.GameGUI;
+import main.java.gui.GameFrame;
 
 /**
  * A launcher class for a game of PseudoBoolean-Sweeper.
@@ -26,7 +26,7 @@ public class GameLauncher {
 
         System.out.println("Started");
         MineSweeper game = new MineSweeper(Difficulty.EXPERT); // Default beginner board
-        GameGUI gui = new GameGUI(game);
+        GameFrame gui = new GameFrame(game);
         gui.buildGUI();
 
         // Example of how load a game with a pre-generated main.java.MineField JSON

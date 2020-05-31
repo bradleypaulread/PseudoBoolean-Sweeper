@@ -1,7 +1,5 @@
 package main.java;
 
-import java.util.Objects;
-
 /**
  * A class that stores a cell's attributes. (E.g. its number, if it has been
  * flagged, if its a mine, its probability etc.).
@@ -85,15 +83,20 @@ public class Cell {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Cell cell = (Cell) o;
-        return x == cell.x &&
-                y == cell.y &&
-                number == cell.number &&
-                state == cell.state;
+
+        if (x != cell.x) return false;
+        if (y != cell.y) return false;
+        if (number != cell.number) return false;
+        return state == cell.state;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, number, state);
+        int result = x;
+        result = 31 * result + y;
+        result = 31 * result + number;
+        return result;
     }
 }

@@ -1,6 +1,9 @@
 package main.java.gui;
 
-import main.java.*;
+import main.java.Cell;
+import main.java.CellState;
+import main.java.MineSweeper;
+import main.java.SolverSwingWorker;
 import main.java.solvers.MyPBSolver;
 import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.Solver;
@@ -9,28 +12,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class GameGUI extends JFrame {
+public class GameFrame extends JFrame {
 
     // This game reference is passed around the gui a lot
     // not great programming but it will do
     private MineSweeper game;
-    private BoardGUI boardGUI;
+    private BoardPanel boardPanel;
     private SolverSwingWorker worker;
 
-    public GameGUI(MineSweeper game) {
+    public GameFrame(MineSweeper game) {
         this.game = game;
-        this.boardGUI = new BoardGUI(this.game);
+        this.boardPanel = new BoardPanel(this.game);
     }
 
     private void resetBoard() {
         this.game = new MineSweeper(game.getWidth(), game.getHeight(), game.getMines());
-        this.boardGUI = new BoardGUI(this.game);
+        this.boardPanel = new BoardPanel(this.game);
     }
 
     private void resetGUI() {
         this.getContentPane().remove(((BorderLayout) this.getContentPane().getLayout())
                 .getLayoutComponent(BorderLayout.CENTER));
-        this.getContentPane().add(boardGUI, BorderLayout.CENTER);
+        this.getContentPane().add(boardPanel, BorderLayout.CENTER);
         this.pack();
     }
 
@@ -77,16 +80,27 @@ public class GameGUI extends JFrame {
                     resetBtn,
                     solveBtn,
                     debugPrintKnownCells,
-                    boardGUI
+                    boardPanel
             );
 
-            this.worker = new SolverSwingWorker(disableBtns, p, this.game);
+            this.worker = new SolverSwingWorker(disableBtns, p, this.game, boardPanel);
             this.worker.execute();
         });
         topFrame.add("Solve", solveBtn);
 
+        JButton hintBtn = new JButton("Hint");
+        hintBtn.addActionListener(e -> {
+            if (!boardPanel.knowsHints()) {
+                Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
+                        game.getHeight(), game.getMines());
+                boardPanel.setHintCells(p.getKnownCells());
+            }
+            boardPanel.showHint();
+        });
+        topFrame.add("Hint Button", hintBtn);
+
         this.getContentPane().add(topFrame, BorderLayout.NORTH);
-        this.getContentPane().add(boardGUI, BorderLayout.CENTER);
+        this.getContentPane().add(boardPanel, BorderLayout.CENTER);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();

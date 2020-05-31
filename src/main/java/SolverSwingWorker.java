@@ -1,6 +1,6 @@
 package main.java;
 
-import main.java.gui.BoardGUI;
+import main.java.gui.BoardPanel;
 import main.java.solvers.Solver;
 
 import javax.swing.*;
@@ -12,14 +12,16 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
     private final List<JComponent> disableComponents;
     private final Solver solver;
     private final MineSweeper game;
+    private final BoardPanel board;
     private volatile boolean running;
 
     public SolverSwingWorker(List<JComponent> disableComponents, Solver solver,
-                             MineSweeper game) {
+                             MineSweeper game, BoardPanel board) {
         this.running = true;
         this.disableComponents = disableComponents;
         this.solver = solver;
         this.game = game;
+        this.board = board;
     }
 
     public void stop() {
@@ -60,8 +62,8 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
                     }
                 }
             }
-            BoardGUI.refreshCellGUIs();
         }
+        board.refreshCellBtns();
         enableComponents();
         return this.running;
     }
