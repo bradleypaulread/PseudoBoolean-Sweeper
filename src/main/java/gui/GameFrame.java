@@ -7,10 +7,12 @@ import main.java.SolverSwingWorker;
 import main.java.solvers.MyPBSolver;
 import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.Solver;
+import org.apache.commons.math3.fraction.BigFraction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
 
 public class GameFrame extends JFrame {
 
@@ -98,6 +100,20 @@ public class GameFrame extends JFrame {
             boardPanel.showHint();
         });
         topFrame.add("Hint Button", hintBtn);
+
+        JButton probabilityBtn = new JButton("Probabilities");
+        probabilityBtn.addActionListener(e -> {
+            Map<Cell, BigFraction> probs = Map.of(
+                    new Cell(0, 0), new BigFraction(1, 5),
+                    new Cell(1, 1), new BigFraction(2, 5),
+                    new Cell(2, 2), new BigFraction(3, 5),
+                    new Cell(3, 3), new BigFraction(4, 5),
+                    new Cell(4, 4), new BigFraction(5, 5),
+                    new Cell(5, 5), BigFraction.ZERO
+            );
+            boardPanel.showHeatMap(probs);
+        });
+        topFrame.add("Probability Button", probabilityBtn);
 
         this.getContentPane().add(topFrame, BorderLayout.NORTH);
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);

@@ -1,23 +1,27 @@
 package main.java.gui;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import main.java.*;
+import org.apache.commons.math3.fraction.BigFraction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
+import java.util.List;
 
 public class BoardPanel extends JPanel {
 
-    private final Map<CellButton, Cell> btnToCell;
+    private final BiMap<CellButton, Cell> cellAndBtnMapping;
     private final MineSweeper game;
     private final Set<CellButton> mineHints;
     private final Set<CellButton> safeHints;
 
     public BoardPanel(MineSweeper game) {
         super();
-        btnToCell = new HashMap<>();
+        cellAndBtnMapping = HashBiMap.create();
         this.game = game;
         this.mineHints = new HashSet<>();
         this.safeHints = new HashSet<>();
@@ -27,7 +31,7 @@ public class BoardPanel extends JPanel {
 
     public void refreshCellBtns() {
         if (game.getState() != GameState.RUNNING) {
-            for (Map.Entry<CellButton, Cell> pair : btnToCell.entrySet()) {
+            for (Map.Entry<CellButton, Cell> pair : cellAndBtnMapping.entrySet()) {
                 CellButton button = pair.getKey();
                 Cell cell = pair.getValue();
                 button.setNumber(cell.getNumber());
@@ -35,7 +39,7 @@ public class BoardPanel extends JPanel {
                 button.setEnabled(false);
             }
         } else {
-            for (Map.Entry<CellButton, Cell> pair : btnToCell.entrySet()) {
+            for (Map.Entry<CellButton, Cell> pair : cellAndBtnMapping.entrySet()) {
                 CellButton button = pair.getKey();
                 Cell cell = pair.getValue();
                 if (cell.getState() == CellState.OPEN &&
@@ -54,14 +58,14 @@ public class BoardPanel extends JPanel {
     public void setEnabled(boolean enabled) {
         resetHints();
         if (enabled) {
-            for (CellButton button : btnToCell.keySet()) {
+            for (CellButton button : cellAndBtnMapping.keySet()) {
                 if (button.getDisplayState() == DisplayState.CLOSED) {
                     button.setBackground(button.getDisplayState().colour);
                     button.setEnabled(true);
                 }
             }
         } else {
-            for (CellButton button : btnToCell.keySet()) {
+            for (CellButton button : cellAndBtnMapping.keySet()) {
                 // make non clicked cells a difference colour
                 if (button.getDisplayState() == DisplayState.CLOSED) {
                     button.setBackground(Color.LIGHT_GRAY);
@@ -78,7 +82,7 @@ public class BoardPanel extends JPanel {
                 CellButton cellButton = new CellButton(cell.toString());
                 addLeftClickListener(cellButton);
                 addRightClickListener(cellButton);
-                btnToCell.put(cellButton, cell);
+                cellAndBtnMapping.put(cellButton, cell);
                 this.add(cell.toString(), cellButton);
             }
         }
@@ -87,7 +91,7 @@ public class BoardPanel extends JPanel {
     private void addLeftClickListener(CellButton button) {
         button.addActionListener(e -> {
             selectButton(button);
-            refreshCellBtns();  // if a 0 was selected
+            refreshCellBtns();  // for if a 0 was selected
         });
     }
 
@@ -103,26 +107,58 @@ public class BoardPanel extends JPanel {
                     if (state == DisplayState.FLAG) {
                         button.setEnabled(true);
                         button.setDisplayState(DisplayState.CLOSED);
-                        btnToCell.get(button).setState(CellState.CLOSED);
+                        cellAndBtnMapping.get(button).setState(CellState.CLOSED);
                     } else {
                         button.setEnabled(false);
                         button.setDisplayState(DisplayState.FLAG);
-                        btnToCell.get(button).setState(CellState.FLAGGED);
+                        cellAndBtnMapping.get(button).setState(CellState.FLAGGED);
                     }
                 }
             }
         });
     }
 
-    private Optional<CellButton> findButtonWithCell(Cell cell) {
-        for (Map.Entry<CellButton, Cell> pair : btnToCell.entrySet()) {
-            CellButton button = pair.getKey();
-            Cell otherCell = pair.getValue();
-            if (cell.equals(otherCell)) {
-                return Optional.of(button);
+    public void showHeatMap(Map<Cell, BigFraction> probs) {
+        if (probs.isEmpty()) {
+            return;
+        }
+        var cellToBtn = cellAndBtnMapping.inverse();
+        var bestProb = BigFraction.ONE;
+        List<Cell> bestCells = new ArrayList<>();
+        for (var pair : probs.entrySet()) {
+            Cell cell = pair.getKey();
+            BigFraction prob = pair.getValue();
+            int probCompare = prob.compareTo(bestProb);
+            if (probCompare == -1) {
+                bestProb = prob;
+                bestCells.clear();
+                bestCells.add(cell);
+            } else if (probCompare == 0) {
+                bestCells.add(cell);
+            }
+            setCellHeat(cellToBtn.get(cell), prob);
+        }
+        bestCells.forEach(cell -> cellToBtn.get(cell).setBackground(Color.CYAN));
+    }
+
+    private void setCellHeat(CellButton button, BigFraction intensity) {
+        final Color[] colours = {
+                Color.WHITE,
+                new Color(180, 230, 142),
+                new Color(123, 237, 123),
+                new Color(255, 248, 150),
+                new Color(255, 127, 127),
+        };
+        Color colour = new Color(247, 76, 76);
+        for (int i = 0; i < colours.length; i++) {
+            if (intensity.compareTo(new BigFraction(i, colours.length)) <= 0) {
+                colour = colours[i];
+                break;
             }
         }
-        return Optional.empty();
+        button.setBackground(colour);
+        System.out.println();
+        button.setToolTipText("" + intensity.percentageValue());
     }
 
     public boolean knowsHints() {
@@ -130,16 +166,14 @@ public class BoardPanel extends JPanel {
     }
 
     public void setHintCells(Map<Cell, Boolean> knownCells) {
+        var cellToBtn = cellAndBtnMapping.inverse();
         for (var pair : knownCells.entrySet()) {
-            Optional<CellButton> button = findButtonWithCell(pair.getKey());
-            if (button.isEmpty()) {
-                return;
-            }
             boolean isMine = pair.getValue();
+            CellButton button = cellToBtn.get(pair.getKey());
             if (isMine) {
-                mineHints.add(button.get());
+                mineHints.add(button);
             } else {
-                safeHints.add(button.get());
+                safeHints.add(button);
             }
         }
     }
@@ -169,7 +203,7 @@ public class BoardPanel extends JPanel {
 
     public void selectButton(CellButton button) {
         resetHints();
-        Cell cell = btnToCell.get(button);
+        Cell cell = cellAndBtnMapping.get(button);
         game.openCell(cell.getX(), cell.getY());
         button.setNumber(cell.getNumber());
         button.setDisplayState(DisplayState.OPEN);
