@@ -37,7 +37,7 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
     }
 
     @Override
-    protected Boolean doInBackground() throws Exception {
+    protected Boolean doInBackground() {
         disableComponents();
         boolean somethingChanged = true;
         while (somethingChanged) {
@@ -63,7 +63,8 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
                 }
             }
         }
-        board.refreshCellBtns();
+        board.refreshAllCellBtns();
+        board.refreshOpenCellBtns();
         enableComponents();
         return this.running;
     }

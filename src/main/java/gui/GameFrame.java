@@ -16,17 +16,31 @@ public class GameFrame extends JFrame {
     // This game reference is passed around the gui a lot
     // not great programming but it will do
     private MineSweeper game;
-    private BoardPanel boardPanel;
     private SolverSwingWorker worker;
+
+    private BoardPanel boardPanel;
+    private JButton resetBtn;
+    private JButton hintBtn;
+    private JButton assistBtn;
+    private JButton solveBtn;
+    private JButton stopBtn;
+    private JCheckBox probabilityCheckBox;
 
     public GameFrame(MineSweeper game) {
         this.game = game;
         this.boardPanel = new BoardPanel(this.game);
+        this.resetBtn = new JButton("Reset");
+        this.hintBtn = new JButton("Hint");
+        this.assistBtn = new JButton("Assist");
+        this.solveBtn = new JButton("Solve");
+        this.stopBtn = new JButton("Stop");
+        this.probabilityCheckBox = new JCheckBox("Probabilities");
     }
 
     private void resetBoard() {
         this.game = new MineSweeper(game.getWidth(), game.getHeight(), game.getMines());
         this.boardPanel = new BoardPanel(this.game);
+        this.boardPanel.setShowProbabilities(probabilityCheckBox.isSelected());
     }
 
     private void resetGUI() {
@@ -40,20 +54,14 @@ public class GameFrame extends JFrame {
         JPanel topFrame = new JPanel();
         topFrame.setLayout(new FlowLayout());
 
-        JButton resetBtn = new JButton("Reset");
-        resetBtn.addActionListener(e -> {
-            resetBoard();
-            resetGUI();
-        });
-        topFrame.add("Reset Button", resetBtn);
+        addListeners();
 
-        JButton stopBtn = new JButton("Stop");
-        stopBtn.addActionListener(e -> {
-            if (worker != null) {
-                worker.stop();
-            }
-        });
+        topFrame.add("Reset Button", resetBtn);
+        topFrame.add("Hint Button", hintBtn);
+        topFrame.add("Assist Button", assistBtn);
+        topFrame.add("Solve Button", solveBtn);
         topFrame.add("Stop Button", stopBtn);
+        topFrame.add("Probability Button", probabilityCheckBox);
 
         JButton debugPrintKnownCells = new JButton("See Cells");
         debugPrintKnownCells.addActionListener(e -> {
@@ -70,24 +78,50 @@ public class GameFrame extends JFrame {
         });
         topFrame.add("See Cells", debugPrintKnownCells);
 
-        JButton solveBtn = new JButton("Solve");
+        this.getContentPane().add(topFrame, BorderLayout.NORTH);
+        this.getContentPane().add(boardPanel, BorderLayout.CENTER);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.pack();
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        this.setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
+        this.setVisible(true);
+    }
+
+    private void addListeners() {
         solveBtn.addActionListener(e -> {
             Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
                     game.getHeight(), game.getMines());
 
             List<JComponent> disableBtns = List.of(
+                    boardPanel,
                     resetBtn,
+                    hintBtn,
+                    assistBtn,
                     solveBtn,
-                    debugPrintKnownCells,
-                    boardPanel
+                    probabilityCheckBox
             );
 
             this.worker = new SolverSwingWorker(disableBtns, p, this.game, boardPanel);
+            this.probabilityCheckBox.setSelected(false);
+            boardPanel.setShowProbabilities(false);
             this.worker.execute();
         });
-        topFrame.add("Solve", solveBtn);
 
-        JButton hintBtn = new JButton("Hint");
+        assistBtn.addActionListener(e -> {
+
+        });
+
+        stopBtn.addActionListener(e -> {
+            if (worker != null) {
+                worker.stop();
+            }
+        });
+
+        resetBtn.addActionListener(e -> {
+            resetBoard();
+            resetGUI();
+        });
+
         hintBtn.addActionListener(e -> {
             if (!boardPanel.knowsHints()) {
                 Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
@@ -96,21 +130,10 @@ public class GameFrame extends JFrame {
             }
             boardPanel.showHint();
         });
-        topFrame.add("Hint Button", hintBtn);
 
-        JCheckBox probabilityBtn = new JCheckBox("Probabilities");
-        probabilityBtn.addActionListener(e -> {
-            boardPanel.setShowProbabilities(probabilityBtn.isSelected());
+        probabilityCheckBox.addActionListener(e -> {
+            boardPanel.setShowProbabilities(probabilityCheckBox.isSelected());
         });
-        topFrame.add("Probability Button", probabilityBtn);
-
-        this.getContentPane().add(topFrame, BorderLayout.NORTH);
-        this.getContentPane().add(boardPanel, BorderLayout.CENTER);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.pack();
-        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        this.setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
-        this.setVisible(true);
     }
 
 }

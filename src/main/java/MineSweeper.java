@@ -47,7 +47,7 @@ public class MineSweeper {
         return openCells;
     }
 
-    public void openCell(int x, int y) {
+    public int openCell(int x, int y) {
         if (this.gameState == GameState.RUNNING) {
             this.openCells += 1;
             Cell cell = board.unveil(x, y);
@@ -55,17 +55,18 @@ public class MineSweeper {
                 case -1 -> {
                     this.gameState = GameState.LOST;
                     endGame();
-                    return;
                 }
                 case 0 -> openNeighbours(x, y);
                 default -> {
                     if (this.openCells == (this.width * this.height) - this.mines) {
                         this.gameState = GameState.WON;
                         endGame();
-                        return;
                     }
                 }
             }
+            return cell.getNumber();
+        } else {
+            return -1;
         }
     }
 
