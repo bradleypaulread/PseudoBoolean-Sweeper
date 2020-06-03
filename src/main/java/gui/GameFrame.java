@@ -4,7 +4,6 @@ import main.java.Cell;
 import main.java.MineSweeper;
 import main.java.SolverSwingWorker;
 import main.java.solvers.MyPBSolver;
-import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.Solver;
 
 import javax.swing.*;
@@ -37,31 +36,39 @@ public class GameFrame extends JFrame {
         this.probabilityCheckBox = new JCheckBox("Probabilities");
     }
 
-    private void resetBoard() {
+    public void setGame(MineSweeper newGame) {
+        this.game = newGame;
+    }
+
+    public void resetBoard() {
         this.game = new MineSweeper(game.getWidth(), game.getHeight(), game.getMines());
         this.boardPanel = new BoardPanel(this.game);
         this.boardPanel.setShowProbabilities(probabilityCheckBox.isSelected());
     }
 
-    private void resetGUI() {
+    public void resetGUI() {
         this.getContentPane().remove(((BorderLayout) this.getContentPane().getLayout())
                 .getLayoutComponent(BorderLayout.CENTER));
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);
         this.pack();
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        this.setLocation(dim.width / 2 - getSize().width / 2, dim.height / 2 - getSize().height / 2);
     }
 
     public void buildGUI() {
+        this.setJMenuBar(new GameMenuBar(this, boardPanel));
+
+        addButtonListeners();
+
         JPanel topFrame = new JPanel();
         topFrame.setLayout(new FlowLayout());
 
-        addListeners();
-
-        topFrame.add("Reset Button", resetBtn);
         topFrame.add("Hint Button", hintBtn);
         topFrame.add("Assist Button", assistBtn);
         topFrame.add("Solve Button", solveBtn);
         topFrame.add("Stop Button", stopBtn);
         topFrame.add("Probability Button", probabilityCheckBox);
+
 
         JButton debugPrintKnownCells = new JButton("See Cells");
         debugPrintKnownCells.addActionListener(e -> {
@@ -80,6 +87,8 @@ public class GameFrame extends JFrame {
 
         this.getContentPane().add(topFrame, BorderLayout.NORTH);
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);
+        this.getContentPane().add(resetBtn, BorderLayout.SOUTH);
+
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -87,7 +96,7 @@ public class GameFrame extends JFrame {
         this.setVisible(true);
     }
 
-    private void addListeners() {
+    private void addButtonListeners() {
         solveBtn.addActionListener(e -> {
             Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
                     game.getHeight(), game.getMines());
