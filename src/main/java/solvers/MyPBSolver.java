@@ -160,7 +160,6 @@ public class MyPBSolver extends AbstractSolver {
         } catch (TimeoutException t) {
             t.printStackTrace();
         }
-
         if (atMostConstr != null) {
             solver.removeConstr(atMostConstr);
         }

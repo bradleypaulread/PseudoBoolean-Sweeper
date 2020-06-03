@@ -1,10 +1,17 @@
 package main.java.solvers;
 
+import com.google.common.math.BigIntegerMath;
 import main.java.Cell;
+import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.core.PBSolver;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IVecInt;
+import org.sat4j.specs.TimeoutException;
+
+import java.math.BigInteger;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ProbabilitySolver extends MyPBSolver {
     public ProbabilitySolver(Cell[][] cells, int width, int height, int mines) {
@@ -37,5 +44,75 @@ public class ProbabilitySolver extends MyPBSolver {
         solver.addAtLeast(lits, coeffs, mines);
         logConstraint(lit, mines, "<=");
         logConstraint(lit, mines, ">=");
+    }
+
+    public Map<Cell, BigFraction> getProbabilities() {
+        Map<Cell, BigInteger> cellMineCount = new HashMap<>();
+        Map<Cell, BigFraction> probs = new HashMap<>();
+
+        var totalModels = BigInteger.ZERO;
+        var totalSeaModels = BigFraction.ZERO;
+        var seaSize = getSeaCells().size();
+
+        PBSolver solver = generateBaseConstraints();
+
+        try {
+            while (solver.isSatisfiable()) {
+                int[] model = solver.model();
+                List<Cell> modelShoreMines = Arrays.stream(model)
+                        .filter(i -> i >= 0)
+                        .mapToObj(i -> decodeCellId(i))
+                        .filter(Optional::isPresent)
+                        .map(cell -> cell.get())
+                        .collect(Collectors.toList());
+
+                int remainingMinesInModel = mines - modelShoreMines.size();
+
+                BigInteger totalPossibleModels = seaSize > 0 ?
+                        BigIntegerMath.binomial(seaSize, remainingMinesInModel) :
+                        BigInteger.ONE; // One to include the current model
+
+                totalModels = totalModels.add(totalPossibleModels);
+
+                // update mine counts
+                for (Cell cell : modelShoreMines) {
+                    BigInteger currentCellMineCount = cellMineCount.getOrDefault(cell, BigInteger.ZERO);
+                    BigInteger newCellMineCount = currentCellMineCount.add(totalPossibleModels);
+                    cellMineCount.put(cell, newCellMineCount);
+                }
+
+                // update sea probability
+                BigFraction currentModelSeaProb = seaSize > 0 ?
+                        new BigFraction(remainingMinesInModel, seaSize) :
+                        BigFraction.ZERO;
+
+                totalSeaModels = totalSeaModels.add(currentModelSeaProb.multiply(totalPossibleModels));
+
+                // Remove current solution from possible solutions
+                for (int i = 0; i < model.length; i++) {
+                    model[i] *= -1;
+                }
+                IVecInt block = new VecInt(model);
+                solver.addBlockingClause(block);
+            }
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (ContradictionException e) {
+            e.printStackTrace();
+        }
+
+        solver.reset();
+
+        if (seaSize > 0) {
+            BigFraction seaProb = totalSeaModels.divide(totalModels).reduce();
+            getSeaCells().forEach(cell -> probs.put(cell, seaProb));
+        }
+
+        for (Cell cell : getClosedShoreCells()) {
+            BigInteger currentCellMineCount = cellMineCount.getOrDefault(cell, BigInteger.ZERO);
+            probs.put(cell, new BigFraction(currentCellMineCount, totalModels).reduce());
+        }
+
+        return probs;
     }
 }

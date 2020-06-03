@@ -1,18 +1,15 @@
 package main.java.gui;
 
 import main.java.Cell;
-import main.java.CellState;
 import main.java.MineSweeper;
 import main.java.SolverSwingWorker;
 import main.java.solvers.MyPBSolver;
 import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.Solver;
-import org.apache.commons.math3.fraction.BigFraction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.Map;
 
 public class GameFrame extends JFrame {
 
@@ -60,7 +57,7 @@ public class GameFrame extends JFrame {
 
         JButton debugPrintKnownCells = new JButton("See Cells");
         debugPrintKnownCells.addActionListener(e -> {
-            ProbabilitySolver p = new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines());
+            MyPBSolver p = new MyPBSolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines());
             List<Cell> mines = p.getMineCells();
             List<Cell> safe = p.getSafeCells();
             System.out.println("Constraints are: ");
@@ -101,17 +98,9 @@ public class GameFrame extends JFrame {
         });
         topFrame.add("Hint Button", hintBtn);
 
-        JButton probabilityBtn = new JButton("Probabilities");
+        JCheckBox probabilityBtn = new JCheckBox("Probabilities");
         probabilityBtn.addActionListener(e -> {
-            Map<Cell, BigFraction> probs = Map.of(
-                    new Cell(0, 0), new BigFraction(1, 5),
-                    new Cell(1, 1), new BigFraction(2, 5),
-                    new Cell(2, 2), new BigFraction(3, 5),
-                    new Cell(3, 3), new BigFraction(4, 5),
-                    new Cell(4, 4), new BigFraction(5, 5),
-                    new Cell(5, 5), BigFraction.ZERO
-            );
-            boardPanel.showHeatMap(probs);
+            boardPanel.setShowProbabilities(probabilityBtn.isSelected());
         });
         topFrame.add("Probability Button", probabilityBtn);
 

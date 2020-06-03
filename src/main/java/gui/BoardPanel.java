@@ -3,14 +3,15 @@ package main.java.gui;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import main.java.*;
+import main.java.solvers.ProbabilitySolver;
 import org.apache.commons.math3.fraction.BigFraction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class BoardPanel extends JPanel {
 
@@ -18,6 +19,7 @@ public class BoardPanel extends JPanel {
     private final MineSweeper game;
     private final Set<CellButton> mineHints;
     private final Set<CellButton> safeHints;
+    private boolean showProbabilities;
 
     public BoardPanel(MineSweeper game) {
         super();
@@ -27,6 +29,13 @@ public class BoardPanel extends JPanel {
         this.safeHints = new HashSet<>();
         this.setLayout(new GridLayout(game.getHeight(), game.getWidth()));
         setupGrid();
+    }
+
+    public void setShowProbabilities(boolean showProbabilities) {
+        this.showProbabilities = showProbabilities;
+        if (showProbabilities) {
+            showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
+        }
     }
 
     public void refreshCellBtns() {
@@ -39,6 +48,9 @@ public class BoardPanel extends JPanel {
                 button.setEnabled(false);
             }
         } else {
+            if (showProbabilities) {
+                showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
+            }
             for (Map.Entry<CellButton, Cell> pair : cellAndBtnMapping.entrySet()) {
                 CellButton button = pair.getKey();
                 Cell cell = pair.getValue();
@@ -138,27 +150,32 @@ public class BoardPanel extends JPanel {
             }
             setCellHeat(cellToBtn.get(cell), prob);
         }
-        bestCells.forEach(cell -> cellToBtn.get(cell).setBackground(Color.CYAN));
+        if (bestProb.compareTo(BigFraction.ZERO) == 0) {
+            return;
+        }
+        bestCells.forEach(cell -> cellToBtn.get(cell).setBackground(new Color(94, 137, 248, 255)));
     }
 
     private void setCellHeat(CellButton button, BigFraction intensity) {
         final Color[] colours = {
-                Color.WHITE,
-                new Color(180, 230, 142),
-                new Color(123, 237, 123),
+                new Color(202, 250, 162),
+                new Color(70, 179, 70),
                 new Color(255, 248, 150),
                 new Color(255, 127, 127),
+                new Color(247, 76, 76),
         };
-        Color colour = new Color(247, 76, 76);
-        for (int i = 0; i < colours.length; i++) {
-            if (intensity.compareTo(new BigFraction(i, colours.length)) <= 0) {
+        Color colour = Color.WHITE;
+        if (intensity.compareTo(BigFraction.ZERO) > 0) {
+            colour = Color.white;
+            for (int i = 0; i < colours.length; i++) {
                 colour = colours[i];
-                break;
+                if (intensity.compareTo(new BigFraction(i, colours.length)) <= 0) {
+                    break;
+                }
             }
         }
         button.setBackground(colour);
-        System.out.println();
-        button.setToolTipText("" + intensity.percentageValue());
+        button.setToolTipText("" + intensity.percentageValue() + "...%");
     }
 
     public boolean knowsHints() {

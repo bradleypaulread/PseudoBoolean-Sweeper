@@ -6,6 +6,7 @@ import main.java.CellState;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,16 +55,16 @@ public abstract class AbstractSolver implements Solver {
      * @return the cell that the id refers to. Null if it is impossible for the
      * passed id to be a cell.
      */
-    public Cell decodeCellId(final int id) {
+    public Optional<Cell> decodeCellId(final int id) {
         final int width = cells.length;
         final int height = cells[0].length;
         int posId = id < 0 ? id * -1 : id;
         if (posId > ((height - 1) * width + (width - 1)) + 1) {
-            return null;
+            return Optional.empty();
         }
         int x = (posId - 1) % width;
         int y = ((posId - 1) - x) / width;
-        return cells[x][y];
+        return Optional.of(cells[x][y]);
     }
 
     public List<Cell> getNeighbours(final int x, final int y) {
