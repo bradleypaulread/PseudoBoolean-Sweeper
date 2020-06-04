@@ -1,27 +1,47 @@
 package main.java;
 
 import main.java.gui.BoardPanel;
+import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.Solver;
 
 import javax.swing.*;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
 
     private final List<JComponent> disableComponents;
-    private final Solver solver;
+    private final List<Solver> solvers;
     private final MineSweeper game;
     private final BoardPanel board;
     private volatile boolean running;
 
-    public SolverSwingWorker(List<JComponent> disableComponents, Solver solver,
+    public SolverSwingWorker(List<JComponent> disableComponents, List<Class> solvers,
                              MineSweeper game, BoardPanel board) {
         this.running = true;
         this.disableComponents = disableComponents;
-        this.solver = solver;
         this.game = game;
         this.board = board;
+        this.solvers = createSolvers(solvers);
+    }
+
+    private List<Solver> createSolvers(List<Class> solvers) {
+        Cell[][] cells = game.getCells();
+        int width = game.getWidth();
+        int height = game.getHeight();
+        int mines = game.getMines();
+        List<Solver> solverList = new ArrayList<>();
+        for (int i = 0; i < solvers.size(); i++) {
+            try {
+                Constructor constructor = solvers.get(i).getDeclaredConstructor(cells.getClass(), int.class, int.class, int.class);
+                solverList.add((Solver) constructor.newInstance(cells, width, height, mines));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return solverList;
     }
 
     public void stop() {
@@ -36,30 +56,41 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
         this.disableComponents.forEach(e -> e.setEnabled(true));
     }
 
+    private boolean makeChanges(Solver solver) {
+        Map<Cell, Boolean> knownCells = solver.getKnownCells();
+        boolean somethingChanged = false;
+        for (Map.Entry<Cell, Boolean> pair : knownCells.entrySet()) {
+            Cell cell = pair.getKey();
+            boolean isMine = pair.getValue();
+            if (isMine) {
+                if (cell.getState() == CellState.CLOSED) {
+                    cell.setState(CellState.FLAGGED);
+                    somethingChanged = true;
+                }
+            } else {
+                // Goes by the assumption that user's flagged cells are correct
+                if (cell.getState() == CellState.CLOSED) {
+                    game.openCell(cell.getX(), cell.getY());
+                    somethingChanged = true;
+                }
+            }
+        }
+        return somethingChanged;
+    }
+
     @Override
     protected Boolean doInBackground() {
         disableComponents();
-        boolean somethingChanged = true;
-        while (somethingChanged) {
-            if (!this.running) {
-                break;
-            }
-            Map<Cell, Boolean> knownCells = solver.getKnownCells();
-            somethingChanged = false;
-            for (Map.Entry<Cell, Boolean> pair : knownCells.entrySet()) {
-                Cell cell = pair.getKey();
-                boolean isMine = pair.getValue();
-                if (isMine) {
-                    if (cell.getState() == CellState.CLOSED) {
-                        somethingChanged = true;
-                        cell.setState(CellState.FLAGGED);
-                    }
-                } else {
-                    // Goes by the assumption that user's flagged cells are correct
-                    if (cell.getState() == CellState.CLOSED) {
-                        somethingChanged = true;
-                        game.openCell(cell.getX(), cell.getY());
-                    }
+        for (int i = 0; i < solvers.size() && this.running && game.getState() == GameState.RUNNING; i++) {
+            Solver solver = solvers.get(i);
+            if (solver instanceof ProbabilitySolver) {
+                Cell bestCell = ((ProbabilitySolver) solver).getBestCell();
+                game.openCell(bestCell.getX(), bestCell.getY());
+                i = -1;
+            } else {
+                boolean somethingChanged = makeChanges(solver);
+                if (somethingChanged) {
+                    i = -1;
                 }
             }
         }
