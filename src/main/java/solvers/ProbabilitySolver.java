@@ -2,6 +2,7 @@ package main.java.solvers;
 
 import com.google.common.math.BigIntegerMath;
 import main.java.Cell;
+import main.java.CellState;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.sat4j.core.VecInt;
 import org.sat4j.pb.core.PBSolver;
@@ -14,8 +15,49 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ProbabilitySolver extends MyPBSolver {
+
     public ProbabilitySolver(Cell[][] cells, int width, int height, int mines) {
         super(cells, width, height, mines);
+    }
+
+    public Cell getBestCell() {
+        var probabilities = getProbabilities();
+        List<Cell> lowestProbCells = new ArrayList<>();
+        BigFraction bestProb = BigFraction.ONE;
+        for (var pair : probabilities.entrySet()) {
+            Cell cell = pair.getKey();
+            BigFraction prob = pair.getValue();
+            if (prob.compareTo(bestProb) <= 0) {
+                lowestProbCells.clear();
+                bestProb = prob;
+            }
+            lowestProbCells.add(cell);
+        }
+
+        if (lowestProbCells.size() == 1) {
+            return lowestProbCells.get(0);
+        }
+
+        Cell bestStrategicCell = lowestProbCells.get(0);
+        int leastUnknownNeighbours = (int) getNeighbours(bestStrategicCell.getX(), bestStrategicCell.getY())
+                .stream()
+                .filter(c -> c.getState() != CellState.OPEN.OPEN)
+                .filter(c -> c.getState() != CellState.FLAGGED)
+                .count();
+
+        for (int i = 1; i < lowestProbCells.size(); i++) {
+            Cell cell = lowestProbCells.get(i);
+            int unknownNeighbours = (int) getNeighbours(bestStrategicCell.getX(), bestStrategicCell.getY())
+                    .stream()
+                    .filter(c -> c.getState() != CellState.OPEN.OPEN)
+                    .filter(c -> c.getState() != CellState.FLAGGED)
+                    .count();
+            if (unknownNeighbours < leastUnknownNeighbours) {
+                bestStrategicCell = cell;
+                leastUnknownNeighbours = unknownNeighbours;
+            }
+        }
+        return bestStrategicCell;
     }
 
     @Override
