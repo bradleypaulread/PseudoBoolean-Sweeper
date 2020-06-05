@@ -32,12 +32,14 @@ public class BoardPanel extends JPanel {
     private final Color BEST_CELL_COLOUR = new Color(94, 137, 248, 255);
     private Map<Cell, BigFraction> probabilityCache;
     private boolean showProbabilities;
+    private final GameStatsPanel gameStats;
 
-    public BoardPanel(MineSweeper game) {
+    public BoardPanel(MineSweeper game, GameStatsPanel gameStats) {
         super();
         bestProbCells = new HashSet<>();
         probabilityCache = new HashMap<>();
         cellAndBtnMapping = HashBiMap.create();
+        this.gameStats = gameStats;
         this.game = game;
         this.mineHints = new HashSet<>();
         this.safeHints = new HashSet<>();
@@ -83,15 +85,20 @@ public class BoardPanel extends JPanel {
     }
 
     public void refreshAllCellBtns() {
+        int flags = 0;
         if (game.getState() != GameState.RUNNING) {
             openAllCells();
         } else {
             if (showProbabilities) {
                 showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
             }
-            for (Map.Entry<CellButton, Cell> pair : cellAndBtnMapping.entrySet()) {
+            for (var pair : cellAndBtnMapping.entrySet()) {
                 refreshCellBtn(pair.getValue(), pair.getKey());
+                if (pair.getValue().getState() == CellState.FLAGGED) {
+                    flags += 1;
+                }
             }
+            gameStats.setMinesLeft(game.getMines() - flags);
         }
     }
 
@@ -170,9 +177,11 @@ public class BoardPanel extends JPanel {
                 }
                 if (SwingUtilities.isRightMouseButton(e)) {
                     if (state == DisplayState.FLAG) {
+                        gameStats.setMinesLeft(gameStats.getMinesLeft() + 1);
                         button.setDisplayState(DisplayState.CLOSED);
                         cellAndBtnMapping.get(button).setState(CellState.CLOSED);
                     } else {
+                        gameStats.setMinesLeft(gameStats.getMinesLeft() - 1);
                         button.setDisplayState(DisplayState.FLAG);
                         cellAndBtnMapping.get(button).setState(CellState.FLAGGED);
                     }
@@ -193,7 +202,7 @@ public class BoardPanel extends JPanel {
             Cell cell = pair.getKey();
             BigFraction prob = pair.getValue();
             int probCompare = prob.compareTo(bestProb);
-            if (probCompare == -1) {
+            if (probCompare < 0) {
                 bestProb = prob;
                 bestProbCells.clear();
                 bestProbCells.add(cell);
@@ -219,7 +228,7 @@ public class BoardPanel extends JPanel {
             }
         }
         button.setBackground(colour);
-        button.setToolTipText("" + intensity.percentageValue() + "...%");
+        button.setToolTipText("" + intensity.percentageValue() + "%");
     }
 
     public boolean knowsHints() {
@@ -264,6 +273,7 @@ public class BoardPanel extends JPanel {
 
     // return true if an opening occurred (if a 0 was selected)
     public boolean selectButton(CellButton button) {
+        gameStats.setMoves(gameStats.getMoves() + 1);
         resetHints();
         Cell cell = cellAndBtnMapping.get(button);
         boolean opening = game.openCell(cell.getX(), cell.getY()) == 0;

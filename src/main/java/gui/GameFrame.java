@@ -21,7 +21,7 @@ public class GameFrame extends JFrame {
     private final List<Class> solvers;
     private SolverSwingWorker worker;
 
-    private GameStatsPanel statsPanel;
+    private GameStatsPanel gameStats;
     private BoardPanel boardPanel;
     private JButton resetBtn;
     private JButton hintBtn;
@@ -32,7 +32,8 @@ public class GameFrame extends JFrame {
 
     public GameFrame(MineSweeper game) {
         this.game = game;
-        this.boardPanel = new BoardPanel(this.game);
+        gameStats = new GameStatsPanel(game.getMines());
+        this.boardPanel = new BoardPanel(this.game, gameStats);
         this.resetBtn = new JButton("Reset");
         this.hintBtn = new JButton("Hint");
         this.assistBtn = new JButton("Assist");
@@ -54,7 +55,8 @@ public class GameFrame extends JFrame {
 
     public void resetBoard() {
         this.game = new MineSweeper(game.getWidth(), game.getHeight(), game.getMines());
-        this.boardPanel = new BoardPanel(this.game);
+        gameStats.reset(game.getMines());
+        this.boardPanel = new BoardPanel(this.game, gameStats);
         this.boardPanel.setShowProbabilities(probabilityCheckBox.isSelected());
     }
 
@@ -75,7 +77,7 @@ public class GameFrame extends JFrame {
         JPanel topFrame = new JPanel();
         topFrame.setLayout(new FlowLayout());
 
-        topFrame.add(statsPanel);
+        topFrame.add(gameStats);
         topFrame.add("Hint Button", hintBtn);
         topFrame.add("Assist Button", assistBtn);
         topFrame.add("Solve Button", solveBtn);
@@ -123,14 +125,29 @@ public class GameFrame extends JFrame {
                     probabilityCheckBox
             );
 
-            this.worker = new SolverSwingWorker(disableBtns, p, this.game, boardPanel);
+            this.worker = new SolverSwingWorker(disableBtns, List.of(MyPBSolver.class), this.game, boardPanel);
             this.probabilityCheckBox.setSelected(false);
             boardPanel.setShowProbabilities(false);
             this.worker.execute();
         });
 
         assistBtn.addActionListener(e -> {
+            Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
+                    game.getHeight(), game.getMines());
 
+            List<JComponent> disableBtns = List.of(
+                    boardPanel,
+                    resetBtn,
+                    hintBtn,
+                    assistBtn,
+                    solveBtn,
+                    probabilityCheckBox
+            );
+
+            this.worker = new SolverSwingWorker(disableBtns, List.of(MyPBSolver.class, ProbabilitySolver.class), this.game, boardPanel);
+            this.probabilityCheckBox.setSelected(false);
+            boardPanel.setShowProbabilities(false);
+            this.worker.execute();
         });
 
         stopBtn.addActionListener(e -> {

@@ -19,13 +19,13 @@ public class GameStatsPanel extends JPanel {
     private final JLabel minesLeftLbl;
     private final JLabel gameStateLbl;
 
-    public GameStatsPanel() {
+    public GameStatsPanel(int mines) {
         super();
         gameTimeLbl = new JLabel();
         movesLbl = new JLabel();
         minesLeftLbl = new JLabel();
         gameStateLbl = new JLabel();
-        reset();
+        reset(mines);
         setupLayout();
         setVisible(true);
     }
@@ -51,10 +51,14 @@ public class GameStatsPanel extends JPanel {
         add(panel);
     }
 
-    public void reset() {
+    public int getMinesLeft() {
+        return minesLeft;
+    }
+
+    public void reset(int mines) {
         gameTime = 0;
         moves = 0;
-        minesLeft = 0;
+        minesLeft = mines;
         gameState = GameState.RUNNING;
         addListeners();
         updateMovesLbl();
