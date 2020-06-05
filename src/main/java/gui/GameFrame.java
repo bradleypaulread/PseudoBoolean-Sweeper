@@ -4,10 +4,13 @@ import main.java.Cell;
 import main.java.MineSweeper;
 import main.java.SolverSwingWorker;
 import main.java.solvers.MyPBSolver;
+import main.java.solvers.ProbabilitySolver;
+import main.java.solvers.SinglePointSolver;
 import main.java.solvers.Solver;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameFrame extends JFrame {
@@ -15,6 +18,7 @@ public class GameFrame extends JFrame {
     // This game reference is passed around the gui a lot
     // not great programming but it will do
     private MineSweeper game;
+    private final List<Class> solvers;
     private SolverSwingWorker worker;
 
     private GameStatsPanel statsPanel;
@@ -35,7 +39,13 @@ public class GameFrame extends JFrame {
         this.solveBtn = new JButton("Solve");
         this.stopBtn = new JButton("Stop");
         this.probabilityCheckBox = new JCheckBox("Probabilities");
-        this.statsPanel = new GameStatsPanel();
+        solvers = new ArrayList<>();
+        solvers.add(SinglePointSolver.class);
+    }
+
+    public void setSolvers(List<Class> solvers) {
+        this.solvers.clear();
+        this.solvers.addAll(solvers);
     }
 
     public void setGame(MineSweeper newGame) {

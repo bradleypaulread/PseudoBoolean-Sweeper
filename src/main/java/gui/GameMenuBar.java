@@ -2,8 +2,13 @@ package main.java.gui;
 
 import main.java.Difficulty;
 import main.java.MineSweeper;
+import main.java.solvers.MyPBSolver;
+import main.java.solvers.ProbabilitySolver;
+import main.java.solvers.SinglePointSolver;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameMenuBar extends JMenuBar {
 
@@ -24,7 +29,7 @@ public class GameMenuBar extends JMenuBar {
         var menu = new JMenu("Options");
         initMenuItems();
         addMenusItems(menu);
-        addListeners(menu);
+        addListeners();
         this.add(menu);
         this.setVisible(true);
     }
@@ -66,7 +71,7 @@ public class GameMenuBar extends JMenuBar {
 
     }
 
-    private void addListeners(JMenu menu) {
+    private void addListeners() {
         easyDiffRb.addActionListener(e -> {
             easyDiffRb.setEnabled(false);
             mediumDiffRb.setEnabled(true);
@@ -85,6 +90,10 @@ public class GameMenuBar extends JMenuBar {
             hardDiffRb.setEnabled(false);
             changeGameDifficulty();
         });
+
+        singlePointCb.addActionListener(e -> setSolvers());
+        pseudoBooleanCb.addActionListener(e -> setSolvers());
+        probabilityCb.addActionListener(e -> setSolvers());
     }
 
     private void changeGameDifficulty() {
@@ -100,5 +109,19 @@ public class GameMenuBar extends JMenuBar {
         gameFrame.setGame(newGame);
         gameFrame.resetBoard();
         gameFrame.resetGUI();
+    }
+
+    private void setSolvers() {
+        List<Class> solvers = new ArrayList<>();
+        if (singlePointCb.isSelected()) {
+            solvers.add(SinglePointSolver.class);
+        }
+        if (pseudoBooleanCb.isSelected()) {
+            solvers.add(MyPBSolver.class);
+        }
+        if (probabilityCb.isSelected()) {
+            solvers.add(ProbabilitySolver.class);
+        }
+        gameFrame.setSolvers(solvers);
     }
 }
