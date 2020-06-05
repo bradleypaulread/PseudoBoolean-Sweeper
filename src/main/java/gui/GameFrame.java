@@ -17,6 +17,7 @@ public class GameFrame extends JFrame {
     private MineSweeper game;
     private SolverSwingWorker worker;
 
+    private GameStatsPanel statsPanel;
     private BoardPanel boardPanel;
     private JButton resetBtn;
     private JButton hintBtn;
@@ -34,6 +35,7 @@ public class GameFrame extends JFrame {
         this.solveBtn = new JButton("Solve");
         this.stopBtn = new JButton("Stop");
         this.probabilityCheckBox = new JCheckBox("Probabilities");
+        this.statsPanel = new GameStatsPanel();
     }
 
     public void setGame(MineSweeper newGame) {
@@ -63,6 +65,7 @@ public class GameFrame extends JFrame {
         JPanel topFrame = new JPanel();
         topFrame.setLayout(new FlowLayout());
 
+        topFrame.add(statsPanel);
         topFrame.add("Hint Button", hintBtn);
         topFrame.add("Assist Button", assistBtn);
         topFrame.add("Solve Button", solveBtn);
