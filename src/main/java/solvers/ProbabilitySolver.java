@@ -41,7 +41,7 @@ public class ProbabilitySolver extends MyPBSolver {
         Cell bestStrategicCell = lowestProbCells.get(0);
         int leastUnknownNeighbours = (int) getNeighbours(bestStrategicCell.getX(), bestStrategicCell.getY())
                 .stream()
-                .filter(c -> c.getState() != CellState.OPEN.OPEN)
+                .filter(c -> c.getState() != CellState.OPEN)
                 .filter(c -> c.getState() != CellState.FLAGGED)
                 .count();
 
@@ -49,7 +49,7 @@ public class ProbabilitySolver extends MyPBSolver {
             Cell cell = lowestProbCells.get(i);
             int unknownNeighbours = (int) getNeighbours(bestStrategicCell.getX(), bestStrategicCell.getY())
                     .stream()
-                    .filter(c -> c.getState() != CellState.OPEN.OPEN)
+                    .filter(c -> c.getState() != CellState.OPEN)
                     .filter(c -> c.getState() != CellState.FLAGGED)
                     .count();
             if (unknownNeighbours < leastUnknownNeighbours) {

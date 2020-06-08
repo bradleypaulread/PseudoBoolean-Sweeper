@@ -82,7 +82,7 @@ public abstract class AbstractSolver implements Solver {
     }
 
     /**
-     * Encodes a literal so that it does not colide with any cell literals.
+     * Encodes a literal so that it does not collide with any cell literals.
      *
      * @param lit the ith literal wanting to be encoded.
      * @return an encoded literal.
@@ -145,7 +145,7 @@ public abstract class AbstractSolver implements Solver {
      * Return a list of all the games open sore cells. Note: a "open" shore cell is
      * a cell that has has been probed (is open) and touches a closed cell.
      *
-     * @return a list of cells that are classsed as open shore cells.
+     * @return a list of cells that are classed as open shore cells.
      */
     public List<Cell> getOpenShoreCells() {
         return cellMatrixToStream()

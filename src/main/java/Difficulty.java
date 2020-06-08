@@ -1,7 +1,7 @@
 package main.java;
 
 /**
- * An Enum that specifies the dificulty of a game.
+ * An Enum that specifies the difficulty of a game.
  *
  * @author Bradley Read
  * @version 1.0

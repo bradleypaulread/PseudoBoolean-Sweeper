@@ -6,8 +6,8 @@ import java.util.Random;
 
 /**
  * A blackbox minefield implementation. Distributes mines randomly and uniformly
- * and the interface only allows access to the mines data structur in a black
- * box mannar.
+ * and the interface only allows access to the mines data structure in a black
+ * box manner.
  * 
  * Created and supplied by Victor Khomenko, School of Computing, University of
  * Newcastle.
@@ -17,7 +17,7 @@ import java.util.Random;
  * @since 2014-08-17
  */
 public class MineField {
-	private boolean[][] field;
+	private final boolean[][] field;
 	private boolean exploded = false;
 	private boolean opened = false;
 

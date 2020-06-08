@@ -21,14 +21,14 @@ public class GameFrame extends JFrame {
     private final List<Class> solvers;
     private SolverSwingWorker worker;
 
-    private GameStatsPanel gameStats;
+    private final GameStatsPanel gameStats;
     private BoardPanel boardPanel;
-    private JButton resetBtn;
-    private JButton hintBtn;
-    private JButton assistBtn;
-    private JButton solveBtn;
-    private JButton stopBtn;
-    private JCheckBox probabilityCheckBox;
+    private final JButton resetBtn;
+    private final JButton hintBtn;
+    private final JButton assistBtn;
+    private final JButton solveBtn;
+    private final JButton stopBtn;
+    private final JCheckBox probabilityCheckBox;
 
     public GameFrame(MineSweeper game) {
         this.game = game;
