@@ -34,7 +34,7 @@ public class CellButton extends JButton {
         String text = String.valueOf(number);
         Optional<Color> colour = switch (number) {
             case -1 -> {
-                text = "X";
+                text = "❌";
                 yield Optional.of(Color.BLACK);
             }
             case 0 -> {

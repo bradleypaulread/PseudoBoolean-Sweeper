@@ -77,8 +77,25 @@ public class BoardPanel extends JPanel {
         for (Map.Entry<CellButton, Cell> pair : cellAndBtnMapping.entrySet()) {
             var button = pair.getKey();
             var cell = pair.getValue();
+            game.openCell(cell.getX(), cell.getY());
             button.setNumber(cell.getNumber());
-            button.setDisplayState(DisplayState.OPEN);
+
+            if (cell.isMine()) {
+                if (button.getDisplayState() != DisplayState.FLAG) {
+                    if (game.getState() == GameState.WON) {
+                        button.setText("✔");
+                        button.setDisplayState(DisplayState.FLAG);
+                    } else {
+                        button.setBackground(new Color(255, 127, 127));
+                        button.setText("❌");
+                    }
+                } else {
+                    button.setText("✔");
+                }
+            } else {
+                button.setDisplayState(DisplayState.OPEN);
+            }
+
             button.setEnabled(false);
             button.setToolTipText(button.getName());
         }
@@ -154,6 +171,32 @@ public class BoardPanel extends JPanel {
         });
     }
 
+    private void addRightClickListener(CellButton button) {
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                DisplayState state = button.getDisplayState();
+                if (state == DisplayState.OPEN || game.getState() != GameState.RUNNING) {
+                    return;
+                }
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    if (state == DisplayState.FLAG) {
+                        gameStats.setMinesLeft(gameStats.getMinesLeft() + 1);
+                        cellAndBtnMapping.get(button).setState(CellState.CLOSED);
+                        button.setDisplayState(DisplayState.CLOSED);
+                        button.setEnabled(true);
+                    } else {
+                        gameStats.setMinesLeft(gameStats.getMinesLeft() - 1);
+                        cellAndBtnMapping.get(button).setState(CellState.FLAGGED);
+                        button.setDisplayState(DisplayState.FLAG);
+                        button.setEnabled(false);
+                    }
+                    refreshCellBtn(cellAndBtnMapping.get(button), button);
+                }
+            }
+        });
+    }
+
     public void refreshOpenCellBtns() {
         for (var pair : cellAndBtnMapping.entrySet()) {
             var button = pair.getKey();
@@ -165,30 +208,6 @@ public class BoardPanel extends JPanel {
                 button.setEnabled(false);
             }
         }
-    }
-
-    private void addRightClickListener(CellButton button) {
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                DisplayState state = button.getDisplayState();
-                if (state == DisplayState.OPEN) {
-                    return;
-                }
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    if (state == DisplayState.FLAG) {
-                        gameStats.setMinesLeft(gameStats.getMinesLeft() + 1);
-                        button.setDisplayState(DisplayState.CLOSED);
-                        cellAndBtnMapping.get(button).setState(CellState.CLOSED);
-                    } else {
-                        gameStats.setMinesLeft(gameStats.getMinesLeft() - 1);
-                        button.setDisplayState(DisplayState.FLAG);
-                        cellAndBtnMapping.get(button).setState(CellState.FLAGGED);
-                    }
-                    refreshCellBtn(cellAndBtnMapping.get(button), button);
-                }
-            }
-        });
     }
 
     public void showHeatMap(Map<Cell, BigFraction> probs) {
@@ -276,7 +295,8 @@ public class BoardPanel extends JPanel {
         gameStats.setMoves(gameStats.getMoves() + 1);
         resetHints();
         Cell cell = cellAndBtnMapping.get(button);
-        boolean opening = game.openCell(cell.getX(), cell.getY()) == 0;
+        game.openCell(cell.getX(), cell.getY());
+        boolean opening = cell.getNumber() == 0;
         button.setNumber(cell.getNumber());
         button.setDisplayState(DisplayState.OPEN);
         button.setEnabled(false);

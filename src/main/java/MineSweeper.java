@@ -47,7 +47,7 @@ public class MineSweeper {
         return openCells;
     }
 
-    public int openCell(int x, int y) {
+    public void openCell(int x, int y) {
         if (this.gameState == GameState.RUNNING) {
             this.openCells += 1;
             Cell cell = board.unveil(x, y);
@@ -64,9 +64,8 @@ public class MineSweeper {
                     }
                 }
             }
-            return cell.getNumber();
         } else {
-            return -1;
+            board.unveil(x, y);
         }
     }
 
@@ -88,17 +87,6 @@ public class MineSweeper {
     }
 
     public void endGame() {
-        switch (gameState) {
-            case WON -> System.out.println("Game Won!");
-            case LOST -> System.out.println("Game Lost :(");
-            default -> {
-                try {
-                    throw new Exception("Game cannot end when it is running");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
         try {
             this.board.openAllCells(PASSWORD);
         } catch (NoSuchAlgorithmException e) {
