@@ -19,6 +19,8 @@ public class GameStatsPanel extends JPanel {
     private final JLabel minesLeftLbl;
     private final JLabel gameStateLbl;
 
+    private Timer gameTimer;
+
     public GameStatsPanel(int mines) {
         super();
         gameTimeLbl = new JLabel();
@@ -67,7 +69,7 @@ public class GameStatsPanel extends JPanel {
     }
 
     private void addListeners() {
-        Timer gameTimer = new Timer(1000, e -> {
+        gameTimer = new Timer(1000, e -> {
             if (gameTime < 100000) {
                 gameTimeLbl.setText("Time: " + gameTime);
             } else {
