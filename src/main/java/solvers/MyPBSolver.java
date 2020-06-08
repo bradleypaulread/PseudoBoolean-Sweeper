@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class MyPBSolver extends AbstractSolver {
 
-    public List<String> constraintLog;
+    public final List<String> constraintLog;
 
     public MyPBSolver(Cell[][] cells, int width, int height, int mines) {
         super(cells, width, height, mines);
@@ -172,7 +172,7 @@ public class MyPBSolver extends AbstractSolver {
 
     public List<Cell> getMineCells() {
         return getKnownCells().entrySet().stream()
-                .filter(entry -> entry.getValue())
+                .filter(Map.Entry::getValue)
                 .map(entry -> entry.getKey())
                 .collect(Collectors.toList());
     }
@@ -180,7 +180,7 @@ public class MyPBSolver extends AbstractSolver {
     public List<Cell> getSafeCells() {
         return getKnownCells().entrySet().stream()
                 .filter(entry -> !entry.getValue())
-                .map(entry -> entry.getKey())
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
 }

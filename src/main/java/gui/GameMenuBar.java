@@ -13,7 +13,6 @@ import java.util.List;
 public class GameMenuBar extends JMenuBar {
 
     private final GameFrame gameFrame;
-    private final BoardPanel boardPanel;
 
     private JRadioButtonMenuItem easyDiffRb;
     private JRadioButtonMenuItem mediumDiffRb;
@@ -23,9 +22,8 @@ public class GameMenuBar extends JMenuBar {
     private JCheckBoxMenuItem pseudoBooleanCb;
     private JCheckBoxMenuItem probabilityCb;
 
-    public GameMenuBar(GameFrame gameFrame, BoardPanel boardPanel) {
+    public GameMenuBar(GameFrame gameFrame) {
         this.gameFrame = gameFrame;
-        this.boardPanel = boardPanel;
         var menu = new JMenu("Options");
         initMenuItems();
         addMenusItems(menu);

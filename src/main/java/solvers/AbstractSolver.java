@@ -131,12 +131,10 @@ public abstract class AbstractSolver implements Solver {
                 .filter(cell -> cell.getState() != CellState.OPEN)
                 .filter(cell -> {
                     List<Cell> neighbours = getNeighbours(cell.getX(), cell.getY());
-                    boolean hasOpenNeighbour =
-                            ((int) neighbours.stream()
-                                    .filter(c -> c.getState() == CellState.OPEN)
-                                    .limit(1)
-                                    .count()) != 0;
-                    return hasOpenNeighbour;
+                    return ((int) neighbours.stream()
+                            .filter(c -> c.getState() == CellState.OPEN)
+                            .limit(1)
+                            .count()) != 0;
                 })
                 .collect(Collectors.toList());
     }
@@ -152,12 +150,10 @@ public abstract class AbstractSolver implements Solver {
                 .filter(cell -> cell.getState() != CellState.OPEN)
                 .filter(cell -> {
                     List<Cell> neighbours = getNeighbours(cell.getX(), cell.getY());
-                    boolean hasClosedNeighbour =
-                            ((int) neighbours.stream()
-                                    .filter(c -> c.getState() != CellState.OPEN)
-                                    .limit(1)
-                                    .count()) != 0;
-                    return hasClosedNeighbour;
+                    return ((int) neighbours.stream()
+                            .filter(c -> c.getState() != CellState.OPEN)
+                            .limit(1)
+                            .count()) != 0;
                 })
                 .collect(Collectors.toList());
     }

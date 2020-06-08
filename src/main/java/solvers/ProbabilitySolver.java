@@ -103,9 +103,9 @@ public class ProbabilitySolver extends MyPBSolver {
                 int[] model = solver.model();
                 List<Cell> modelShoreMines = Arrays.stream(model)
                         .filter(i -> i >= 0)
-                        .mapToObj(i -> decodeCellId(i))
+                        .mapToObj(this::decodeCellId)
                         .filter(Optional::isPresent)
-                        .map(cell -> cell.get())
+                        .map(Optional::get)
                         .collect(Collectors.toList());
 
                 int remainingMinesInModel = mines - modelShoreMines.size();
@@ -137,9 +137,7 @@ public class ProbabilitySolver extends MyPBSolver {
                 IVecInt block = new VecInt(model);
                 solver.addBlockingClause(block);
             }
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        } catch (ContradictionException e) {
+        } catch (TimeoutException | ContradictionException e) {
             e.printStackTrace();
         }
 

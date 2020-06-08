@@ -70,7 +70,7 @@ public class GameFrame extends JFrame {
     }
 
     public void buildGUI() {
-        this.setJMenuBar(new GameMenuBar(this, boardPanel));
+        this.setJMenuBar(new GameMenuBar(this));
 
         addButtonListeners();
 
@@ -170,9 +170,7 @@ public class GameFrame extends JFrame {
             boardPanel.showHint();
         });
 
-        probabilityCheckBox.addActionListener(e -> {
-            boardPanel.setShowProbabilities(probabilityCheckBox.isSelected());
-        });
+        probabilityCheckBox.addActionListener(e -> boardPanel.setShowProbabilities(probabilityCheckBox.isSelected()));
     }
 
 }

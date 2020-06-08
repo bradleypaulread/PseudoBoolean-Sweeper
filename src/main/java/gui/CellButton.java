@@ -10,13 +10,13 @@ import java.util.Optional;
 public class CellButton extends JButton {
 
     private static final int CELL_WIDTH = 50;
-    private static final int TEXT_SIZE = CELL_WIDTH / 6;
+    private static final int TEXT_SIZE = CELL_WIDTH / 3;
     private DisplayState displayState;
 
     public CellButton(String name) {
         this.setPreferredSize(new Dimension(CELL_WIDTH, CELL_WIDTH));
         setDisplayState(DisplayState.CLOSED);
-        this.setFont(new Font("", Font.BOLD, (CELL_WIDTH / 3)));
+        this.setFont(new Font("", Font.BOLD, TEXT_SIZE));
         this.setToolTipText(name);
     }
 
@@ -50,14 +50,12 @@ public class CellButton extends JButton {
             case 7 -> Optional.of(new Color(132, 0, 132));  // Purple
             default -> Optional.of(Color.BLACK);
         };
-        if (colour.isPresent()) {
-            // change the text colour of a disabled button
-            this.setUI(new MetalButtonUI() {
-                protected Color getDisabledTextColor() {
-                    return colour.get();
-                }
-            });
-        }
+        // change the text colour of a disabled button
+        colour.ifPresent(color -> this.setUI(new MetalButtonUI() {
+            protected Color getDisabledTextColor() {
+                return color;
+            }
+        }));
         setText(text);
     }
 }

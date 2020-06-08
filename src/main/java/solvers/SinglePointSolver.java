@@ -36,7 +36,7 @@ public class SinglePointSolver extends AbstractSolver {
     public List<Cell> getMineCells() {
         List<Cell> haveSurroundingMineCells = cellMatrixToStream()
                 .filter(c -> c.getState() == CellState.OPEN)
-                .filter(cell -> hasSinglePointMinePattern(cell))
+                .filter(this::hasSinglePointMinePattern)
                 .collect(Collectors.toList());
 
         // Set so duplicates are ignored
@@ -45,7 +45,7 @@ public class SinglePointSolver extends AbstractSolver {
 
     public List<Cell> getSafeCells() {
         List<Cell> haveSurroundingSafeCells = cellMatrixToStream()
-                .filter(cell -> hasSinglePointSafePattern(cell))
+                .filter(this::hasSinglePointSafePattern)
                 .collect(Collectors.toList());
 
         // Set so duplicates are ignored

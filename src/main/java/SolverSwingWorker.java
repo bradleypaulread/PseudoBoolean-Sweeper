@@ -33,9 +33,9 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
         int height = game.getHeight();
         int mines = game.getMines();
         List<Solver> solverList = new ArrayList<>();
-        for (int i = 0; i < solvers.size(); i++) {
+        for (Class solver : solvers) {
             try {
-                Constructor constructor = solvers.get(i).getDeclaredConstructor(cells.getClass(), int.class, int.class, int.class);
+                Constructor constructor = solver.getDeclaredConstructor(cells.getClass(), int.class, int.class, int.class);
                 solverList.add((Solver) constructor.newInstance(cells, width, height, mines));
             } catch (Exception e) {
                 e.printStackTrace();

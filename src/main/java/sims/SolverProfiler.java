@@ -17,7 +17,7 @@ public class SolverProfiler {
             ProbabilitySolver.class
     );
 
-    public static void main(String[] args) throws NoSuchMethodException {
+    public static void main(String[] args) {
         new SolverProfiler().startSim(100);
     }
 
@@ -69,7 +69,7 @@ public class SolverProfiler {
 
     private boolean[][] deepCopy(boolean[][] matrix) {
         return java.util.Arrays.stream(matrix)
-                .map(el -> el.clone())
+                .map(boolean[]::clone)
                 .toArray($ -> matrix.clone());
     }
 
