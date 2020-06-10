@@ -84,11 +84,11 @@ public class BoardPanel extends JPanel {
             if (cell.isMine()) {
                 if (button.getDisplayState() != DisplayState.FLAG) {
                     if (game.getState() == GameState.WON) {
-                        button.setText(CellButton.MINE_TEXT);
+                        button.setText(CellButton.FLAGGED_MINE_TEXT);
                         button.setDisplayState(DisplayState.FLAG);
                     } else {
                         button.setBackground(new Color(255, 127, 127));
-                        button.setText(CellButton.FLAGGED_MINE_TEXT);
+                        button.setText(CellButton.MINE_TEXT);
                     }
                 } else {
                     button.setText("✔");
