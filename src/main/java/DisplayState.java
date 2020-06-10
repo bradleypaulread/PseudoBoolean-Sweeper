@@ -2,14 +2,6 @@ package main.java;
 
 import java.awt.*;
 
-/**
- * An Enum that specifies the hint state of a GUI cell.
- *
- * @author Bradley Read
- * @version 1.0
- * @since 2019-08-30
- */
-
 public enum DisplayState {
     CLOSED(null),
     OPEN(null),

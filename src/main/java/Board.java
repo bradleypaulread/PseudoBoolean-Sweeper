@@ -28,13 +28,6 @@ public class Board {
         return this.cells[x][y];
     }
 
-    /**
-     * Returns a list of of the neighbouring cells around the specified cell.
-     *
-     * @param x X-axis coordinate of cell.
-     * @param y Y-axis coordinate of cell.
-     * @return a list of neighbouring cells.
-     */
     public List<Cell> getNeighbours(int x, int y) {
         List<Cell> neighbours = new ArrayList<>();
         for (int i = x - 1; i <= x + 1; i++) {

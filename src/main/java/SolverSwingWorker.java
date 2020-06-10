@@ -92,12 +92,12 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
 
     public static class Builder {
 
+        private final MineSweeper game;
+        private final boolean running;
         private List<JComponent> disableComponents;
         private List<Solver> solvers;
-        private MineSweeper game;
         private BoardPanel board;
         private boolean loop;
-        private volatile boolean running;
 
         public Builder(MineSweeper game) {
             this.game = game;

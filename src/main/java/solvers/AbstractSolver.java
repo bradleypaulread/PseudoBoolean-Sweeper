@@ -10,13 +10,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * An abstract class for a board solver. Contains many helper methods.
- *
- * @author Bradley Read
- * @version 1.0
- * @since 2019-03-11
- */
 public abstract class AbstractSolver implements Solver {
 
     protected final Cell[][] cells;
@@ -24,12 +17,16 @@ public abstract class AbstractSolver implements Solver {
     protected final int height;
     protected final int mines;
 
-    // TODO: exception for width and height need to more than 0
     public AbstractSolver(Cell[][] cells, int width, int height, int mines) {
         this.cells = cells;
         this.width = width;
         this.height = height;
         this.mines = mines;
+    }
+
+    protected Stream<Cell> cellMatrixToStream() {
+        return Arrays.stream(cells)
+                .flatMap(Arrays::stream);
     }
 
     /**
@@ -41,11 +38,6 @@ public abstract class AbstractSolver implements Solver {
      */
     protected int encodeCellId(final Cell c) {
         return (c.getY() * width + c.getX()) + 1;
-    }
-
-    protected Stream<Cell> cellMatrixToStream() {
-        return Arrays.stream(cells)
-                .flatMap(Arrays::stream);
     }
 
     /**
@@ -158,26 +150,12 @@ public abstract class AbstractSolver implements Solver {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Count the amount of flagged cells are around a cell.
-     *
-     * @param x X-axis coordinate of cell.
-     * @param y Y-axis coordinate of cell.
-     * @return the number of flagged neighbouring cells.
-     */
     public int calcFlaggedNeighbours(final int x, final int y) {
         return (int) getNeighbours(x, y).stream()
                 .filter(cell -> cell.getState() == CellState.FLAGGED)
                 .count();
     }
 
-    /**
-     * Count the amount of closed cells are around a cell.
-     *
-     * @param x X-axis coordinate of cell.
-     * @param y Y-axis coordinate of cell.
-     * @return the number of closed neighbouring cells.
-     */
     public int calcClosedNeighbours(final int x, final int y) {
         return (int) getNeighbours(x, y).stream()
                 .filter(cell -> cell.getState() != CellState.OPEN)

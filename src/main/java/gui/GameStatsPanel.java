@@ -9,16 +9,14 @@ import java.awt.*;
 
 public class GameStatsPanel extends JPanel {
 
-    private int gameTime;
-    private int moves;
-    private int minesLeft;
-    private GameState gameState;
-
     private final JLabel gameTimeLbl;
     private final JLabel movesLbl;
     private final JLabel minesLeftLbl;
     private final JLabel gameStateLbl;
-
+    private int gameTime;
+    private int moves;
+    private int minesLeft;
+    private GameState gameState;
     private Timer gameTimer;
 
     public GameStatsPanel(int mines) {
@@ -55,6 +53,11 @@ public class GameStatsPanel extends JPanel {
 
     public int getMinesLeft() {
         return minesLeft;
+    }
+
+    public void setMinesLeft(int minesLeft) {
+        this.minesLeft = minesLeft;
+        updateMinesLeftLbl();
     }
 
     public void reset(int mines) {
@@ -99,11 +102,6 @@ public class GameStatsPanel extends JPanel {
 
     private void updateMovesLbl() {
         movesLbl.setText("Moves: " + moves);
-    }
-
-    public void setMinesLeft(int minesLeft) {
-        this.minesLeft = minesLeft;
-        updateMinesLeftLbl();
     }
 
     private void updateMinesLeftLbl() {

@@ -9,8 +9,11 @@ import java.util.Optional;
 
 public class CellButton extends JButton {
 
+    public static final String MINE_TEXT = "❌";
+    public static final String FLAGGED_MINE_TEXT = "✔";
     private static final int CELL_WIDTH = 50;
     private static final int TEXT_SIZE = CELL_WIDTH / 3;
+
     private DisplayState displayState;
 
     public CellButton(String name) {
@@ -34,7 +37,7 @@ public class CellButton extends JButton {
         String text = String.valueOf(number);
         Optional<Color> colour = switch (number) {
             case -1 -> {
-                text = "❌";
+                text = MINE_TEXT;
                 yield Optional.of(Color.BLACK);
             }
             case 0 -> {

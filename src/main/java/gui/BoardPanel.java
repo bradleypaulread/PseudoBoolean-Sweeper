@@ -17,22 +17,23 @@ import java.util.Set;
 
 public class BoardPanel extends JPanel {
 
-    private final BiMap<CellButton, Cell> cellAndBtnMapping;
-    private final MineSweeper game;
-    private final Set<CellButton> mineHints;
-    private final Set<CellButton> safeHints;
-    private final Set<Cell> bestProbCells;
-    private final Color[] HEAT_MAP_COLOURS = {
+    private static final Color[] HEAT_MAP_COLOURS = {
             new Color(202, 250, 162),
             new Color(70, 179, 70),
             new Color(255, 248, 150),
             new Color(255, 127, 127),
             new Color(247, 76, 76),
     };
-    private final Color BEST_CELL_COLOUR = new Color(94, 137, 248, 255);
+    private static final Color BEST_CELL_COLOUR = new Color(94, 137, 248, 255);
+
+    private final BiMap<CellButton, Cell> cellAndBtnMapping;
+    private final MineSweeper game;
+    private final Set<CellButton> mineHints;
+    private final Set<CellButton> safeHints;
+    private final Set<Cell> bestProbCells;
+    private final GameStatsPanel gameStats;
     private Map<Cell, BigFraction> probabilityCache;
     private boolean showProbabilities;
-    private final GameStatsPanel gameStats;
 
     public BoardPanel(MineSweeper game, GameStatsPanel gameStats) {
         super();
@@ -83,11 +84,11 @@ public class BoardPanel extends JPanel {
             if (cell.isMine()) {
                 if (button.getDisplayState() != DisplayState.FLAG) {
                     if (game.getState() == GameState.WON) {
-                        button.setText("✔");
+                        button.setText(CellButton.MINE_TEXT);
                         button.setDisplayState(DisplayState.FLAG);
                     } else {
                         button.setBackground(new Color(255, 127, 127));
-                        button.setText("❌");
+                        button.setText(CellButton.FLAGGED_MINE_TEXT);
                     }
                 } else {
                     button.setText("✔");
@@ -284,8 +285,22 @@ public class BoardPanel extends JPanel {
     }
 
     private void resetHints() {
-        this.mineHints.forEach(e -> e.setDisplayState(DisplayState.CLOSED));
-        this.safeHints.forEach(e -> e.setDisplayState(DisplayState.CLOSED));
+        this.mineHints.forEach(button -> {
+            DisplayState state = switch (cellAndBtnMapping.get(button).getState()) {
+                case OPEN -> DisplayState.OPEN;
+                case FLAGGED -> DisplayState.FLAG;
+                default -> DisplayState.CLOSED;
+            };
+            button.setDisplayState(state);
+        });
+        this.safeHints.forEach(button -> {
+            DisplayState state = switch (cellAndBtnMapping.get(button).getState()) {
+                case OPEN -> DisplayState.OPEN;
+                case FLAGGED -> DisplayState.FLAG;
+                default -> DisplayState.CLOSED;
+            };
+            button.setDisplayState(state);
+        });
         this.mineHints.clear();
         this.safeHints.clear();
     }

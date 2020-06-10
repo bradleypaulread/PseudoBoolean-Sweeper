@@ -5,7 +5,7 @@ import java.util.List;
 
 public class MineSweeper {
 
-    private final String PASSWORD = "hello";
+    private static final String PASSWORD = "hello";
 
     private final int width;
     private final int height;

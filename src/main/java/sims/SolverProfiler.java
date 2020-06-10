@@ -1,6 +1,9 @@
 package main.java.sims;
 
-import main.java.*;
+import main.java.Board;
+import main.java.Difficulty;
+import main.java.MineField;
+import main.java.MineSweeper;
 import main.java.solvers.MyPBSolver;
 import main.java.solvers.ProbabilitySolver;
 

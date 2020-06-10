@@ -1,13 +1,5 @@
 package main.java;
 
-/**
- * A class that stores a cell's attributes. (E.g. its number, if it has been
- * flagged, if its a mine, its probability etc.).
- *
- * @author Bradley Read
- * @version 1.0
- * @since 2019-01-28
- */
 public class Cell {
     // ID of cell (cell coordinates)
     private int x, y;
@@ -16,13 +8,6 @@ public class Cell {
     private int number;
 
     private CellState state;
-
-    /**
-     * Constructor for main.java.Cell class.
-     *
-     * @param x cell's x-axis position
-     * @param y cell's y-axis position
-     */
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
@@ -41,9 +26,6 @@ public class Cell {
         return x;
     }
 
-    /**
-     * @param x the x to set
-     */
     public void setX(int x) {
         this.x = x;
     }
@@ -52,9 +34,6 @@ public class Cell {
         return y;
     }
 
-    /**
-     * @param y the y to set
-     */
     public void setY(int y) {
         this.y = y;
     }

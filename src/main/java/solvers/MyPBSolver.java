@@ -10,7 +10,6 @@ import org.sat4j.specs.IVecInt;
 import org.sat4j.specs.TimeoutException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MyPBSolver extends AbstractSolver {
 
@@ -19,10 +18,6 @@ public class MyPBSolver extends AbstractSolver {
     public MyPBSolver(Cell[][] cells, int width, int height, int mines) {
         super(cells, width, height, mines);
         constraintLog = new ArrayList<>();
-    }
-
-    protected void logConstraint(String lits, int value, String ex) {
-        this.constraintLog.add("" + lits + " " + ex + " " + value);
     }
 
     protected PBSolver generateBaseConstraints() {
@@ -43,18 +38,14 @@ public class MyPBSolver extends AbstractSolver {
 
         // Constraint that sum of all cells must be the no.
         // of mines present on the board
-        String lit = "";
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 Cell current = cells[i][j];
-                lit += current + " + ";
                 lits.push(encodeCellId(current));
                 coeffs.push(1);
             }
         }
-        logConstraint(lit, mines, "<=");
         solver.addAtMost(lits, coeffs, mines);
-        logConstraint(lit, mines, ">=");
         solver.addAtLeast(lits, coeffs, mines);
         lits.clear();
         coeffs.clear();
@@ -70,25 +61,17 @@ public class MyPBSolver extends AbstractSolver {
         for (Cell cell : openCells) {
             lits.push(encodeCellId(cell));
             coeffs.push(1);
-            String lit = "";
-            lit += cell;
-            logConstraint(lit, 0, "<=");
-            logConstraint(lit, 0, ">=");
             solver.addAtMost(lits, coeffs, 0);
             solver.addAtLeast(lits, coeffs, 0);
             lits.clear();
             coeffs.clear();
-            lit = "";
 
             // Normal constraint
             List<Cell> neighbours = getNeighbours(cell.getX(), cell.getY());
             for (Cell c : neighbours) {
-                lit += c + " + ";
                 lits.push(encodeCellId(c));
                 coeffs.push(1);
             }
-            logConstraint(lit, cell.getNumber(), "<=");
-            logConstraint(lit, cell.getNumber(), ">=");
             solver.addAtMost(lits, coeffs, cell.getNumber());
             solver.addAtLeast(lits, coeffs, cell.getNumber());
             lits.clear();
@@ -168,19 +151,5 @@ public class MyPBSolver extends AbstractSolver {
         }
 
         return result;
-    }
-
-    public List<Cell> getMineCells() {
-        return getKnownCells().entrySet().stream()
-                .filter(Map.Entry::getValue)
-                .map(entry -> entry.getKey())
-                .collect(Collectors.toList());
-    }
-
-    public List<Cell> getSafeCells() {
-        return getKnownCells().entrySet().stream()
-                .filter(entry -> !entry.getValue())
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
     }
 }
