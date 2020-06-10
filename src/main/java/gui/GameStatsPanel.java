@@ -62,10 +62,17 @@ public class GameStatsPanel extends JPanel {
         moves = 0;
         minesLeft = mines;
         gameState = GameState.RUNNING;
+        stopTimer();
         addListeners();
         updateMovesLbl();
         updateMinesLeftLbl();
         updateGameStateLbl();
+    }
+
+    public void stopTimer() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+        }
     }
 
     private void addListeners() {
