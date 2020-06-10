@@ -91,7 +91,7 @@ public class BoardPanel extends JPanel {
                         button.setText(CellButton.MINE_TEXT);
                     }
                 } else {
-                    button.setText("✔");
+                    button.setText(CellButton.FLAGGED_MINE_TEXT);
                 }
             } else {
                 button.setDisplayState(DisplayState.OPEN);
