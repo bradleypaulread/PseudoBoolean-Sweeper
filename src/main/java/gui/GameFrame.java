@@ -1,10 +1,8 @@
 package main.java.gui;
 
-import main.java.Cell;
 import main.java.MineSweeper;
 import main.java.SolverSwingWorker;
 import main.java.solvers.MyPBSolver;
-import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.SinglePointSolver;
 import main.java.solvers.Solver;
 
@@ -15,20 +13,19 @@ import java.util.List;
 
 public class GameFrame extends JFrame {
 
-    // This game reference is passed around the gui a lot
-    // not great programming but it will do
-    private MineSweeper game;
     private final List<Class> solvers;
-    private SolverSwingWorker worker;
-
     private final GameStatsPanel gameStats;
-    private BoardPanel boardPanel;
     private final JButton resetBtn;
     private final JButton hintBtn;
     private final JButton assistBtn;
     private final JButton solveBtn;
     private final JButton stopBtn;
     private final JCheckBox probabilityCheckBox;
+    // This game reference is passed around the gui a lot
+    // not great programming but it will do
+    private MineSweeper game;
+    private SolverSwingWorker worker;
+    private BoardPanel boardPanel;
 
     public GameFrame(MineSweeper game) {
         this.game = game;
@@ -84,22 +81,6 @@ public class GameFrame extends JFrame {
         topFrame.add("Stop Button", stopBtn);
         topFrame.add("Probability Button", probabilityCheckBox);
 
-
-        JButton debugPrintKnownCells = new JButton("See Cells");
-        debugPrintKnownCells.addActionListener(e -> {
-            MyPBSolver p = new MyPBSolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines());
-            List<Cell> mines = p.getMineCells();
-            List<Cell> safe = p.getSafeCells();
-            System.out.println("Constraints are: ");
-            for (String c : p.constraintLog) {
-                System.out.println(c);
-            }
-            System.out.println();
-            System.out.println("Mines are: " + mines);
-            System.out.println("Safes are: " + safe);
-        });
-        topFrame.add("See Cells", debugPrintKnownCells);
-
         this.getContentPane().add(topFrame, BorderLayout.NORTH);
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);
         this.getContentPane().add(resetBtn, BorderLayout.SOUTH);
@@ -112,10 +93,17 @@ public class GameFrame extends JFrame {
     }
 
     private void addButtonListeners() {
-        solveBtn.addActionListener(e -> {
-            Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
-                    game.getHeight(), game.getMines());
+        hintBtn.addActionListener(e -> {
+            if (!boardPanel.knowsHints()) {
+                // just use a pb solver rather than incremental solvers
+                Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
+                        game.getHeight(), game.getMines());
+                boardPanel.setHintCells(p.getKnownCells());
+            }
+            boardPanel.showHint();
+        });
 
+        assistBtn.addActionListener(e -> {
             List<JComponent> disableBtns = List.of(
                     boardPanel,
                     resetBtn,
@@ -125,16 +113,19 @@ public class GameFrame extends JFrame {
                     probabilityCheckBox
             );
 
-            this.worker = new SolverSwingWorker(disableBtns, List.of(MyPBSolver.class), this.game, boardPanel);
+            this.worker = new SolverSwingWorker.Builder(game)
+                    .disableComponents(disableBtns)
+                    .withBoardPanel(boardPanel)
+                    .withSolvers(solvers)
+                    .setLoop(false)
+                    .build();
+
             this.probabilityCheckBox.setSelected(false);
             boardPanel.setShowProbabilities(false);
             this.worker.execute();
         });
 
-        assistBtn.addActionListener(e -> {
-            Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
-                    game.getHeight(), game.getMines());
-
+        solveBtn.addActionListener(e -> {
             List<JComponent> disableBtns = List.of(
                     boardPanel,
                     resetBtn,
@@ -144,7 +135,13 @@ public class GameFrame extends JFrame {
                     probabilityCheckBox
             );
 
-            this.worker = new SolverSwingWorker(disableBtns, List.of(MyPBSolver.class, ProbabilitySolver.class), this.game, boardPanel);
+            this.worker = new SolverSwingWorker.Builder(game)
+                    .disableComponents(disableBtns)
+                    .withBoardPanel(boardPanel)
+                    .withSolvers(solvers)
+                    .setLoop(true)
+                    .build();
+
             this.probabilityCheckBox.setSelected(false);
             boardPanel.setShowProbabilities(false);
             this.worker.execute();
@@ -159,15 +156,6 @@ public class GameFrame extends JFrame {
         resetBtn.addActionListener(e -> {
             resetBoard();
             resetGUI();
-        });
-
-        hintBtn.addActionListener(e -> {
-            if (!boardPanel.knowsHints()) {
-                Solver p = new MyPBSolver(game.getCells(), game.getWidth(),
-                        game.getHeight(), game.getMines());
-                boardPanel.setHintCells(p.getKnownCells());
-            }
-            boardPanel.showHint();
         });
 
         probabilityCheckBox.addActionListener(e -> boardPanel.setShowProbabilities(probabilityCheckBox.isSelected()));

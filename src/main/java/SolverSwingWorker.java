@@ -16,32 +16,16 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
     private final List<Solver> solvers;
     private final MineSweeper game;
     private final BoardPanel board;
+    private final boolean loop;
     private volatile boolean running;
 
-    public SolverSwingWorker(List<JComponent> disableComponents, List<Class> solvers,
-                             MineSweeper game, BoardPanel board) {
+    private SolverSwingWorker(MineSweeper game, BoardPanel board, List<JComponent> disableComponents, List<Solver> solvers, boolean loop) {
         this.running = true;
         this.disableComponents = disableComponents;
         this.game = game;
         this.board = board;
-        this.solvers = createSolvers(solvers);
-    }
-
-    private List<Solver> createSolvers(List<Class> solvers) {
-        Cell[][] cells = game.getCells();
-        int width = game.getWidth();
-        int height = game.getHeight();
-        int mines = game.getMines();
-        List<Solver> solverList = new ArrayList<>();
-        for (Class solver : solvers) {
-            try {
-                Constructor constructor = solver.getDeclaredConstructor(cells.getClass(), int.class, int.class, int.class);
-                solverList.add((Solver) constructor.newInstance(cells, width, height, mines));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return solverList;
+        this.loop = loop;
+        this.solvers = solvers;
     }
 
     public void stop() {
@@ -86,10 +70,16 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
             if (solver instanceof ProbabilitySolver) {
                 Cell bestCell = ((ProbabilitySolver) solver).getBestCell();
                 game.openCell(bestCell.getX(), bestCell.getY());
+                if (!loop) {
+                    break;
+                }
                 i = -1;
             } else {
                 boolean somethingChanged = makeChanges(solver);
                 if (somethingChanged) {
+                    if (!loop) {
+                        break;
+                    }
                     i = -1;
                 }
             }
@@ -98,5 +88,58 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
         board.refreshOpenCellBtns();
         enableComponents();
         return this.running;
+    }
+
+    public static class Builder {
+
+        private List<JComponent> disableComponents;
+        private List<Solver> solvers;
+        private MineSweeper game;
+        private BoardPanel board;
+        private boolean loop;
+        private volatile boolean running;
+
+        public Builder(MineSweeper game) {
+            this.game = game;
+            this.running = true;
+        }
+
+        public Builder withSolvers(List<Class> solvers) {
+            Cell[][] cells = game.getCells();
+            int width = game.getWidth();
+            int height = game.getHeight();
+            int mines = game.getMines();
+            List<Solver> solverList = new ArrayList<>();
+            for (Class solver : solvers) {
+                try {
+                    Constructor constructor = solver.getDeclaredConstructor(cells.getClass(), int.class, int.class, int.class);
+                    solverList.add((Solver) constructor.newInstance(cells, width, height, mines));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            this.solvers = solverList;
+            return this;
+        }
+
+        public Builder disableComponents(List<JComponent> components) {
+            this.disableComponents = components;
+            return this;
+        }
+
+        public Builder withBoardPanel(BoardPanel board) {
+            this.board = board;
+            return this;
+        }
+
+        public Builder setLoop(boolean loop) {
+            this.loop = loop;
+            return this;
+        }
+
+        public SolverSwingWorker build() {
+            return new SolverSwingWorker(game, board, disableComponents, solvers, loop);
+        }
+
     }
 }
