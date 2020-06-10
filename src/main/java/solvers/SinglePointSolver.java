@@ -21,7 +21,6 @@ public class SinglePointSolver extends AbstractSolver {
 
     public Map<Cell, Boolean> getKnownCells() {
         Map<Cell, Boolean> results = new HashMap<>();
-
         for (Cell cell : getMineCells()) {
             results.put(cell, true);
         }
@@ -40,52 +39,36 @@ public class SinglePointSolver extends AbstractSolver {
                 .collect(Collectors.toList());
 
         // Set so duplicates are ignored
-        return getAllNeighbouringClosedCells(cells, haveSurroundingMineCells);
+        return getAllNeighbouringClosedCells(haveSurroundingMineCells);
     }
 
     public List<Cell> getSafeCells() {
         List<Cell> haveSurroundingSafeCells = cellMatrixToStream()
+                .filter(c -> c.getState() == CellState.OPEN)
                 .filter(this::hasSinglePointSafePattern)
                 .collect(Collectors.toList());
 
         // Set so duplicates are ignored
-        return getAllNeighbouringClosedCells(cells, haveSurroundingSafeCells);
+        return getAllNeighbouringClosedCells(haveSurroundingSafeCells);
     }
 
-    public List<Cell> getAllNeighbouringClosedCells(Cell[][] cells, List<Cell> knownCells) {
+    public List<Cell> getAllNeighbouringClosedCells(List<Cell> knownCells) {
         Set<Cell> safeCells = new HashSet<>();
         for (Cell cell : knownCells) {
             safeCells.addAll(
                     getNeighbours(cell.getX(), cell.getY()).stream()
-                            .filter(c -> c.getState() != CellState.OPEN)
+                            .filter(c -> c.getState() == CellState.CLOSED)
                             .collect(Collectors.toList())
             );
         }
         return new ArrayList<>(safeCells);
     }
 
-    /**
-     * Checks if the cell is safe using the single point method. If the cell's
-     * number is equal to the number of flagged neighbours then the cell is classed
-     * as safe.
-     *
-     * @param cell the cell to check using single point.
-     * @return if the cell is safe. True if it matches single point and is safe,
-     * false otherwise.
-     */
     private boolean hasSinglePointSafePattern(final Cell cell) {
         int flagCount = calcFlaggedNeighbours(cell.getX(), cell.getY());
         return cell.getNumber() == flagCount;
     }
 
-    /**
-     * Checks if the cell is a mine using the single point method. If the cell's
-     * number is equal to the number of closed neighbours then the cell a mine.
-     *
-     * @param cell the cell to check using single point.
-     * @return if the cell is a mine. True if it matches single point and is a mine,
-     * false otherwise.
-     */
     private boolean hasSinglePointMinePattern(final Cell cell) {
         int closedCount = calcClosedNeighbours(cell.getX(), cell.getY());
         return cell.getNumber() == closedCount;
