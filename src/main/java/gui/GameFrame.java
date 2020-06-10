@@ -27,6 +27,8 @@ public class GameFrame extends JFrame {
     private SolverSwingWorker worker;
     private BoardPanel boardPanel;
 
+    private final List<JComponent> disableBtns;
+
     public GameFrame(MineSweeper game) {
         this.game = game;
         gameStats = new GameStatsPanel(game.getMines());
@@ -37,6 +39,14 @@ public class GameFrame extends JFrame {
         this.solveBtn = new JButton("Solve");
         this.stopBtn = new JButton("Stop");
         this.probabilityCheckBox = new JCheckBox("Probabilities");
+        disableBtns = List.of(
+                boardPanel,
+                resetBtn,
+                hintBtn,
+                assistBtn,
+                solveBtn,
+                probabilityCheckBox
+        );
         solvers = new ArrayList<>();
         solvers.add(SinglePointSolver.class);
     }
@@ -104,15 +114,6 @@ public class GameFrame extends JFrame {
         });
 
         assistBtn.addActionListener(e -> {
-            List<JComponent> disableBtns = List.of(
-                    boardPanel,
-                    resetBtn,
-                    hintBtn,
-                    assistBtn,
-                    solveBtn,
-                    probabilityCheckBox
-            );
-
             this.worker = new SolverSwingWorker.Builder(game)
                     .disableComponents(disableBtns)
                     .withBoardPanel(boardPanel)
@@ -126,15 +127,6 @@ public class GameFrame extends JFrame {
         });
 
         solveBtn.addActionListener(e -> {
-            List<JComponent> disableBtns = List.of(
-                    boardPanel,
-                    resetBtn,
-                    hintBtn,
-                    assistBtn,
-                    solveBtn,
-                    probabilityCheckBox
-            );
-
             this.worker = new SolverSwingWorker.Builder(game)
                     .disableComponents(disableBtns)
                     .withBoardPanel(boardPanel)
@@ -150,6 +142,7 @@ public class GameFrame extends JFrame {
         stopBtn.addActionListener(e -> {
             if (worker != null) {
                 worker.stop();
+                disableBtns.forEach(b -> b.setEnabled(true));
             }
         });
 

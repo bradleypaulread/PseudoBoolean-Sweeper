@@ -46,6 +46,9 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
         for (Map.Entry<Cell, Boolean> pair : knownCells.entrySet()) {
             Cell cell = pair.getKey();
             boolean isMine = pair.getValue();
+            if (!running) {
+                break;
+            }
             if (isMine) {
                 if (cell.getState() == CellState.CLOSED) {
                     cell.setState(CellState.FLAGGED);
@@ -69,6 +72,9 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
             Solver solver = solvers.get(i);
             if (solver instanceof ProbabilitySolver) {
                 Cell bestCell = ((ProbabilitySolver) solver).getBestCell();
+                if (!running) {
+                    break;
+                }
                 game.openCell(bestCell.getX(), bestCell.getY());
                 if (!loop) {
                     break;
@@ -84,9 +90,9 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
                 }
             }
         }
-        board.refreshAllCellBtns();
-        board.refreshOpenCellBtns();
         enableComponents();
+        board.refreshOpenCellBtns();
+        board.refreshAllCellBtns();
         return this.running;
     }
 
