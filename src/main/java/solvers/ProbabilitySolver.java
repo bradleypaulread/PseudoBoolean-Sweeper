@@ -27,11 +27,14 @@ public class ProbabilitySolver extends MyPBSolver {
         for (var pair : probabilities.entrySet()) {
             Cell cell = pair.getKey();
             BigFraction prob = pair.getValue();
-            if (prob.compareTo(bestProb) <= 0) {
+            int comp = prob.compareTo(bestProb);
+            if (comp < 0) {
                 lowestProbCells.clear();
                 bestProb = prob;
+                lowestProbCells.add(cell);
+            } else if (comp == 0) {
+                lowestProbCells.add(cell);
             }
-            lowestProbCells.add(cell);
         }
 
         if (lowestProbCells.size() == 1) {
@@ -41,16 +44,14 @@ public class ProbabilitySolver extends MyPBSolver {
         Cell bestStrategicCell = lowestProbCells.get(0);
         int leastUnknownNeighbours = (int) getNeighbours(bestStrategicCell.getX(), bestStrategicCell.getY())
                 .stream()
-                .filter(c -> c.getState() != CellState.OPEN)
-                .filter(c -> c.getState() != CellState.FLAGGED)
+                .filter(c -> c.getState() == CellState.CLOSED)
                 .count();
 
         for (int i = 1; i < lowestProbCells.size(); i++) {
             Cell cell = lowestProbCells.get(i);
-            int unknownNeighbours = (int) getNeighbours(bestStrategicCell.getX(), bestStrategicCell.getY())
+            int unknownNeighbours = (int) getNeighbours(cell.getX(), cell.getY())
                     .stream()
-                    .filter(c -> c.getState() != CellState.OPEN)
-                    .filter(c -> c.getState() != CellState.FLAGGED)
+                    .filter(c -> c.getState() == CellState.CLOSED)
                     .count();
             if (unknownNeighbours < leastUnknownNeighbours) {
                 bestStrategicCell = cell;
