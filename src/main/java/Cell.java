@@ -2,7 +2,8 @@ package main.java;
 
 public class Cell {
     // ID of cell (cell coordinates)
-    private int x, y;
+    private final int x;
+    private final int y;
 
     // Surrounding mines
     private int number;
@@ -26,16 +27,8 @@ public class Cell {
         return x;
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
     public int getY() {
         return y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
     }
 
     public int getNumber() {
@@ -67,7 +60,6 @@ public class Cell {
 
         if (x != cell.x) return false;
         if (y != cell.y) return false;
-        if (number != cell.number) return false;
         return state == cell.state;
     }
 
@@ -75,7 +67,6 @@ public class Cell {
     public int hashCode() {
         int result = x;
         result = 31 * result + y;
-        result = 31 * result + number;
         return result;
     }
 }
