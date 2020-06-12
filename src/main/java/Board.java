@@ -67,7 +67,7 @@ public class Board {
         for (int i = 0; i < this.width; i++) {
             for (int j = 0; j < this.height; j++) {
                 Cell cell = this.cells[i][j];
-                if (cell.getState() == CellState.CLOSED) {
+                if (cell.getState() != CellState.OPEN) {
                     int num = this.field.uncover(i, j);
                     cell.setNumber(num);
                     cell.setState(CellState.OPEN);
