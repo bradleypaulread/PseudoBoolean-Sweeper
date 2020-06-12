@@ -108,11 +108,6 @@ public class GameStatsPanel extends JPanel {
         minesLeftLbl.setText("Mines left: " + minesLeft);
     }
 
-    public void setGameState(GameState state) {
-        gameState = state;
-        updateGameStateLbl();
-    }
-
     private void updateGameStateLbl() {
         String gameStateStr = gameState.toString().toLowerCase();
         gameStateStr = Character.toUpperCase(gameStateStr.charAt(0)) + gameStateStr.substring(1);
