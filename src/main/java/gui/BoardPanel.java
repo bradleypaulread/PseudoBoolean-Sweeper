@@ -1,19 +1,18 @@
 package main.java.gui;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import main.java.*;
 import main.java.solvers.ProbabilitySolver;
 import org.apache.commons.math3.fraction.BigFraction;
 
 import javax.swing.*;
+import javax.swing.plaf.metal.MetalButtonUI;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class BoardPanel extends JPanel {
 
@@ -26,97 +25,36 @@ public class BoardPanel extends JPanel {
     };
     private static final Color BEST_CELL_COLOUR = new Color(94, 137, 248, 255);
 
-    private final BiMap<CellButton, Cell> cellAndBtnMapping;
+    private final Map<Cell, CellButton> cellAndBtnMapping;
     private final MineSweeper game;
-    private final Set<CellButton> mineHints;
-    private final Set<CellButton> safeHints;
+    private final List<Cell> unsetCellHints;  // list for cells that are not yet set to hints in the gui
     private final Set<Cell> bestProbCells;
     private final GameStatsPanel gameStats;
-    private Map<Cell, BigFraction> probabilityCache;
+    private Map<Cell, Boolean> cellHints;
     private boolean showProbabilities;
 
     public BoardPanel(MineSweeper game, GameStatsPanel gameStats) {
         super();
         bestProbCells = new HashSet<>();
-        probabilityCache = new HashMap<>();
-        cellAndBtnMapping = HashBiMap.create();
+        cellAndBtnMapping = new HashMap<>();
         this.gameStats = gameStats;
         this.game = game;
-        this.mineHints = new HashSet<>();
-        this.safeHints = new HashSet<>();
+        this.cellHints = new HashMap<>();
+        this.unsetCellHints = new ArrayList<>();
         this.setLayout(new GridLayout(game.getHeight(), game.getWidth()));
         setupGrid();
     }
 
-    public void setShowProbabilities(boolean showProbabilities) {
-        this.showProbabilities = showProbabilities;
-        if (showProbabilities) {
-            showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
-        } else {
-            refreshAllCellBtns();
-        }
-    }
-
-    public void refreshCellBtn(Cell cell, CellButton button) {
-        if (game.getState() != GameState.RUNNING) {
-            openAllCells();
-            return;
-        }
-        if (cell.getState() == CellState.FLAGGED) {
-            button.setDisplayState(DisplayState.FLAG);
-        } else if (button.getDisplayState() == DisplayState.CLOSED && showProbabilities) {
-            setCellHeat(button, probabilityCache.get(cell));
-            if (bestProbCells.contains(cell) && probabilityCache.get(cell).compareTo(BigFraction.ZERO) != 0) {
-                button.setBackground(BEST_CELL_COLOUR);
+    private void setupGrid() {
+        for (int i = 0; i < game.getHeight(); i++) {
+            for (int j = 0; j < game.getWidth(); j++) {
+                Cell cell = game.getCell(j, i);
+                CellButton button = new CellButton(cell.toString());
+                addLeftClickListener(button, cell);
+                addRightClickListener(button, cell);
+                cellAndBtnMapping.put(cell, button);
+                this.add(cell.toString(), button);
             }
-        } else if (button.getDisplayState() == DisplayState.CLOSED) {
-            button.setBackground(DisplayState.CLOSED.colour);
-        }
-    }
-
-    private void openAllCells() {
-        for (Map.Entry<CellButton, Cell> pair : cellAndBtnMapping.entrySet()) {
-            var button = pair.getKey();
-            var cell = pair.getValue();
-            game.openCell(cell.getX(), cell.getY());
-            button.setNumber(cell.getNumber());
-
-            if (cell.isMine()) {
-                if (button.getDisplayState() != DisplayState.FLAG) {
-                    if (game.getState() == GameState.WON) {
-                        button.setText(CellButton.FLAGGED_MINE_TEXT);
-                        button.setDisplayState(DisplayState.FLAG);
-                    } else {
-                        button.setBackground(new Color(255, 127, 127));
-                        button.setText(CellButton.MINE_TEXT);
-                    }
-                } else {
-                    button.setText(CellButton.FLAGGED_MINE_TEXT);
-                }
-            } else {
-                button.setDisplayState(DisplayState.OPEN);
-            }
-
-            button.setEnabled(false);
-            button.setToolTipText(button.getName());
-        }
-    }
-
-    public void refreshAllCellBtns() {
-        int flags = 0;
-        if (game.getState() != GameState.RUNNING) {
-            openAllCells();
-        } else {
-            if (showProbabilities) {
-                showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
-            }
-            for (var pair : cellAndBtnMapping.entrySet()) {
-                refreshCellBtn(pair.getValue(), pair.getKey());
-                if (pair.getValue().getState() == CellState.FLAGGED) {
-                    flags += 1;
-                }
-            }
-            gameStats.setMinesLeft(game.getMines() - flags);
         }
     }
 
@@ -125,89 +63,218 @@ public class BoardPanel extends JPanel {
         resetHints();
         if (enabled) {
             for (var pair : cellAndBtnMapping.entrySet()) {
-                var button = pair.getKey();
-                var cell = pair.getValue();
-                if (button.getDisplayState() == DisplayState.CLOSED) {
-                    refreshCellBtn(cell, button);
+                var cell = pair.getKey();
+                var button = pair.getValue();
+                if (cell.getState() == CellState.CLOSED) {
+                    if (!showProbabilities) {
+                        button.setDisplayState(DisplayState.CLOSED);
+                    }
                     button.setEnabled(true);
                 }
             }
         } else {
-            for (CellButton button : cellAndBtnMapping.keySet()) {
-                // make non clicked cells a difference colour
+            cellAndBtnMapping.values().forEach(button -> {
                 if (button.getDisplayState() == DisplayState.CLOSED) {
                     button.setBackground(Color.LIGHT_GRAY);
                 }
                 button.setEnabled(false);
-            }
-        }
-    }
-
-    private void setupGrid() {
-        for (int i = 0; i < game.getHeight(); i++) {
-            for (int j = 0; j < game.getWidth(); j++) {
-                Cell cell = game.getCell(j, i);
-                CellButton cellButton = new CellButton(cell.toString());
-                addLeftClickListener(cellButton);
-                addRightClickListener(cellButton);
-                cellAndBtnMapping.put(cellButton, cell);
-                this.add(cell.toString(), cellButton);
-            }
-        }
-    }
-
-    private void addLeftClickListener(CellButton button) {
-        button.addActionListener(e -> {
-            boolean opening = selectButton(button);
-            if (!opening && !showProbabilities) {
-                refreshCellBtn(cellAndBtnMapping.get(button), button);
-                return;
-            }
-            if (opening) {
-                refreshOpenCellBtns();  // for if a 0 was selected
-            }
+            });
             if (showProbabilities) {
-                refreshAllCellBtns();
+                showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
             }
+        }
+    }
+
+    public CellButton getButtonFromCell(Cell cell) {
+        return cellAndBtnMapping.get(cell);
+    }
+
+    private void addLeftClickListener(CellButton button, Cell cell) {
+        button.addActionListener(click -> {
+            selectButton(button, cell);
+            gameStats.setMoves(gameStats.getMoves() + 1);
         });
     }
 
-    private void addRightClickListener(CellButton button) {
+    public void selectButton(CellButton button, Cell cell) {
+        resetHints();
+        game.openCell(cell.getX(), cell.getY());
+        int num = cell.getNumber();
+        openCellButton(button, num);
+        if (game.getState() != GameState.RUNNING) {
+            endGame();
+            if (game.getState() == GameState.LOST) {
+                button.setUI(new MetalButtonUI() {
+                    protected Color getDisabledTextColor() {
+                        return Color.WHITE;
+                    }
+                });
+            }
+        } else if (num == 0) {  // if an opening was made, collect opening cells and update them
+            clearOpening(cell);
+        }
+        // Todo: could speed up visualisation if all 0% cells were selected first
+        //  before redoing heatmap
+        if (showProbabilities && game.getState() == GameState.RUNNING) {
+            showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
+        }
+    }
+
+    public void flagButton(CellButton button, Cell cell) {
+        int newMinesLeft = gameStats.getMinesLeft();
+        var displayState = button.getDisplayState() == DisplayState.FLAG ? DisplayState.CLOSED : DisplayState.FLAG;
+        var cellState = button.getDisplayState() == DisplayState.FLAG ? CellState.CLOSED : CellState.FLAGGED;
+        if (displayState == DisplayState.FLAG) {
+            newMinesLeft -= 1;
+        } else {
+            newMinesLeft += 1;
+        }
+        gameStats.setMinesLeft(newMinesLeft);
+        cell.setState(cellState);
+        button.setDisplayState(displayState);
+        button.setEnabled(displayState == DisplayState.CLOSED);
+    }
+
+    private void addRightClickListener(CellButton button, Cell cell) {
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                DisplayState state = button.getDisplayState();
-                if (state == DisplayState.OPEN || game.getState() != GameState.RUNNING) {
-                    return;
-                }
+                // only execute on right click
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    if (state == DisplayState.FLAG) {
-                        gameStats.setMinesLeft(gameStats.getMinesLeft() + 1);
-                        cellAndBtnMapping.get(button).setState(CellState.CLOSED);
-                        button.setDisplayState(DisplayState.CLOSED);
-                        button.setEnabled(true);
-                    } else {
-                        gameStats.setMinesLeft(gameStats.getMinesLeft() - 1);
-                        cellAndBtnMapping.get(button).setState(CellState.FLAGGED);
-                        button.setDisplayState(DisplayState.FLAG);
-                        button.setEnabled(false);
+                    var state = button.getDisplayState();
+                    if (state == DisplayState.OPEN) {
+                        return;
                     }
-                    refreshCellBtn(cellAndBtnMapping.get(button), button);
+                    flagButton(button, cell);
                 }
             }
         });
     }
 
-    public void refreshOpenCellBtns() {
-        for (var pair : cellAndBtnMapping.entrySet()) {
-            var button = pair.getKey();
-            var cell = pair.getValue();
-            if (cell.getState() == CellState.OPEN &&
-                    button.getDisplayState() == DisplayState.CLOSED) {
-                button.setDisplayState(DisplayState.OPEN);
-                button.setNumber(cell.getNumber());
-                button.setEnabled(false);
+    private void openCellButton(CellButton button, int num) {
+        button.setDisplayState(DisplayState.OPEN);
+        button.setNumber(num);
+        button.setEnabled(false);
+    }
+
+    private void clearOpening(Cell origin) {
+        Set<Cell> checkedCells = new HashSet<>();
+        checkedCells.add(origin);
+
+        Predicate<Cell> openPredicate = cell -> cell.getState() == CellState.OPEN;
+
+        var neighbours = game.getBoard().getNeighbours(origin.getX(), origin.getY()).stream()
+                .filter(openPredicate)
+                .collect(Collectors.toList());
+
+        while (!neighbours.isEmpty()) {
+            List<Cell> openNeighbours = new ArrayList<>();
+            for (Cell cell : neighbours) {
+                if (checkedCells.contains(cell)) {
+                    continue;
+                }
+                int num = cell.getNumber();
+                CellButton button = cellAndBtnMapping.get(cell);
+                openCellButton(button, num);
+                checkedCells.add(cell);
+                if (num == 0) {
+                    openNeighbours.addAll(game.getBoard().getNeighbours(cell.getX(), cell.getY()));
+                }
             }
+            neighbours.clear();
+            neighbours = openNeighbours.stream()
+                    .filter(openPredicate)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private void endGame() {
+        gameStats.stopTimer();
+        openAllCellButtons();
+    }
+
+    private void openAllCellButtons() {
+        for (var pair : cellAndBtnMapping.entrySet()) {
+            var cell = pair.getKey();
+            var button = pair.getValue();
+            int num = cell.getNumber();
+            if (cell.isMine()) {
+                if (button.getDisplayState() == DisplayState.FLAG || game.getState() == GameState.WON) {
+                    button.setDisplayState(DisplayState.FLAG);
+                    button.setText(CellButton.FLAGGED_MINE_TEXT);
+                } else {
+                    button.setBackground(new Color(255, 127, 127));
+                    button.setText(CellButton.MINE_TEXT);
+                }
+            } else {
+                openCellButton(button, num);
+                button.setDisplayState(DisplayState.OPEN);
+            }
+            button.setEnabled(false);
+        }
+    }
+
+    public boolean knowsHints() {
+        return !cellHints.isEmpty();
+    }
+
+    public void setHintCells(Map<Cell, Boolean> knownCells) {
+        resetHints();
+        this.cellHints = knownCells;
+        this.unsetCellHints.addAll(cellHints.keySet());
+    }
+
+    public void showHint() {
+        while (!unsetCellHints.isEmpty()) {
+            Cell cell = unsetCellHints.remove(unsetCellHints.size() - 1);
+            boolean isMine = cellHints.get(cell);
+            CellButton button = cellAndBtnMapping.get(cell);
+            if (isMine) {
+                // dont show hint if cell is already flagged
+                if (button.getDisplayState() == DisplayState.FLAG) {
+                    continue;
+                }
+                button.setDisplayState(DisplayState.MINE_HINT);
+            } else {
+                button.setDisplayState(DisplayState.SAFE_HINT);
+            }
+            break;
+        }
+    }
+
+    private void resetHints() {
+        this.cellHints.keySet().forEach(cell -> {
+            DisplayState state = switch (cell.getState()) {
+                case OPEN -> DisplayState.OPEN;
+                case FLAGGED -> DisplayState.FLAG;
+                default -> DisplayState.CLOSED;
+            };
+            cellAndBtnMapping.get(cell).setDisplayState(state);
+        });
+        this.unsetCellHints.clear();
+        this.cellHints.clear();
+    }
+
+    public void setShowProbabilities(boolean showProbabilities) {
+        this.showProbabilities = showProbabilities;
+        if (showProbabilities) {
+            showHeatMap(new ProbabilitySolver(game.getCells(), game.getWidth(), game.getHeight(), game.getMines()).getProbabilities());
+        } else {
+            normaliseAllCellButtons();
+        }
+    }
+
+    private void normaliseAllCellButtons() {
+        for (var pair : cellAndBtnMapping.entrySet()) {
+            Cell cell = pair.getKey();
+            CellButton button = pair.getValue();
+            DisplayState state = switch (cell.getState()) {
+                case OPEN -> DisplayState.OPEN;
+                case FLAGGED -> DisplayState.FLAG;
+                default -> DisplayState.CLOSED;
+            };
+            button.setDisplayState(state);
+            button.setToolTipText(button.getName());
         }
     }
 
@@ -215,8 +282,6 @@ public class BoardPanel extends JPanel {
         if (probs.isEmpty()) {
             return;
         }
-        probabilityCache = probs;
-        var cellToBtn = cellAndBtnMapping.inverse();
         var bestProb = BigFraction.ONE;
         for (var pair : probs.entrySet()) {
             Cell cell = pair.getKey();
@@ -229,12 +294,12 @@ public class BoardPanel extends JPanel {
             } else if (probCompare == 0) {
                 bestProbCells.add(cell);
             }
-            setCellHeat(cellToBtn.get(cell), prob);
+            setCellHeat(cellAndBtnMapping.get(cell), prob);
         }
         if (bestProb.compareTo(BigFraction.ZERO) == 0) {
             return;
         }
-        bestProbCells.forEach(cell -> cellToBtn.get(cell).setBackground(BEST_CELL_COLOUR));
+        bestProbCells.forEach(cell -> cellAndBtnMapping.get(cell).setBackground(BEST_CELL_COLOUR));
     }
 
     private void setCellHeat(CellButton button, BigFraction intensity) {
@@ -249,73 +314,6 @@ public class BoardPanel extends JPanel {
         }
         button.setBackground(colour);
         button.setToolTipText("" + intensity.percentageValue() + "%");
-    }
-
-    public boolean knowsHints() {
-        return !mineHints.isEmpty() && !safeHints.isEmpty();
-    }
-
-    public void setHintCells(Map<Cell, Boolean> knownCells) {
-        var cellToBtn = cellAndBtnMapping.inverse();
-        for (var pair : knownCells.entrySet()) {
-            boolean isMine = pair.getValue();
-            CellButton button = cellToBtn.get(pair.getKey());
-            if (isMine) {
-                mineHints.add(button);
-            } else {
-                safeHints.add(button);
-            }
-        }
-    }
-
-    public void showHint() {
-        for (CellButton button : mineHints) {
-            DisplayState state = button.getDisplayState();
-            if (state != DisplayState.MINE_HINT && state != DisplayState.FLAG) {
-                button.setDisplayState(DisplayState.MINE_HINT);
-                return;
-            }
-        }
-        for (CellButton button : safeHints) {
-            if (button.getDisplayState() != DisplayState.SAFE_HINT) {
-                button.setDisplayState(DisplayState.SAFE_HINT);
-                return;
-            }
-        }
-    }
-
-    private void resetHints() {
-        this.mineHints.forEach(button -> {
-            DisplayState state = switch (cellAndBtnMapping.get(button).getState()) {
-                case OPEN -> DisplayState.OPEN;
-                case FLAGGED -> DisplayState.FLAG;
-                default -> DisplayState.CLOSED;
-            };
-            button.setDisplayState(state);
-        });
-        this.safeHints.forEach(button -> {
-            DisplayState state = switch (cellAndBtnMapping.get(button).getState()) {
-                case OPEN -> DisplayState.OPEN;
-                case FLAGGED -> DisplayState.FLAG;
-                default -> DisplayState.CLOSED;
-            };
-            button.setDisplayState(state);
-        });
-        this.mineHints.clear();
-        this.safeHints.clear();
-    }
-
-    // return true if an opening occurred (if a 0 was selected)
-    public boolean selectButton(CellButton button) {
-        gameStats.setMoves(gameStats.getMoves() + 1);
-        resetHints();
-        Cell cell = cellAndBtnMapping.get(button);
-        game.openCell(cell.getX(), cell.getY());
-        boolean opening = cell.getNumber() == 0;
-        button.setNumber(cell.getNumber());
-        button.setDisplayState(DisplayState.OPEN);
-        button.setEnabled(false);
-        return opening;
     }
 
 }

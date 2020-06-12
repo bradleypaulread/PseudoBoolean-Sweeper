@@ -7,6 +7,7 @@ import main.java.solvers.SinglePointSolver;
 import main.java.solvers.Solver;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +22,12 @@ public class GameFrame extends JFrame {
     private final JButton solveBtn;
     private final JButton stopBtn;
     private final JCheckBox probabilityCheckBox;
+    private final List<JComponent> disableComponents;
     // This game reference is passed around the gui a lot
     // not great programming but it will do
     private MineSweeper game;
     private SolverSwingWorker worker;
     private BoardPanel boardPanel;
-
-    private final List<JComponent> disableBtns;
 
     public GameFrame(MineSweeper game) {
         this.game = game;
@@ -39,8 +39,7 @@ public class GameFrame extends JFrame {
         this.solveBtn = new JButton("Solve");
         this.stopBtn = new JButton("Stop");
         this.probabilityCheckBox = new JCheckBox("Probabilities");
-        disableBtns = List.of(
-                boardPanel,
+        disableComponents = List.of(
                 resetBtn,
                 hintBtn,
                 assistBtn,
@@ -85,11 +84,18 @@ public class GameFrame extends JFrame {
         topFrame.setLayout(new FlowLayout());
 
         topFrame.add(gameStats);
-        topFrame.add("Hint Button", hintBtn);
-        topFrame.add("Assist Button", assistBtn);
-        topFrame.add("Solve Button", solveBtn);
-        topFrame.add("Stop Button", stopBtn);
-        topFrame.add("Probability Button", probabilityCheckBox);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        TitledBorder buttonTitle = new TitledBorder("Control Buttons");
+        buttonTitle.setTitleJustification(TitledBorder.CENTER);
+        buttonPanel.setBorder(buttonTitle);
+        buttonPanel.add("Hint Button", hintBtn);
+        buttonPanel.add("Assist Button", assistBtn);
+        buttonPanel.add("Solve Button", solveBtn);
+        buttonPanel.add("Stop Button", stopBtn);
+        buttonPanel.add("Probability Button", probabilityCheckBox);
+        topFrame.add(buttonPanel);
 
         this.getContentPane().add(topFrame, BorderLayout.NORTH);
         this.getContentPane().add(boardPanel, BorderLayout.CENTER);
@@ -115,34 +121,32 @@ public class GameFrame extends JFrame {
 
         assistBtn.addActionListener(e -> {
             this.worker = new SolverSwingWorker.Builder(game)
-                    .disableComponents(disableBtns)
+                    .disableComponents(disableComponents)
                     .withBoardPanel(boardPanel)
                     .withSolvers(solvers)
                     .setLoop(false)
                     .build();
-
-            this.probabilityCheckBox.setSelected(false);
-            boardPanel.setShowProbabilities(false);
+            boardPanel.setEnabled(false);
+            disableComponents.forEach(component -> component.setEnabled(false));
             this.worker.execute();
         });
 
         solveBtn.addActionListener(e -> {
             this.worker = new SolverSwingWorker.Builder(game)
-                    .disableComponents(disableBtns)
+                    .disableComponents(disableComponents)
                     .withBoardPanel(boardPanel)
                     .withSolvers(solvers)
                     .setLoop(true)
                     .build();
-
-            this.probabilityCheckBox.setSelected(false);
-            boardPanel.setShowProbabilities(false);
+            boardPanel.setEnabled(false);
+            disableComponents.forEach(component -> component.setEnabled(false));
             this.worker.execute();
         });
 
         stopBtn.addActionListener(e -> {
             if (worker != null) {
                 worker.stop();
-                disableBtns.forEach(b -> b.setEnabled(true));
+                disableComponents.forEach(component -> component.setEnabled(true));
             }
         });
 

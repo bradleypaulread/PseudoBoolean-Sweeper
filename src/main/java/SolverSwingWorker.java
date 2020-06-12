@@ -1,6 +1,7 @@
 package main.java;
 
 import main.java.gui.BoardPanel;
+import main.java.gui.CellButton;
 import main.java.solvers.ProbabilitySolver;
 import main.java.solvers.Solver;
 
@@ -15,15 +16,15 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
     private final List<JComponent> disableComponents;
     private final List<Solver> solvers;
     private final MineSweeper game;
-    private final BoardPanel board;
+    private final BoardPanel boardPanel;
     private final boolean loop;
     private volatile boolean running;
 
-    private SolverSwingWorker(MineSweeper game, BoardPanel board, List<JComponent> disableComponents, List<Solver> solvers, boolean loop) {
+    private SolverSwingWorker(MineSweeper game, BoardPanel boardPanel, List<JComponent> disableComponents, List<Solver> solvers, boolean loop) {
         this.running = true;
         this.disableComponents = disableComponents;
         this.game = game;
-        this.board = board;
+        this.boardPanel = boardPanel;
         this.loop = loop;
         this.solvers = solvers;
     }
@@ -32,32 +33,25 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
         this.running = false;
     }
 
-    private void disableComponents() {
-        this.disableComponents.forEach(e -> e.setEnabled(false));
-    }
-
-    private void enableComponents() {
-        this.disableComponents.forEach(e -> e.setEnabled(true));
-    }
-
     private boolean makeChanges(Solver solver) {
         Map<Cell, Boolean> knownCells = solver.getKnownCells();
         boolean somethingChanged = false;
-        for (Map.Entry<Cell, Boolean> pair : knownCells.entrySet()) {
+        for (var pair : knownCells.entrySet()) {
             Cell cell = pair.getKey();
             boolean isMine = pair.getValue();
+            CellButton button = boardPanel.getButtonFromCell(cell);
             if (!running) {
                 break;
             }
             if (isMine) {
                 if (cell.getState() == CellState.CLOSED) {
-                    cell.setState(CellState.FLAGGED);
+                    boardPanel.flagButton(button, cell);
                     somethingChanged = true;
                 }
             } else {
                 // Goes by the assumption that user's flagged cells are correct
                 if (cell.getState() == CellState.CLOSED) {
-                    game.openCell(cell.getX(), cell.getY());
+                    boardPanel.selectButton(button, cell);
                     somethingChanged = true;
                 }
             }
@@ -67,7 +61,6 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
 
     @Override
     protected Boolean doInBackground() {
-        disableComponents();
         for (int i = 0; i < solvers.size() && this.running && game.getState() == GameState.RUNNING; i++) {
             Solver solver = solvers.get(i);
             if (solver instanceof ProbabilitySolver) {
@@ -75,7 +68,7 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
                 if (!running) {
                     break;
                 }
-                game.openCell(bestCell.getX(), bestCell.getY());
+                boardPanel.selectButton(boardPanel.getButtonFromCell(bestCell), bestCell);
                 if (!loop) {
                     break;
                 }
@@ -90,16 +83,14 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
                 }
             }
         }
-        enableComponents();
-        board.refreshOpenCellBtns();
-        board.refreshAllCellBtns();
+        boardPanel.setEnabled(true);
+        disableComponents.forEach(component -> component.setEnabled(true));
         return this.running;
     }
 
     public static class Builder {
 
         private final MineSweeper game;
-        private final boolean running;
         private List<JComponent> disableComponents;
         private List<Solver> solvers;
         private BoardPanel board;
@@ -107,7 +98,6 @@ public class SolverSwingWorker extends SwingWorker<Boolean, Boolean> {
 
         public Builder(MineSweeper game) {
             this.game = game;
-            this.running = true;
         }
 
         public Builder withSolvers(List<Class> solvers) {
