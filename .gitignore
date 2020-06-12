@@ -8,3 +8,4 @@ bin/
 .env
 *.iml
 stale_outputs_checked
+out/
