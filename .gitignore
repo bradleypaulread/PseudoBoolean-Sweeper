@@ -1,1 +1,11 @@
-/target/
+target/
+.idea/
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+.env
+*.iml
+stale_outputs_checked
+out/
